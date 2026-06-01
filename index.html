@@ -78,7 +78,7 @@ header {
     background:white;
     border-radius:10px;
     margin-bottom:6px;
-    min-height:110px; /* 提高基礎高度以容納活動文字 */
+    min-height:115px; /* 提高基礎高度以容納活動文字 */
     font-size:18px;
     vertical-align: top;
     box-sizing: border-box;
@@ -151,6 +151,18 @@ button.action-btn:hover {
     background:#20ba59;
 }
 
+button.edit-btn {
+    background:#1890ff;
+    padding:4px 8px;
+    color:white;
+    border:none;
+    border-radius:5px;
+    font-size:14px;
+    cursor:pointer;
+    float: right;
+    margin-left: 5px;
+}
+
 button.delete-btn {
     background:#ff4d4f;
     padding:4px 8px;
@@ -190,6 +202,18 @@ input, textarea {
     margin-top: 4px;
     color: #555;
 }
+
+/* 編輯模式提示條 */
+.edit-mode-indicator {
+    background: #fffbe6;
+    border: 1px solid #ffe58f;
+    color: #d46b08;
+    padding: 8px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    display: none;
+}
 </style>
 </head>
 
@@ -225,7 +249,13 @@ input, textarea {
     </div>
 
     <div class="card">
-        <h3 style="margin-top:0; color:#333;">➕ 新增家庭活動</h3>
+        <h3 id="formTitle" style="margin-top:0; color:#333;">➕ 新增家庭活動</h3>
+        
+        <div id="editIndicator" class="edit-mode-indicator">
+            ⚠️ 您正在編輯一項現有活動。完成後請點擊「更新此活動」，或點擊 <a href="javascript:void(0)" onclick="cancelEditMode()">取消編輯</a>。
+        </div>
+        
+        <input type="hidden" id="editingEventId" value="">
         
         <label for="eventTime" style="font-size:15px; color:#666;">活動時間：</label>
         <input type="time" id="eventTime" value="12:00">
@@ -236,7 +266,7 @@ input, textarea {
         <label for="eventNote" style="font-size:15px; color:#666;">備註：</label>
         <textarea id="eventNote" rows="2" placeholder="詳細備忘事項..."></textarea>
         
-        <button class="action-btn" onclick="addFamilyEvent()">儲存至此日期</button>
+        <button id="submitBtn" class="action-btn" onclick="saveFamilyEvent()">儲存至此日期</button>
     </div>
 
 </div>
@@ -349,6 +379,7 @@ function selectDate(dateStr) {
         }
     });
     
+    cancelEditMode(); // 切換日期時自動退出未完成的編輯
     renderDayEvents();
 }
 
@@ -372,6 +403,7 @@ function renderDayEvents() {
         html += `
         <div class="event-item">
             <button class="delete-btn" onclick="deleteEvent(${ev.id})">❌ 刪除</button>
+            <button class="edit-btn" onclick="startEditEvent(${ev.id})">✏️ 修改</button>
             <div class="event-time">⏰ ${ev.time}</div>
             <div class="event-desc">📌 <strong>${ev.title}</strong></div>
             ${ev.note ? `<div class="event-desc" style="font-size:14px; color:#777; padding-left:14px;">📝 ${ev.note}</div>` : ""}
@@ -382,31 +414,71 @@ function renderDayEvents() {
     dayEventsContainer.innerHTML = html;
 }
 
-/* ✅ 新增活動 */
-function addFamilyEvent() {
+/* ✅ 進入編輯模式 */
+function startEditEvent(id) {
+    let ev = activities.find(a => a.id === id);
+    if (!ev) return;
+    
+    document.getElementById('editingEventId').value = ev.id;
+    document.getElementById('eventTime').value = ev.time;
+    document.getElementById('eventTitle').value = ev.title;
+    document.getElementById('eventNote').value = ev.note;
+    
+    document.getElementById('formTitle').innerText = "✏️ 修改家庭活動";
+    document.getElementById('submitBtn').innerText = "更新此活動";
+    document.getElementById('editIndicator').style.display = "block";
+    
+    document.getElementById('formTitle').scrollIntoView({ behavior: 'smooth' });
+}
+
+/* ✅ 取消編輯模式 */
+function cancelEditMode() {
+    document.getElementById('editingEventId').value = "";
+    document.getElementById('eventTime').value = "12:00";
+    document.getElementById('eventTitle').value = "";
+    document.getElementById('eventNote').value = "";
+    
+    document.getElementById('formTitle').innerText = "➕ 新增家庭活動";
+    document.getElementById('submitBtn').innerText = "儲存至此日期";
+    document.getElementById('editIndicator').style.display = "none";
+}
+
+/* ✅ 儲存或更新活動 */
+function saveFamilyEvent() {
     let titleInput = document.getElementById('eventTitle');
     let timeInput = document.getElementById('eventTime');
     let noteInput = document.getElementById('eventNote');
+    let editingId = document.getElementById('editingEventId').value;
     
     if (!titleInput.value.trim()) {
         alert("請輸入活動名稱或地點！");
         return;
     }
     
-    let newEvent = {
-        id: Date.now(),
-        date: selectedDateStr,
-        time: timeInput.value || "12:00",
-        title: titleInput.value.trim(),
-        note: noteInput.value.trim()
-    };
+    if (editingId) {
+        // 更新現有活動
+        let index = activities.findIndex(a => a.id == editingId);
+        if (index !== -1) {
+            activities[index].time = timeInput.value || "12:00";
+            activities[index].title = titleInput.value.trim();
+            activities[index].note = noteInput.value.trim();
+        }
+    } else {
+        // 新增全新活動
+        let newEvent = {
+            id: Date.now(),
+            date: selectedDateStr,
+            time: timeInput.value || "12:00",
+            title: titleInput.value.trim(),
+            note: noteInput.value.trim()
+        };
+        activities.push(newEvent);
+    }
     
-    activities.push(newEvent);
+    // 同步到本地儲存
     localStorage.setItem('family_calendar_activities', JSON.stringify(activities));
     
-    titleInput.value = "";
-    noteInput.value = "";
-    
+    cancelEditMode();
     renderCalendar();
     renderDayEvents();
 }
@@ -416,12 +488,18 @@ function deleteEvent(id) {
     if (confirm("確定要刪除這項活動嗎？")) {
         activities = activities.filter(a => a.id !== id);
         localStorage.setItem('family_calendar_activities', JSON.stringify(activities));
+        
+        let editingId = document.getElementById('editingEventId').value;
+        if (editingId == id) {
+            cancelEditMode();
+        }
+        
         renderCalendar();
         renderDayEvents();
     }
 }
 
-/* ✅ 繪製完整日曆（包含格子內活動渲染） */
+/* ✅ 繪製完整日曆 */
 function renderCalendar(){
     let y = current.getFullYear();
     let m = current.getMonth();
@@ -448,11 +526,9 @@ function renderCalendar(){
         let lunar = getLunar(dStr);
         let holiday = getDynamicHoliday(y, m+1, i);
         
-        // 🔍 篩選出屬於該日期的所有活動，並依時間排序
         let dayActivities = activities.filter(a => a.date === dStr);
         dayActivities.sort((a, b) => a.time.localeCompare(b.time));
 
-        // 拼接格子內活動條的 HTML
         let eventsHtml = "";
         dayActivities.forEach(act => {
             eventsHtml += `<span class="day-event-badge" title="${act.time} ${act.title}">${act.time} ${act.title}</span>`;
