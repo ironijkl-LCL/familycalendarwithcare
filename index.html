@@ -78,7 +78,7 @@ header {
     background:white;
     border-radius:10px;
     margin-bottom:6px;
-    min-height:115px; /* 提高基礎高度以容納活動文字 */
+    min-height:110px;
     font-size:18px;
     vertical-align: top;
     box-sizing: border-box;
@@ -151,6 +151,17 @@ button.action-btn:hover {
     background:#20ba59;
 }
 
+button.delete-btn {
+    background:#ff4d4f;
+    padding:4px 8px;
+    color:white;
+    border:none;
+    border-radius:5px;
+    font-size:14px;
+    cursor:pointer;
+    float: right;
+}
+
 button.edit-btn {
     background:#1890ff;
     padding:4px 8px;
@@ -161,17 +172,6 @@ button.edit-btn {
     cursor:pointer;
     float: right;
     margin-left: 5px;
-}
-
-button.delete-btn {
-    background:#ff4d4f;
-    padding:4px 8px;
-    color:white;
-    border:none;
-    border-radius:5px;
-    font-size:14px;
-    cursor:pointer;
-    float: right;
 }
 
 input, textarea {
@@ -203,16 +203,11 @@ input, textarea {
     color: #555;
 }
 
-/* 編輯模式提示條 */
-.edit-mode-indicator {
-    background: #fffbe6;
-    border: 1px solid #ffe58f;
-    color: #d46b08;
-    padding: 8px;
-    border-radius: 6px;
-    margin-bottom: 8px;
+#cloudStatus {
+    text-align: center;
     font-size: 14px;
-    display: none;
+    color: #666;
+    margin-bottom: 10px;
 }
 </style>
 </head>
@@ -222,6 +217,8 @@ input, textarea {
 <header>📅 家庭活動日曆</header>
 
 <div class="container">
+
+    <div id="cloudStatus">🔄 正在連接家庭雲端伺服器 (lohas-58d50)...</div>
 
     <div class="card">
         <div class="calendar-header">
@@ -251,14 +248,10 @@ input, textarea {
     <div class="card">
         <h3 id="formTitle" style="margin-top:0; color:#333;">➕ 新增家庭活動</h3>
         
-        <div id="editIndicator" class="edit-mode-indicator">
-            ⚠️ 您正在編輯一項現有活動。完成後請點擊「更新此活動」，或點擊 <a href="javascript:void(0)" onclick="cancelEditMode()">取消編輯</a>。
-        </div>
-        
-        <input type="hidden" id="editingEventId" value="">
-        
+        <input type="hidden" id="editKey" value="">
+
         <label for="eventTime" style="font-size:15px; color:#666;">活動時間：</label>
-        <input type="time" id="eventTime" value="12:00">
+        <input type="time" id="eventTime" value="18:00">
         
         <label for="eventTitle" style="font-size:15px; color:#666;">活動名稱 / 地點：</label>
         <input type="text" id="eventTitle" placeholder="例如：陪爺爺飲茶、家族聚餐、樂活金掌家會議">
@@ -266,62 +259,74 @@ input, textarea {
         <label for="eventNote" style="font-size:15px; color:#666;">備註：</label>
         <textarea id="eventNote" rows="2" placeholder="詳細備忘事項..."></textarea>
         
-        <button id="submitBtn" class="action-btn" onclick="saveFamilyEvent()">儲存至此日期</button>
+        <button id="submitBtn" class="action-btn" onclick="addFamilyEvent()">儲存至此日期</button>
+        <button id="cancelBtn" class="action-btn" style="background:#8c8c8c; display:none; margin-top:5px;" onclick="clearForm()">取消修改</button>
     </div>
 
 </div>
 
 <script>
 
-// 初始化活動陣列，預設從本地儲存載入
-let activities = JSON.parse(localStorage.getItem('family_calendar_activities')) || [
-    { id: 1, date: "2026-06-01", time: "12:00", title: "家族聚餐", note: "預訂了酒樓，記得帶相機拍攝合照" },
-    { id: 2, date: "2026-06-19", time: "15:30", title: "金掌家項目會議", note: "討論言語治療訓練介面優化" }
-];
+// ─── 1. 直連您的雲端數據庫節點宣告 ───
+const dbURL = "https://lohas-58d50-default-rtdb.firebaseio.com/family_calendar_activities";
 
+let activities = [];
 let current = new Date();
 let selectedDateStr = new Date().toISOString().slice(0, 10); // 預設選擇今天
 
+// ─── 2. 雲端高效同步引擎 ───
+function fetchCloudData() {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", dbURL + ".json", true);
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                var data = JSON.parse(xhr.responseText);
+                activities = [];
+                if (data) {
+                    for (var key in data) {
+                        if (data[key]) {
+                            activities.push({
+                                id: key,
+                                date: data[key].date,
+                                time: data[key].time,
+                                title: data[key].title,
+                                note: data[key].note
+                            });
+                        }
+                    }
+                }
+                document.getElementById('cloudStatus').innerText = "🟢 雲端數據已即時同步（全家人可同時查看與更新）";
+                renderCalendar();
+                renderDayEvents();
+            } else {
+                document.getElementById('cloudStatus').innerText = "⚠️ 數據加載受阻，請確保 Firebase Rules 內已改為 true。";
+            }
+        }
+    };
+    xhr.send();
+}
+
+// 每 3 秒在後台自動異步同步數據
+setInterval(fetchCloudData, 3000);
+
 /* ✅ 香港公眾假期資料庫 */
 const holidays = {
-    "01-01":"元旦",
-    "04-04":"清明節",
-    "05-01":"勞動節",
-    "07-01":"香港回歸日",
-    "10-01":"國慶日",
-    "12-25":"聖誕節",
-    "12-26":"聖誕翌日"
+    "01-01":"元旦", "04-04":"清明節", "05-01":"勞動節", "07-01":"香港回歸日", "10-01":"國慶日", "12-25":"聖誕節", "12-26":"聖誕翌日"
 };
 
 function getDynamicHoliday(y, m, d) {
-    let mm = String(m).padStart(2, '0');
-    let dd = String(d).padStart(2, '0');
-    let key = `${mm}-${dd}`;
-    
+    let mm = String(m).padStart(2, '0'); let dd = String(d).padStart(2, '0'); let key = `${mm}-${dd}`;
     if (holidays[key]) return holidays[key];
-    
     if (y === 2026) {
-        if (key === "02-17") return "年初一";
-        if (key === "02-18") return "年初二";
-        if (key === "02-19") return "年初三";
-        if (key === "04-03") return "受難節";
-        if (key === "04-06") return "復活節";
-        if (key === "05-24") return "佛誕";
-        if (key === "06-19") return "端午節";
-        if (key === "09-26") return "中秋翌日";
-        if (key === "10-19") return "重陽節";
+        if (key === "02-17") return "年初一"; if (key === "02-18") return "年初二"; if (key === "02-19") return "年初三";
+        if (key === "04-03") return "受難節"; if (key === "04-06") return "復活節"; if (key === "05-24") return "佛誕";
+        if (key === "06-19") return "端午節"; if (key === "09-26") return "中秋翌日"; if (key === "10-19") return "重陽節";
     }
-    
     if (y === 2027) {
-        if (key === "02-06") return "年初一";
-        if (key === "02-08") return "年初二";
-        if (key === "02-09") return "年初三";
-        if (key === "03-26") return "受難節";
-        if (key === "03-29") return "復活節";
-        if (key === "05-13") return "佛誕";
-        if (key === "06-09") return "端午節";
-        if (key === "09-16") return "中秋翌日";
-        if (key === "10-08") return "重陽節";
+        if (key === "02-06") return "年初一"; if (key === "02-08") return "年初二"; if (key === "02-09") return "年初三";
+        if (key === "03-26") return "受難節"; if (key === "03-29") return "復活節"; if (key === "05-13") return "佛誕";
+        if (key === "06-09") return "端午節"; if (key === "09-16") return "中秋翌日"; if (key === "10-08") return "重陽節";
     }
     return "";
 }
@@ -329,70 +334,34 @@ function getDynamicHoliday(y, m, d) {
 /* ✅ 農曆轉換 */
 function getLunar(date){
     try {
-        let d = new Date(date);
-        if (isNaN(d.getTime())) return "";
-
-        let parts = new Intl.DateTimeFormat(
-            "zh-Hant-u-ca-chinese",
-            {month:"numeric", day:"numeric"}
-        ).formatToParts(d);
-
-        let month = parts.find(p=>p.type==='month').value;
-        let day = parts.find(p=>p.type==='day').value;
-
+        let d = new Date(date); if (isNaN(d.getTime())) return "";
+        let parts = new Intl.DateTimeFormat("zh-Hant-u-ca-chinese", {month:"numeric", day:"numeric"}).formatToParts(d);
+        let month = parts.find(p=>p.type==='month').value; let day = parts.find(p=>p.type==='day').value;
         const CN=["","一","二","三","四","五","六","七","八","九","十"];
-
-        function dCN(n){
-            n=Number(n);
-            if(n<=10) return "初"+CN[n];
-            if(n<20) return "十"+CN[n-10];
-            if(n==20) return "二十";
-            if(n<30) return "廿"+CN[n-20];
-            return "三十";
-        }
-
-        function mCN(n){
-            return ["","一月","二月","三月","四月","五月","六月",
-                    "七月","八月","九月","十月","冬月","臘月"][n];
-        }
-
-        if(day==1){
-            return mCN(month);
-        } else {
-            return dCN(day);
-        }
-    } catch(e) {
-        return "";
-    }
+        function dCN(n){ n=Number(n); if(n<=10) return "初"+CN[n]; if(n<20) return "十"+CN[n-10]; if(n==20) return "二十"; if(n<30) return "廿"+CN[n-20]; return "三十"; }
+        function mCN(n){ return ["","一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","冬月","臘月"][n]; }
+        return day==1 ? mCN(month) : dCN(day);
+    } catch(e) { return ""; }
 }
 
 /* ✅ 點擊日期選擇 */
 function selectDate(dateStr) {
     selectedDateStr = dateStr;
-    
     let cells = document.querySelectorAll('.calendar-day');
     cells.forEach(cell => {
-        if (cell.getAttribute('data-date') === dateStr) {
-            cell.classList.add('selected-day');
-        } else {
-            cell.classList.remove('selected-day');
-        }
+        if (cell.getAttribute('data-date') === dateStr) { cell.classList.add('selected-day'); } else { cell.classList.remove('selected-day'); }
     });
-    
-    cancelEditMode(); // 切換日期時自動退出未完成的編輯
     renderDayEvents();
+    clearForm();
 }
 
 /* ✅ 渲染當日活動詳細列表 */
 function renderDayEvents() {
-    let label = document.getElementById('selectedDateLabel');
-    label.innerText = selectedDateStr;
-    
+    document.getElementById('selectedDateLabel').innerText = selectedDateStr;
     let dayEventsContainer = document.getElementById('dayEvents');
     let filtered = activities.filter(a => a.date === selectedDateStr);
     
     filtered.sort((a, b) => a.time.localeCompare(b.time));
-    
     if (filtered.length === 0) {
         dayEventsContainer.innerHTML = `<p style="color:gray; font-size:16px;">此日期暫無安排家庭活動。</p>`;
         return;
@@ -402,129 +371,114 @@ function renderDayEvents() {
     filtered.forEach(ev => {
         html += `
         <div class="event-item">
-            <button class="delete-btn" onclick="deleteEvent(${ev.id})">❌ 刪除</button>
-            <button class="edit-btn" onclick="startEditEvent(${ev.id})">✏️ 修改</button>
+            <button class="delete-btn" onclick="deleteEvent('${ev.id}')">❌ 刪除</button>
+            <button class="edit-btn" onclick="startEditEvent('${ev.id}')">✏️ 修改</button>
             <div class="event-time">⏰ ${ev.time}</div>
             <div class="event-desc">📌 <strong>${ev.title}</strong></div>
             ${ev.note ? `<div class="event-desc" style="font-size:14px; color:#777; padding-left:14px;">📝 ${ev.note}</div>` : ""}
         </div>
         `;
     });
-    
     dayEventsContainer.innerHTML = html;
 }
 
-/* ✅ 進入編輯模式 */
-function startEditEvent(id) {
-    let ev = activities.find(a => a.id === id);
-    if (!ev) return;
-    
-    document.getElementById('editingEventId').value = ev.id;
-    document.getElementById('eventTime').value = ev.time;
-    document.getElementById('eventTitle').value = ev.title;
-    document.getElementById('eventNote').value = ev.note;
-    
-    document.getElementById('formTitle').innerText = "✏️ 修改家庭活動";
-    document.getElementById('submitBtn').innerText = "更新此活動";
-    document.getElementById('editIndicator').style.display = "block";
-    
-    document.getElementById('formTitle').scrollIntoView({ behavior: 'smooth' });
-}
-
-/* ✅ 取消編輯模式 */
-function cancelEditMode() {
-    document.getElementById('editingEventId').value = "";
-    document.getElementById('eventTime').value = "12:00";
-    document.getElementById('eventTitle').value = "";
-    document.getElementById('eventNote').value = "";
-    
-    document.getElementById('formTitle').innerText = "➕ 新增家庭活動";
-    document.getElementById('submitBtn').innerText = "儲存至此日期";
-    document.getElementById('editIndicator').style.display = "none";
-}
-
-/* ✅ 儲存或更新活動 */
-function saveFamilyEvent() {
+/* ✅ 儲存活動（新增與修改蓋寫） */
+function addFamilyEvent() {
     let titleInput = document.getElementById('eventTitle');
     let timeInput = document.getElementById('eventTime');
     let noteInput = document.getElementById('eventNote');
-    let editingId = document.getElementById('editingEventId').value;
+    let editKey = document.getElementById('editKey').value;
     
     if (!titleInput.value.trim()) {
         alert("請輸入活動名稱或地點！");
         return;
     }
     
-    if (editingId) {
-        // 更新現有活動
-        let index = activities.findIndex(a => a.id == editingId);
-        if (index !== -1) {
-            activities[index].time = timeInput.value || "12:00";
-            activities[index].title = titleInput.value.trim();
-            activities[index].note = noteInput.value.trim();
-        }
+    let eventData = {
+        date: selectedDateStr,
+        time: timeInput.value || "12:00",
+        title: titleInput.value.trim(),
+        note: noteInput.value.trim()
+    };
+    
+    document.getElementById('cloudStatus').innerText = "⚡ 正在同步變更至雲端...";
+    
+    var xhr = new XMLHttpRequest();
+    if (editKey) {
+        // 修改模式：PUT
+        xhr.open("PUT", dbURL + "/" + editKey + ".json", true);
     } else {
-        // 新增全新活動
-        let newEvent = {
-            id: Date.now(),
-            date: selectedDateStr,
-            time: timeInput.value || "12:00",
-            title: titleInput.value.trim(),
-            note: noteInput.value.trim()
-        };
-        activities.push(newEvent);
+        // 新增模式：POST
+        xhr.open("POST", dbURL + ".json", true);
     }
     
-    // 同步到本地儲存
-    localStorage.setItem('family_calendar_activities', JSON.stringify(activities));
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            clearForm();
+            fetchCloudData();
+        }
+    };
+    xhr.send(JSON.stringify(eventData));
+}
+
+/* ✅ 點擊修改按鈕 */
+function startEditEvent(id) {
+    let ev = activities.find(a => a.id === id);
+    if (!ev) return;
     
-    cancelEditMode();
-    renderCalendar();
-    renderDayEvents();
+    document.getElementById('editKey').value = ev.id;
+    document.getElementById('eventTime').value = ev.time;
+    document.getElementById('eventTitle').value = ev.title;
+    document.getElementById('eventNote').value = ev.note;
+    
+    document.getElementById('formTitle').innerText = "✏️ 修改家庭活動項目內容";
+    document.getElementById('submitBtn').innerText = "確認修改更新至雲端";
+    document.getElementById('cancelBtn').style.display = "inline-block";
+    
+    document.getElementById('formTitle').scrollIntoView({ behavior: 'smooth' });
+}
+
+/* ✅ 清空並重設表單狀態 */
+function clearForm() {
+    document.getElementById('editKey').value = "";
+    document.getElementById('eventTime').value = "18:00";
+    document.getElementById('eventTitle').value = "";
+    document.getElementById('eventNote').value = "";
+    
+    document.getElementById('formTitle').innerText = "➕ 新增家庭活動";
+    document.getElementById('submitBtn').innerText = "儲存至此日期";
+    document.getElementById('cancelBtn').style.display = "none";
 }
 
 /* ✅ 刪除活動 */
 function deleteEvent(id) {
     if (confirm("確定要刪除這項活動嗎？")) {
-        activities = activities.filter(a => a.id !== id);
-        localStorage.setItem('family_calendar_activities', JSON.stringify(activities));
-        
-        let editingId = document.getElementById('editingEventId').value;
-        if (editingId == id) {
-            cancelEditMode();
-        }
-        
-        renderCalendar();
-        renderDayEvents();
+        document.getElementById('cloudStatus').innerText = "⚡ 正在從雲端刪除項目...";
+        var xhr = new XMLHttpRequest();
+        xhr.open("DELETE", dbURL + "/" + id + ".json", true);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                fetchCloudData();
+            }
+        };
+        xhr.send();
     }
 }
 
-/* ✅ 繪製完整日曆 */
+/* ✅ 繪製完整日曆面版 */
 function renderCalendar(){
-    let y = current.getFullYear();
-    let m = current.getMonth();
-
+    let y = current.getFullYear(); let m = current.getMonth();
     monthLabel.innerText = y + "年 " + (m + 1) + "月";
-
-    let first = new Date(y, m, 1).getDay();
-    let days = new Date(y, m + 1, 0).getDate();
-
+    let first = new Date(y, m, 1).getDay(); let days = new Date(y, m + 1, 0).getDate();
     let html = "", total = 0;
 
-    // 頭部補空
-    for(let i=0; i<first; i++){
-        html += `<div class="calendar-day empty"></div>`;
-        total++;
-    }
+    for(let i=0; i<first; i++){ html += `<div class="calendar-day empty"></div>`; total++; }
 
-    // 依序生成日期資訊
     for(let i=1; i<=days; i++){
         let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
         let isToday = new Date().toISOString().slice(0,10) === dStr;
         let isSelected = selectedDateStr === dStr;
-
-        let lunar = getLunar(dStr);
-        let holiday = getDynamicHoliday(y, m+1, i);
+        let lunar = getLunar(dStr); let holiday = getDynamicHoliday(y, m+1, i);
         
         let dayActivities = activities.filter(a => a.date === dStr);
         dayActivities.sort((a, b) => a.time.localeCompare(b.time));
@@ -533,11 +487,9 @@ function renderCalendar(){
         dayActivities.forEach(act => {
             eventsHtml += `<span class="day-event-badge" title="${act.time} ${act.title}">${act.time} ${act.title}</span>`;
         });
-
         let dayClass = "calendar-day";
         if (isToday) dayClass += " today";
         if (isSelected) dayClass += " selected-day";
-
         html += `
         <div class="${dayClass}" data-date="${dStr}" onclick="selectDate('${dStr}')">
             <strong>${i}</strong>
@@ -546,29 +498,16 @@ function renderCalendar(){
             <div class="day-events-container">${eventsHtml}</div>
         </div>
         `;
-
         total++;
     }
-
-    // 尾部補空
-    while(total % 7 !== 0){
-        html += `<div class="calendar-day empty"></div>`;
-        total++;
-    }
-
+    while(total % 7 !== 0){ html += `<div class="calendar-day empty"></div>`; total++; }
     calendar.innerHTML = html;
 }
 
-/* 切月份 */
-function changeMonth(n){
-    current.setMonth(current.getMonth() + n);
-    renderCalendar();
-}
+function changeMonth(n){ current.setMonth(current.getMonth() + n); renderCalendar(); }
 
-/* 初始化執行 */
-renderCalendar();
-renderDayEvents();
-
+// 啟動首次加載
+fetchCloudData();
 </script>
 
 </body>
