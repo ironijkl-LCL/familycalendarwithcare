@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>家庭活動日曆（香港假期版）</title>
+<title>麟李互助家庭日誌</title>
 
 <style>
 body { font-family: Arial, sans-serif; margin:0; font-size:18px; background:#f5f5f5; }
@@ -174,6 +174,21 @@ button.edit-btn {
     margin-left: 5px;
 }
 
+/* WhatsApp 快捷按鈕樣式 */
+button.whatsapp-btn {
+    background:#25D366;
+    padding:4px 8px;
+    color:white;
+    border:none;
+    border-radius:5px;
+    font-size:14px;
+    cursor:pointer;
+    float: right;
+    margin-left: 5px;
+    font-weight: bold;
+}
+button.whatsapp-btn:hover { background:#20ba59; }
+
 input, textarea {
     width:100%;
     padding:12px;
@@ -209,16 +224,59 @@ input, textarea {
     color: #666;
     margin-bottom: 10px;
 }
+
+/* 名單複選群組外觀 */
+.member-checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 8px 0 12px 0;
+}
+.member-label {
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    background: #f0f0f0;
+    padding: 6px 12px;
+    border-radius: 20px;
+    user-select: none;
+}
+.member-label.custom-added {
+    background: #d0f5db; /* 自訂新增的成員外觀以粉綠色作視覺區隔 */
+}
+.member-label input {
+    width: auto;
+    margin: 0 6px 0 0;
+    transform: scale(1.2);
+}
+
+/* 內部小輸入面板樣式 */
+.sub-form-panel {
+    background: #fdfdfd;
+    border: 1px dashed #25D366;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+.flex-input-row {
+    display: flex;
+    gap: 8px;
+}
+.flex-input-row input {
+    margin-top: 0;
+    margin-bottom: 4px;
+}
 </style>
 </head>
 
 <body>
 
-<header>📅 家庭活動日曆</header>
+<header>📅 麟李互助家庭日誌</header>
 
 <div class="container">
 
-    <div id="cloudStatus">🔄 正在連接新家庭雲端伺服器 (familycalender-a62ae)...</div>
+    <div id="cloudStatus">已同步</div>
 
     <div class="card">
         <div class="calendar-header">
@@ -252,10 +310,35 @@ input, textarea {
 
         <label for="eventTime" style="font-size:15px; color:#666;">活動時間：</label>
         <input type="time" id="eventTime" value="18:00">
+
+        <label for="notifyTime" style="font-size:15px; color:#666;">WhatsApp 提醒發送時間：</label>
+        <input type="time" id="notifyTime" value="17:00">
         
         <label for="eventTitle" style="font-size:15px; color:#666;">活動名稱 / 地點：</label>
         <input type="text" id="eventTitle" placeholder="例如：陪爺爺飲茶、家族聚餐、樂活金掌家會議">
         
+        <label style="font-size:15px; color:#666;">參與名單 / 邀請對象：</label>
+        <div class="member-checkbox-group" id="memberCheckboxContainer">
+            <label class="member-label"><input type="checkbox" name="members" value="爸爸" data-phone=""> 爸爸</label>
+            <label class="member-label"><input type="checkbox" name="members" value="媽媽" data-phone=""> 媽媽</label>
+            <label class="member-label"><input type="checkbox" name="members" value="爺爺" data-phone=""> 爺爺</label>
+            <label class="member-label"><input type="checkbox" name="members" value="嫲嫲" data-phone=""> 嫲嫲</label>
+            <label class="member-label"><input type="checkbox" name="members" value="小明" data-phone=""> 小明</label>
+            <label class="member-label"><input type="checkbox" name="members" value="言語治療師" data-phone=""> 治療師</label>
+        </div>
+
+        <div class="sub-form-panel">
+            <span style="font-size: 14px; font-weight: bold; color: #25D366;">➕ 動態擴充名單與聯絡電話：</span>
+            <div class="flex-input-row" style="margin-top: 6px;">
+                <input type="text" id="newMemberName" placeholder="成員名字 (例如：姑姐)" style="width: 40%;">
+                <input type="tel" id="newMemberPhone" placeholder="香港電話 (例如：91234567)" style="width: 60%;">
+            </div>
+            <button type="button" class="action-btn" style="padding: 6px; font-size: 14px; margin-top: 2px; background: #1890ff;" onclick="createNewMemberBadge()">➕ 新增自訂成員至上方</button>
+        </div>
+
+        <label for="whatsappBtnText" style="font-size:15px; color:#666;">自訂 WhatsApp 按鈕鍵顯示名稱：</label>
+        <input type="text" id="whatsappBtnText" value="💬 WhatsApp 通知" placeholder="可以自訂修改按鈕文字名稱">
+
         <label for="eventNote" style="font-size:15px; color:#666;">備註：</label>
         <textarea id="eventNote" rows="2" placeholder="詳細備忘事項..."></textarea>
         
@@ -267,14 +350,64 @@ input, textarea {
 
 <script>
 
-// ─── 1. 精準對接您提供的新 Firebase 數據庫端點 ───
+// ─── 1. 數據庫端點宣告 ───
 const dbURL = "https://familycalender-a62ae-default-rtdb.firebaseio.com/family_calendar_activities";
 
 let activities = [];
 let current = new Date();
-let selectedDateStr = new Date().toISOString().slice(0, 10); // 預設選擇今天
+let selectedDateStr = new Date().toISOString().slice(0, 10);
 
-// ─── 2. 高效自動雲端同步引擎 (無感自動刷新) ───
+// 暫存動態自訂新增的成員名單清單（格式：[{name: "姑姐", phone: "91234567"}]），防止重新整理時消失，亦可連動打勾
+let customMembersList = JSON.parse(localStorage.getItem('custom_members_pool')) || [];
+
+// ─── 2. 動態在前端渲染出自訂新增的成員標籤 ───
+function renderCustomMemberBadges() {
+    // 移除所有舊有的動態標籤，避免重複
+    document.querySelectorAll('.member-label.custom-added').forEach(el => el.remove());
+    let container = document.getElementById('memberCheckboxContainer');
+    
+    customMembersList.forEach(m => {
+        let lbl = document.createElement('label');
+        lbl.className = 'member-label custom-added';
+        lbl.innerHTML = `<input type="checkbox" name="members" value="${m.name}" data-phone="${m.phone}"> ${m.name}`;
+        container.appendChild(lbl);
+    });
+}
+
+function createNewMemberBadge() {
+    let nameIn = document.getElementById('newMemberName');
+    let phoneIn = document.getElementById('newMemberPhone');
+    let name = nameIn.value.trim();
+    let phone = phoneIn.value.trim();
+
+    if(!name) {
+        alert("請輸入成員名字！");
+        return;
+    }
+
+    // 防重複判定
+    if(customMembersList.some(m => m.name === name)) {
+        alert("該成員名字已存在於清單中。");
+        return;
+    }
+
+    customMembersList.push({ name: name, phone: phone });
+    localStorage.setItem('custom_members_pool', JSON.stringify(customMembersList));
+    
+    renderCustomMemberBadges();
+    
+    // 自動將剛新造的成員設為打勾狀態
+    setTimeout(() => {
+        let cb = document.querySelector(`input[name="members"][value="${name}"]`);
+        if(cb) cb.checked = true;
+    }, 50);
+
+    // 清空輸入欄
+    nameIn.value = "";
+    phoneIn.value = "";
+}
+
+// ─── 3. 雲端高效同步引擎 ───
 function fetchCloudData() {
     fetch(`${dbURL}.json`, { method: "GET", mode: "cors" })
         .then(response => response.json())
@@ -283,28 +416,42 @@ function fetchCloudData() {
             if (data) {
                 for (let key in data) {
                     if (data[key]) {
+                        // 自動從雲端歷史行程中，補捉曾經自訂新增過的名字與電話
+                        if (data[key].customPhones) {
+                            for (let cName in data[key].customPhones) {
+                                if (!customMembersList.some(m => m.name === cName)) {
+                                    customMembersList.push({ name: cName, phone: data[key].customPhones[cName] });
+                                }
+                            }
+                            localStorage.setItem('custom_members_pool', JSON.stringify(customMembersList));
+                        }
+
                         activities.push({
                             id: key,
                             date: data[key].date,
                             time: data[key].time,
+                            notifyTime: data[key].notifyTime || "17:00",
                             title: data[key].title,
+                            members: data[key].members || [], 
+                            customPhones: data[key].customPhones || {}, // 儲存名字對應電話之對照表
+                            whatsappBtnText: data[key].whatsappBtnText || "💬 WhatsApp 通知", // 雲端儲存自訂按鈕名稱
                             note: data[key].note
                         });
                     }
                 }
             }
-            document.getElementById('cloudStatus').innerText = "🟢 雲端數據已即時同步（全家人可同時查看與更新）";
+            document.getElementById('cloudStatus').innerText = "🟢 已同步";
+            renderCustomMemberBadges(); // 重新整理基礎池
             renderCalendar();
             renderDayEvents();
         })
         .catch(error => {
-            document.getElementById('cloudStatus').innerText = "⚠️ 讀取失敗，請確認新專案的 Rules 規則是否已設為 true。";
+            document.getElementById('cloudStatus').innerText = "⚠️ 讀取失敗，請確認 Firebase Rules 規則。";
             console.error(error);
         });
 }
 
-// 每 3 秒在後台自動與全家裝置異步同步
-setInterval(fetchCloudData, 3000);
+setInterval(fetchCloudData, 4000);
 
 /* ✅ 香港公眾假期資料庫 */
 const holidays = {
@@ -321,7 +468,7 @@ function getDynamicHoliday(y, m, d) {
     }
     if (y === 2027) {
         if (key === "02-06") return "年初一"; if (key === "02-08") return "年初二"; if (key === "02-09") return "年初三";
-        if (key === "03-26") return "受難節"; if (key === "03-29") return "復活節"; if (style=key === "05-13") return "佛誕";
+        if (key === "03-26") return "受難節"; if (key === "03-29") return "復活節"; if (key === "05-13") return "佛誕";
         if (key === "06-09") return "端午節"; if (key === "09-16") return "中秋翌日"; if (key === "10-08") return "重陽節";
     }
     return "";
@@ -351,6 +498,57 @@ function selectDate(dateStr) {
     clearForm();
 }
 
+function formatTimeText(timeStr) {
+    if(!timeStr) return "";
+    let parts = timeStr.split(":");
+    let hours = parseInt(parts[0]);
+    let minutes = parts[1];
+    let prefix = hours >= 12 ? "下午" : "上午";
+    let displayHours = hours > 12 ? hours - 12 : hours;
+    if(displayHours == 0) displayHours = 12;
+    return `${prefix}${displayHours}:${minutes}`;
+}
+
+/* ✅ 🔄 升級：點擊發送 WhatsApp 通知（支援智慧型電話直連判斷） */
+function sendWhatsAppNotification(id) {
+    let ev = activities.find(a => a.id === id);
+    if (!ev) return;
+
+    let timeTxt = formatTimeText(ev.time);
+    let notifyTimeTxt = formatTimeText(ev.notifyTime);
+    let nameList = ev.members && ev.members.length > 0 ? ev.members.join('、') : "全體家人";
+    let remark = ev.note ? `\n📝 備註備忘：${ev.note}` : "";
+
+    let textMessage = `💡【麟李互助家庭日誌 - 行程提醒】\n\n📢 各位親愛的家人（參與者：${nameList}），有一項行程提示：\n\n📅 日期：${ev.date}\n⏰ 活動時間：${timeTxt}\n📌 項目名稱 / 地點：${ev.title}${remark}\n\n🔔 本訊息預計於 ${notifyTimeTxt} 發出提醒，請大家留意安排，互相照顧扶持！❤️`;
+
+    // 🔍 智慧查找：如果勾選的成員中，剛好有填寫電話號碼，優先提取第一個有電話號碼的對象做直接專屬私訊跳轉
+    let directPhone = "";
+    if (ev.members && ev.customPhones) {
+        for (let i = 0; i < ev.members.length; i++) {
+            let mName = ev.members[i];
+            if (ev.customPhones[mName]) {
+                directPhone = ev.customPhones[mName].replace(/\s+/g, ''); // 去除空白
+                // 補齊國際區碼（如果是香港 8 位數電話，自動追加 852）
+                if (directPhone.length === 8 && /^[569]/.test(directPhone)) {
+                    directPhone = "852" + directPhone;
+                }
+                break; // 抓取第一個有號碼的成員即可
+            }
+        }
+    }
+
+    let whatsappUrl = "";
+    if (directPhone) {
+        // 直連該成員的個別對話視窗
+        whatsappUrl = `https://api.whatsapp.com/send?phone=${directPhone}&text=${encodeURIComponent(textMessage)}`;
+    } else {
+        // 開啟群組發送與聯絡人選擇清單
+        whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(textMessage)}`;
+    }
+    
+    window.open(whatsappUrl, '_blank');
+}
+
 /* ✅ 渲染當日活動詳細列表 */
 function renderDayEvents() {
     document.getElementById('selectedDateLabel').innerText = selectedDateStr;
@@ -365,12 +563,25 @@ function renderDayEvents() {
     
     let html = "";
     filtered.forEach(ev => {
+        let membersListText = [];
+        if(ev.members) {
+            ev.members.forEach(m => {
+                let pNum = (ev.customPhones && ev.customPhones[m]) ? `(${ev.customPhones[m]})` : "";
+                membersListText.push(m + pNum);
+            });
+        }
+        let membersTxt = membersListText.length > 0 ? `👥 參與名單：${membersListText.join('、')}` : "👥 參與名單：全體家人";
+        let notifyTxt = ev.notifyTime ? ` 🔔 提醒時間：${formatTimeText(ev.notifyTime)}` : "";
+        let btnLabel = ev.whatsappBtnText || "💬 WhatsApp 通知"; // 🔄 讀取自訂按鈕文字
+
         html += `
         <div class="event-item">
             <button class="delete-btn" onclick="deleteEvent('${ev.id}')">❌ 刪除</button>
             <button class="edit-btn" onclick="startEditEvent('${ev.id}')">✏️ 修改</button>
-            <div class="event-time">⏰ ${ev.time}</div>
+            <button class="whatsapp-btn" onclick="sendWhatsAppNotification('${ev.id}')">${btnLabel}</button>
+            <div class="event-time">⏰ ${formatTimeText(ev.time)} <span style="font-size:13px; font-weight:normal; color:#8c8c8c;">${notifyTxt}</span></div>
             <div class="event-desc">📌 <strong>${ev.title}</strong></div>
+            <div class="event-desc" style="font-size:14px; color:#555;">${membersTxt}</div>
             ${ev.note ? `<div class="event-desc" style="font-size:14px; color:#777; padding-left:14px;">📝 ${ev.note}</div>` : ""}
         </div>
         `;
@@ -378,26 +589,45 @@ function renderDayEvents() {
     dayEventsContainer.innerHTML = html;
 }
 
-/* ✅ 儲存活動的核心（全面採用標準資料流，跳過 SDK 加密攔截） */
+/* ✅ 儲存活動（新增與修改蓋寫） */
 function addFamilyEvent() {
     let titleInput = document.getElementById('eventTitle');
     let timeInput = document.getElementById('eventTime');
+    let notifyTimeInput = document.getElementById('notifyTime');
     let noteInput = document.getElementById('eventNote');
+    let whatsappBtnTextInput = document.getElementById('whatsappBtnText');
     let editKey = document.getElementById('editKey').value;
     
     if (!titleInput.value.trim()) {
         alert("請輸入活動名稱或地點！");
         return;
     }
+
+    // 收集選取名單與個別的電話號碼屬性對照
+    let checkedMembers = [];
+    let customPhonesMap = {};
+    let checkboxes = document.querySelectorAll('input[name="members"]:checked');
+    
+    checkboxes.forEach(cb => { 
+        checkedMembers.push(cb.value);
+        let phone = cb.getAttribute('data-phone') || "";
+        if(phone) {
+            customPhonesMap[cb.value] = phone;
+        }
+    });
     
     let eventData = {
         date: selectedDateStr,
         time: timeInput.value || "12:00",
+        notifyTime: notifyTimeInput.value || "17:00", 
         title: titleInput.value.trim(),
+        members: checkedMembers, 
+        customPhones: customPhonesMap, // 伴隨行程一併上傳電話簿對照
+        whatsappBtnText: whatsappBtnTextInput.value.trim() || "💬 WhatsApp 通知", // 儲存自訂名稱
         note: noteInput.value.trim()
     };
     
-    document.getElementById('cloudStatus').innerText = "⚡ 正在同步變更至雲端...";
+    document.getElementById('cloudStatus').innerText = "⚡ 正在更新...";
 
     let targetURL = editKey ? `${dbURL}/${editKey}.json` : `${dbURL}.json`;
     let reqMethod = editKey ? "PUT" : "POST";
@@ -414,22 +644,34 @@ function addFamilyEvent() {
         fetchCloudData();
     })
     .catch(err => {
-        alert("儲存未成功，請確認新專案 Rules 分頁內已發布為 true。");
+        alert("儲存未成功，請確認 Firebase Rules 規則。");
         console.error(err);
     });
 }
 
-/* ✅ 點擊修改按鈕：將數據載入表單 */
+/* ✅ 點擊修改按鈕：將數據載入並還原打勾與按鈕名稱 */
 function startEditEvent(id) {
     let ev = activities.find(a => a.id === id);
     if (!ev) return;
     
     document.getElementById('editKey').value = ev.id;
     document.getElementById('eventTime').value = ev.time;
+    document.getElementById('notifyTime').value = ev.notifyTime || "17:00";
     document.getElementById('eventTitle').value = ev.title;
     document.getElementById('eventNote').value = ev.note;
+    document.getElementById('whatsappBtnText').value = ev.whatsappBtnText || "💬 WhatsApp 通知"; // 🔄 載入自訂按鈕名稱
     
-    document.getElementById('formTitle').innerText = "✏️ 修改家庭活動項目內容";
+    // 還原打勾狀態
+    let checkboxes = document.querySelectorAll('input[name="members"]');
+    checkboxes.forEach(cb => {
+        if(ev.members && ev.members.includes(cb.value)) {
+            cb.checked = true;
+        } else {
+            cb.checked = false;
+        }
+    });
+
+    document.getElementById('formTitle').innerText = "✏️ 修改項目內容";
     document.getElementById('submitBtn').innerText = "確認修改更新至雲端";
     document.getElementById('cancelBtn').style.display = "inline-block";
     
@@ -440,9 +682,14 @@ function startEditEvent(id) {
 function clearForm() {
     document.getElementById('editKey').value = "";
     document.getElementById('eventTime').value = "18:00";
+    document.getElementById('notifyTime').value = "17:00";
     document.getElementById('eventTitle').value = "";
     document.getElementById('eventNote').value = "";
+    document.getElementById('whatsappBtnText').value = "💬 WhatsApp 通知"; // 還原預設按鈕名
     
+    let checkboxes = document.querySelectorAll('input[name="members"]');
+    checkboxes.forEach(cb => cb.checked = false);
+
     document.getElementById('formTitle').innerText = "➕ 新增家庭活動";
     document.getElementById('submitBtn').innerText = "儲存至此日期";
     document.getElementById('cancelBtn').style.display = "none";
@@ -451,7 +698,7 @@ function clearForm() {
 /* ✅ 刪除活動 */
 function deleteEvent(id) {
     if (confirm("確定要刪除這項活動嗎？")) {
-        document.getElementById('cloudStatus').innerText = "⚡ 正在從雲端刪除項目...";
+        document.getElementById('cloudStatus').innerText = "⚡ 正在刪除...";
         fetch(`${dbURL}/${id}.json`, { method: "DELETE", mode: "cors" })
             .then(() => { fetchCloudData(); });
     }
@@ -498,7 +745,8 @@ function renderCalendar(){
 
 function changeMonth(n){ current.setMonth(current.getMonth() + n); renderCalendar(); }
 
-// 初始啟動加載
+// 初始啟動加載與生成自訂成員池
+renderCustomMemberBadges();
 fetchCloudData();
 </script>
 
