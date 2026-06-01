@@ -218,7 +218,7 @@ input, textarea {
 
 <div class="container">
 
-    <div id="cloudStatus">🔄 正在連接家庭雲端伺服器 (lohas-58d50)...</div>
+    <div id="cloudStatus">🔄 正在連接新家庭雲端伺服器 (familycalender-a62ae)...</div>
 
     <div class="card">
         <div class="calendar-header">
@@ -267,47 +267,43 @@ input, textarea {
 
 <script>
 
-// ─── 1. 直連您的雲端數據庫節點宣告 ───
-const dbURL = "https://lohas-58d50-default-rtdb.firebaseio.com/family_calendar_activities";
+// ─── 1. 精準對接您提供的新 Firebase 數據庫端點 ───
+const dbURL = "https://familycalender-a62ae-default-rtdb.firebaseio.com/family_calendar_activities";
 
 let activities = [];
 let current = new Date();
 let selectedDateStr = new Date().toISOString().slice(0, 10); // 預設選擇今天
 
-// ─── 2. 雲端高效同步引擎 ───
+// ─── 2. 高效自動雲端同步引擎 (無感自動刷新) ───
 function fetchCloudData() {
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", dbURL + ".json", true);
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                var data = JSON.parse(xhr.responseText);
-                activities = [];
-                if (data) {
-                    for (var key in data) {
-                        if (data[key]) {
-                            activities.push({
-                                id: key,
-                                date: data[key].date,
-                                time: data[key].time,
-                                title: data[key].title,
-                                note: data[key].note
-                            });
-                        }
+    fetch(`${dbURL}.json`, { method: "GET", mode: "cors" })
+        .then(response => response.json())
+        .then(data => {
+            activities = [];
+            if (data) {
+                for (let key in data) {
+                    if (data[key]) {
+                        activities.push({
+                            id: key,
+                            date: data[key].date,
+                            time: data[key].time,
+                            title: data[key].title,
+                            note: data[key].note
+                        });
                     }
                 }
-                document.getElementById('cloudStatus').innerText = "🟢 雲端數據已即時同步（全家人可同時查看與更新）";
-                renderCalendar();
-                renderDayEvents();
-            } else {
-                document.getElementById('cloudStatus').innerText = "⚠️ 數據加載受阻，請確保 Firebase Rules 內已改為 true。";
             }
-        }
-    };
-    xhr.send();
+            document.getElementById('cloudStatus').innerText = "🟢 雲端數據已即時同步（全家人可同時查看與更新）";
+            renderCalendar();
+            renderDayEvents();
+        })
+        .catch(error => {
+            document.getElementById('cloudStatus').innerText = "⚠️ 讀取失敗，請確認新專案的 Rules 規則是否已設為 true。";
+            console.error(error);
+        });
 }
 
-// 每 3 秒在後台自動異步同步數據
+// 每 3 秒在後台自動與全家裝置異步同步
 setInterval(fetchCloudData, 3000);
 
 /* ✅ 香港公眾假期資料庫 */
@@ -325,7 +321,7 @@ function getDynamicHoliday(y, m, d) {
     }
     if (y === 2027) {
         if (key === "02-06") return "年初一"; if (key === "02-08") return "年初二"; if (key === "02-09") return "年初三";
-        if (key === "03-26") return "受難節"; if (key === "03-29") return "復活節"; if (key === "05-13") return "佛誕";
+        if (key === "03-26") return "受難節"; if (key === "03-29") return "復活節"; if (style=key === "05-13") return "佛誕";
         if (key === "06-09") return "端午節"; if (key === "09-16") return "中秋翌日"; if (key === "10-08") return "重陽節";
     }
     return "";
@@ -382,7 +378,7 @@ function renderDayEvents() {
     dayEventsContainer.innerHTML = html;
 }
 
-/* ✅ 儲存活動（新增與修改蓋寫） */
+/* ✅ 儲存活動的核心（全面採用標準資料流，跳過 SDK 加密攔截） */
 function addFamilyEvent() {
     let titleInput = document.getElementById('eventTitle');
     let timeInput = document.getElementById('eventTime');
@@ -402,26 +398,28 @@ function addFamilyEvent() {
     };
     
     document.getElementById('cloudStatus').innerText = "⚡ 正在同步變更至雲端...";
-    
-    var xhr = new XMLHttpRequest();
-    if (editKey) {
-        // 修改模式：PUT
-        xhr.open("PUT", dbURL + "/" + editKey + ".json", true);
-    } else {
-        // 新增模式：POST
-        xhr.open("POST", dbURL + ".json", true);
-    }
-    
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-            clearForm();
-            fetchCloudData();
-        }
-    };
-    xhr.send(JSON.stringify(eventData));
+
+    let targetURL = editKey ? `${dbURL}/${editKey}.json` : `${dbURL}.json`;
+    let reqMethod = editKey ? "PUT" : "POST";
+
+    fetch(targetURL, {
+        method: reqMethod,
+        mode: "cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(eventData)
+    })
+    .then(response => response.json())
+    .then(() => {
+        clearForm();
+        fetchCloudData();
+    })
+    .catch(err => {
+        alert("儲存未成功，請確認新專案 Rules 分頁內已發布為 true。");
+        console.error(err);
+    });
 }
 
-/* ✅ 點擊修改按鈕 */
+/* ✅ 點擊修改按鈕：將數據載入表單 */
 function startEditEvent(id) {
     let ev = activities.find(a => a.id === id);
     if (!ev) return;
@@ -454,18 +452,12 @@ function clearForm() {
 function deleteEvent(id) {
     if (confirm("確定要刪除這項活動嗎？")) {
         document.getElementById('cloudStatus').innerText = "⚡ 正在從雲端刪除項目...";
-        var xhr = new XMLHttpRequest();
-        xhr.open("DELETE", dbURL + "/" + id + ".json", true);
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4) {
-                fetchCloudData();
-            }
-        };
-        xhr.send();
+        fetch(`${dbURL}/${id}.json`, { method: "DELETE", mode: "cors" })
+            .then(() => { fetchCloudData(); });
     }
 }
 
-/* ✅ 繪製完整日曆面版 */
+/* ✅ 繪製完整日曆 */
 function renderCalendar(){
     let y = current.getFullYear(); let m = current.getMonth();
     monthLabel.innerText = y + "年 " + (m + 1) + "月";
@@ -506,7 +498,7 @@ function renderCalendar(){
 
 function changeMonth(n){ current.setMonth(current.getMonth() + n); renderCalendar(); }
 
-// 啟動首次加載
+// 初始啟動加載
 fetchCloudData();
 </script>
 
