@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>麟李互助家庭日誌</title>
+<title>📅 麟李互助家庭日誌</title>
 
 <style>
 body { font-family: Arial, sans-serif; margin:0; font-size:18px; background:#f5f5f5; }
@@ -366,7 +366,7 @@ input, textarea {
     pointer-events: none;
 }
 
-/* 新增：修改成員專用彈窗內部樣式 */
+/* 修改成員自訂彈窗排版與輸入框優化 */
 .member-edit-fields {
     margin-top: 15px;
 }
@@ -452,16 +452,18 @@ input, textarea {
                 
                 <label style="font-size:15px; color:#666; display: block; margin-top: 12px;">活動參與者：</label>
                 <div class="member-checkbox-group" id="memberCheckboxContainer">
-                    <label class="member-label" id="slot_label_1"><input type="checkbox" name="members" id="slot_cb_1" value="爸爸" onclick="syncTargetPhone(1)"> <span class="btn-text-span" onclick="modifyMemberPrompt(1, event)">爸爸</span></label>
-                    <label class="member-label" id="slot_label_2"><input type="checkbox" name="members" id="slot_cb_2" value="媽媽" onclick="syncTargetPhone(2)"> <span class="btn-text-span" onclick="modifyMemberPrompt(2, event)">媽媽</span></label>
-                    <label class="member-label" id="slot_label_3"><input type="checkbox" name="members" id="slot_cb_3" value="爺爺" onclick="syncTargetPhone(3)"> <span class="btn-text-span" onclick="modifyMemberPrompt(3, event)">爺爺</span></label>
-                    <label class="member-label" id="slot_label_4"><input type="checkbox" name="members" id="slot_cb_4" value="嫲嫲" onclick="syncTargetPhone(4)"> <span class="btn-text-span" onclick="modifyMemberPrompt(4, event)">嫲嫲</span></label>
-                    <label class="member-label" id="slot_label_5"><input type="checkbox" name="members" id="slot_cb_5" value="小明" onclick="syncTargetPhone(5)"> <span class="btn-text-span" onclick="modifyMemberPrompt(5, event)">小明</span></label>
-                    <label class="member-label" id="slot_label_6"><input type="checkbox" name="members" id="slot_cb_6" value="治療師" onclick="syncTargetPhone(6)"> <span class="btn-text-span" onclick="modifyMemberPrompt(6, event)">治療師</span></label>
-                    <label class="member-label" id="slot_label_7"><input type="checkbox" name="members" id="slot_cb_7" value="叔叔" onclick="syncTargetPhone(7)"> <span class="btn-text-span" onclick="modifyMemberPrompt(7, event)">叔叔</span></label>
-                    <label class="member-label" id="slot_label_8"><input type="checkbox" name="members" id="slot_cb_8" value="嬸嬸" onclick="syncTargetPhone(8)"> <span class="btn-text-span" onclick="modifyMemberPrompt(8, event)">嬸嬸</span></label>
+                    <label class="member-label" id="slot_label_1"><input type="checkbox" name="members" id="slot_cb_1" value="阿鐵" onclick="syncTargetPhone(1)"> <span class="btn-text-span" onclick="modifyMemberPrompt(1, event)">阿鐵</span></label>
+                    <label class="member-label" id="slot_label_2"><input type="checkbox" name="members" id="slot_cb_2" value="Jolie" onclick="syncTargetPhone(2)"> <span class="btn-text-span" onclick="modifyMemberPrompt(2, event)">Jolie</span></label>
+                    <label class="member-label" id="slot_label_3"><input type="checkbox" name="members" id="slot_cb_3" value="Daddy" onclick="syncTargetPhone(3)"> <span class="btn-text-span" onclick="modifyMemberPrompt(3, event)">Daddy</span></label>
+                    <label class="member-label" id="slot_label_4"><input type="checkbox" name="members" id="slot_cb_4" value="Mummy" onclick="syncTargetPhone(4)"> <span class="btn-text-span" onclick="modifyMemberPrompt(4, event)">Mummy</span></label>
+                    <label class="member-label" id="slot_label_5"><input type="checkbox" name="members" id="slot_cb_5" value="Karis" onclick="syncTargetPhone(5)"> <span class="btn-text-span" onclick="modifyMemberPrompt(5, event)">Karis</span></label>
+                    <label class="member-label" id="slot_label_6"><input type="checkbox" name="members" id="slot_cb_6" value="Leisel" onclick="syncTargetPhone(6)"> <span class="btn-text-span" onclick="modifyMemberPrompt(6, event)">Leisel</span></label>
+                    <label class="member-label" id="slot_label_7"><input type="checkbox" name="members" id="slot_cb_7" value="Debby" onclick="syncTargetPhone(7)"> <span class="btn-text-span" onclick="modifyMemberPrompt(7, event)">Debby</span></label>
+                    <label class="member-label" id="slot_label_8"><input type="checkbox" name="members" id="slot_cb_8" value="Hardy" onclick="syncTargetPhone(8)"> <span class="btn-text-span" onclick="modifyMemberPrompt(8, event)">Hardy</span></label>
                     <label class="member-label" id="slot_label_9"><input type="checkbox" name="members" id="slot_cb_9" value="姑姐" onclick="syncTargetPhone(9)"> <span class="btn-text-span" onclick="modifyMemberPrompt(9, event)">姑姐</span></label>
                     <label class="member-label" id="slot_label_10"><input type="checkbox" name="members" id="slot_cb_10" value="鄰居" onclick="syncTargetPhone(10)"> <span class="btn-text-span" onclick="modifyMemberPrompt(10, event)">鄰居</span></label>
+                    <label class="member-label" id="slot_label_11"><input type="checkbox" name="members" id="slot_cb_11" value="➕ 欄位11" onclick="syncTargetPhone(11)"> <span class="btn-text-span" onclick="modifyMemberPrompt(11, event)">➕ 欄位11</span></label>
+                    <label class="member-label" id="slot_label_12"><input type="checkbox" name="members" id="slot_cb_12" value="➕ 欄位12" onclick="syncTargetPhone(12)"> <span class="btn-text-span" onclick="modifyMemberPrompt(12, event)">➕ 欄位12</span></label>
                 </div>
 
                 <label for="targetPhone" style="font-size:15px; color:#666; display: block;">接收者 / 通知對象電話號碼：</label>
@@ -491,22 +493,29 @@ input, textarea {
     </div>
 
     <div class="popup-overlay" id="memberEditPopupOverlay" onclick="closeMemberPopupOverlayOutside(event)">
-        <div class="popup-content-card" style="max-width: 420px; margin: 100px auto;">
+        <div class="popup-content-card" style="max-width: 450px; margin: 100px auto;">
             <span class="popup-close-x" onclick="closeMemberEditPopup()">&times;</span>
-            <h3 style="margin-top:0; color:#333;">✏️ 修改成員資料</h3>
+            <h3 id="memberFormTitle" style="margin-top:0; color:#333; padding-right: 20px;">✏️ 修改成員資料</h3>
             
-            <div class="member-edit-fields">
+            <div class="password-lock-section" id="memberLockSection">
+                <div style="display:flex; gap:8px;">
+                    <input type="password" id="memberPopupPassword" placeholder="輸入密碼進入..." style="margin:0; flex:1; padding:10px;">
+                    <button type="button" class="action-btn" style="margin:0; width:auto; padding:10px 20px; background:#1890ff;" onclick="verifyMemberGatePassword()">確認進入</button>
+                </div>
+            </div>
+
+            <div class="secure-form-fields" id="secureMemberPanel">
                 <input type="hidden" id="currentEditSlotId" value="">
                 
-                <label for="editMemberName" style="font-size:15px; color:#666; display: block;">參與者顯示名稱：</label>
+                <label for="editMemberName" style="font-size:15px; color:#666; display: block; margin-top: 10px;">參與者顯示名稱：</label>
                 <input type="text" id="editMemberName" placeholder="例如：陳先生">
                 
-                <label for="editMemberPhone" style="font-size:15px; color:#666; display: block; margin-top: 10px;">WhatsApp 電話號碼：</label>
+                <label for="editMemberPhone" style="font-size:15px; color:#666; display: block; margin-top: 12px;">WhatsApp 電話號碼：</label>
                 <input type="tel" id="editMemberPhone" placeholder="例如：91234567 (留空發送到大群組)">
                 
-                <button class="action-btn" style="background:#25D366; margin-top: 15px;" onclick="saveMemberSettings()">儲存更新</button>
-                <button class="action-btn" style="background:#8c8c8c; margin-top: 8px;" onclick="closeMemberEditPopup()">取消</button>
+                <button class="action-btn" style="background:#25D366; margin-top: 20px;" onclick="saveMemberSettings()">儲存更新</button>
             </div>
+            <button class="action-btn" style="background:#8c8c8c; margin-top: 10px;" onclick="closeMemberEditPopup()">取消關閉</button>
         </div>
     </div>
 
@@ -521,17 +530,20 @@ let current = new Date();
 let selectedDateStr = new Date().toISOString().slice(0, 10); 
 let currentPopupMode = "ADD"; 
 
+// 🌟 同步將 slotsMapping 物件擴充至 12 個欄位
 let slotsMapping = JSON.parse(localStorage.getItem('member_slots_extended_config')) || {
-    1: { name: "爸爸", phone: "" },
-    2: { name: "媽媽", phone: "" },
-    3: { name: "爺爺", phone: "" },
-    4: { name: "嫲嫲", phone: "" },
-    5: { name: "小明", phone: "" },
-    6: { name: "治療師", phone: "" },
-    7: { name: "叔叔", phone: "" },
-    8: { name: "嬸嬸", phone: "" },
+    1: { name: "阿鐵", phone: "" },
+    2: { name: "Jolie", phone: "" },
+    3: { name: "Daddy", phone: "" },
+    4: { name: "Mummy", phone: "" },
+    5: { name: "Karis", phone: "" },
+    6: { name: "Leisel", phone: "" },
+    7: { name: "Debby", phone: "" },
+    8: { name: "Hardy", phone: "" },
     9: { name: "姑姐", phone: "" },
-    10: { name: "鄰居", phone: "" }
+    10: { name: "鄰居", phone: "" },
+    11: { name: "➕ 欄位11", phone: "" },
+    12: { name: "➕ 欄位12", phone: "" }
 };
 
 function triggerTimeWheel(txtInputId, nativePickerId) {
@@ -583,6 +595,20 @@ function verifyGatePassword() {
         }
     } else {
         alert("❌ 密碼錯誤，無法開啟詳細設定欄位！");
+        passwordInput.value = "";
+        passwordInput.focus();
+    }
+}
+
+function verifyMemberGatePassword() {
+    let passwordInput = document.getElementById('memberPopupPassword');
+    if (passwordInput.value === "8679") {
+        document.getElementById('memberLockSection').style.display = 'none';
+        document.getElementById('secureMemberPanel').style.display = 'block';
+        passwordInput.value = "";
+        document.getElementById('editMemberName').focus();
+    } else {
+        alert("❌ 密碼錯誤，無法修改成員配置！");
         passwordInput.value = "";
         passwordInput.focus();
     }
@@ -714,6 +740,7 @@ function closePopupOverlayOutside(event) {
     if (event.target === document.getElementById('addEventPopupOverlay')) closeEventPopup();
 }
 
+// 🌟 機制優化：更新時完整迴圈刷新至 12 個成員
 function refreshMemberButtonsUI() {
     for (let slotId in slotsMapping) {
         let cb = document.getElementById(`slot_cb_${slotId}`);
@@ -736,24 +763,26 @@ function syncTargetPhone(slotId) {
     }
 }
 
-/* ─── 🔄 重寫：點擊名字文字開啟獨立彈窗（高齡友善優化） ─── */
 function modifyMemberPrompt(slotId, event) {
     if (event) {
         event.preventDefault();
         event.stopPropagation();
     }
 
-    // 寫入當前選取成員的資料到彈窗欄位中
+    document.getElementById('memberLockSection').style.display = 'block';
+    document.getElementById('secureMemberPanel').style.display = 'none';
+    document.getElementById('memberPopupPassword').value = "";
+
     document.getElementById('currentEditSlotId').value = slotId;
     document.getElementById('editMemberName').value = slotsMapping[slotId].name;
     document.getElementById('editMemberPhone').value = slotsMapping[slotId].phone || "";
 
-    // 顯示獨立的成員修改彈窗
+    document.getElementById('memberFormTitle').innerText = `✏️ 修改成員資料 (${slotsMapping[slotId].name})`;
+
     document.getElementById('memberEditPopupOverlay').style.display = 'block';
-    document.getElementById('editMemberName').focus();
+    document.getElementById('memberPopupPassword').focus();
 }
 
-/* ─── 💾 新增：儲存成員自訂設定 ─── */
 function saveMemberSettings() {
     let slotId = document.getElementById('currentEditSlotId').value;
     let newName = document.getElementById('editMemberName').value.trim();
@@ -764,23 +793,19 @@ function saveMemberSettings() {
         return;
     }
 
-    // 更新本地資料對映
     slotsMapping[slotId].name = newName;
     slotsMapping[slotId].phone = newPhone;
     
-    // 刷新介面按鈕文字與快取
     refreshMemberButtonsUI();
-    
-    // 關閉修改視窗
     closeMemberEditPopup();
 }
 
-/* ─── 🚪 新增：關閉成員修改彈窗邏輯 ─── */
 function closeMemberEditPopup() {
     document.getElementById('memberEditPopupOverlay').style.display = 'none';
     document.getElementById('currentEditSlotId').value = "";
     document.getElementById('editMemberName').value = "";
     document.getElementById('editMemberPhone').value = "";
+    document.getElementById('memberPopupPassword').value = "";
 }
 
 function closeMemberPopupOverlayOutside(event) {
@@ -1032,6 +1057,10 @@ function renderCalendar(){
 function changeMonth(n){ current.setMonth(current.getMonth() + n); renderCalendar(); }
 
 document.getElementById('popupPassword').addEventListener('keydown', popupPasswordInputKeydown);
+
+document.getElementById('memberPopupPassword').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') verifyMemberGatePassword();
+});
 
 fetchCloudData();
 </script>
