@@ -246,7 +246,6 @@ input, textarea {
 .member-label:hover {
     background: #e0e0e0;
 }
-/* 智慧型核取方塊(剔方格) */
 .member-label input[type="checkbox"] {
     width: auto;
     margin: 0 6px 0 0;
@@ -262,6 +261,52 @@ input, textarea {
     font-size: 11px;
     color: #1890ff;
     margin-left: 3px;
+}
+
+/* ─── 🔄 新增：高級黑半透明彈窗遮罩層與容器樣式 ─── */
+.popup-overlay {
+    display: none; /* 預設關閉隱藏 */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.55); /* 遮罩暗化背景 */
+    z-index: 1000;
+    overflow-y: auto; /* 防止手機板內容太長無法捲動 */
+}
+
+.popup-content-card {
+    position: relative;
+    background: white;
+    width: 90%;
+    max-width: 550px;
+    margin: 50px auto; /* 居中對齊 */
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    animation: popupSlideIn 0.3s ease-out; /* 滑出動畫效果 */
+}
+
+/* 關閉 X 按鈕樣式 */
+.popup-close-x {
+    position: absolute;
+    top: 15px;
+    right: 18px;
+    font-size: 24px;
+    color: #8c8c8c;
+    cursor: pointer;
+    font-weight: bold;
+    user-select: none;
+}
+.popup-close-x:hover {
+    color: #333;
+}
+
+/* 彈窗滑出動畫 */
+@keyframes popupSlideIn {
+    from { transform: translateY(-30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
 }
 </style>
 </head>
@@ -299,59 +344,66 @@ input, textarea {
         <div id="dayEvents"></div>
     </div>
 
-    <div class="card">
-        <h3 id="formTitle" style="margin-top:0; color:#333;">➕ 新增家庭活動</h3>
-        
-        <input type="hidden" id="editKey" value="">
+    <div class="card" style="text-align: center; padding: 10px;">
+        <button class="action-btn" style="background: #25D366; font-size: 18px; padding: 14px;" onclick="openAddFormPopup()">➕ 新增家庭活動</button>
+    </div>
 
-        <label for="eventTime" style="font-size:15px; color:#666;">活動時間 <span style="font-size:13px; color:#25D366;">(請直接手動按鍵輸入，例如 18:00)</span>：</label>
-        <input type="text" id="eventTime" value="18:00" placeholder="例如：18:00 或 下午6:00">
+    <div class="popup-overlay" id="addEventPopupOverlay" onclick="closePopupOverlayOutside(event)">
+        <div class="popup-content-card" id="popupInnerCard">
+            <span class="popup-close-x" onclick="closeEventPopup()">&times;</span>
+            
+            <h3 id="formTitle" style="margin-top:0; color:#333; padding-right: 20px;">➕ 新增家庭活動</h3>
+            <input type="hidden" id="editKey" value="">
 
-        <label for="notifyTime" style="font-size:15px; color:#666;">WhatsApp 提醒發送時間 <span style="font-size:13px; color:#25D366;">(支援按鍵輸入日期與時間，例如：6月1日 17:00)</span>：</label>
-        <input type="text" id="notifyTime" value="17:00" placeholder="例如：6月1日 下午5:00 或 2026-06-01 17:00">
-        
-        <label for="eventTitle" style="font-size:15px; color:#666;">活動名稱 / 地點：</label>
-        <input type="text" id="eventTitle" placeholder="例如：陪爺爺飲茶、家族聚餐、樂活金掌家會議">
-        
-        <label style="font-size:15px; color:#666;">活動參與者 <span style="font-size:13px; color:#1890ff;">(💡剔方格選擇參與者；點擊名字文字可修改名稱與電話)</span>：</label>
-        <div class="member-checkbox-group" id="memberCheckboxContainer">
-            <label class="member-label" id="slot_label_1"><input type="checkbox" name="members" id="slot_cb_1" value="爸爸" onclick="syncTargetPhone(1)"> <span class="btn-text-span" onclick="modifyMemberPrompt(1, event)">爸爸</span></label>
-            <label class="member-label" id="slot_label_2"><input type="checkbox" name="members" id="slot_cb_2" value="媽媽" onclick="syncTargetPhone(2)"> <span class="btn-text-span" onclick="modifyMemberPrompt(2, event)">媽媽</span></label>
-            <label class="member-label" id="slot_label_3"><input type="checkbox" name="members" id="slot_cb_3" value="爺爺" onclick="syncTargetPhone(3)"> <span class="btn-text-span" onclick="modifyMemberPrompt(3, event)">爺爺</span></label>
-            <label class="member-label" id="slot_label_4"><input type="checkbox" name="members" id="slot_cb_4" value="嫲嫲" onclick="syncTargetPhone(4)"> <span class="btn-text-span" onclick="modifyMemberPrompt(4, event)">嫲嫲</span></label>
-            <label class="member-label" id="slot_label_5"><input type="checkbox" name="members" id="slot_cb_5" value="小明" onclick="syncTargetPhone(5)"> <span class="btn-text-span" onclick="modifyMemberPrompt(5, event)">小明</span></label>
-            <label class="member-label" id="slot_label_6"><input type="checkbox" name="members" id="slot_cb_6" value="治療師" onclick="syncTargetPhone(6)"> <span class="btn-text-span" onclick="modifyMemberPrompt(6, event)">治療師</span></label>
-            <label class="member-label" id="slot_label_7"><input type="checkbox" name="members" id="slot_cb_7" value="叔叔" onclick="syncTargetPhone(7)"> <span class="btn-text-span" onclick="modifyMemberPrompt(7, event)">叔叔</span></label>
-            <label class="member-label" id="slot_label_8"><input type="checkbox" name="members" id="slot_cb_8" value="嬸嬸" onclick="syncTargetPhone(8)"> <span class="btn-text-span" onclick="modifyMemberPrompt(8, event)">嬸嬸</span></label>
-            <label class="member-label" id="slot_label_9"><input type="checkbox" name="members" id="slot_cb_9" value="姑姐" onclick="syncTargetPhone(9)"> <span class="btn-text-span" onclick="modifyMemberPrompt(9, event)">姑姐</span></label>
-            <label class="member-label" id="slot_label_10"><input type="checkbox" name="members" id="slot_cb_10" value="鄰居" onclick="syncTargetPhone(10)"> <span class="btn-text-span" onclick="modifyMemberPrompt(10, event)">鄰居</span></label>
+            <label for="eventTitle" style="font-size:15px; color:#666; margin-top: 10px; display: block;">活動名稱 / 地點：</label>
+            <input type="text" id="eventTitle" placeholder="例如：陪爺爺飲茶、家族聚餐、樂活金掌家會議">
+
+            <label for="eventTime" style="font-size:15px; color:#666; display: block;">活動時間 <span style="font-size:13px; color:#25D366;">(可直接手動按鍵輸入，例如 18:00)</span>：</label>
+            <input type="text" id="eventTime" value="18:00" placeholder="例如：18:00 或 下午6:00">
+
+            <label for="notifyTime" style="font-size:15px; color:#666; display: block;">WhatsApp 提醒發送時間 <span style="font-size:13px; color:#25D366;">(支援按鍵輸入日期與時間，例如：6月1日 17:00)</span>：</label>
+            <input type="text" id="notifyTime" value="17:00" placeholder="例如：6月1日 下午5:00 或 2026-06-01 17:00">
+            
+            <label style="font-size:15px; color:#666; display: block; margin-top: 5px;">活動參與者 <span style="font-size:13px; color:#1890ff;">(💡剔方格選擇參與者；點擊名字可修改名稱與電話)</span>：</label>
+            <div class="member-checkbox-group" id="memberCheckboxContainer">
+                <label class="member-label" id="slot_label_1"><input type="checkbox" name="members" id="slot_cb_1" value="爸爸" onclick="syncTargetPhone(1)"> <span class="btn-text-span" onclick="modifyMemberPrompt(1, event)">爸爸</span></label>
+                <label class="member-label" id="slot_label_2"><input type="checkbox" name="members" id="slot_cb_2" value="媽媽" onclick="syncTargetPhone(2)"> <span class="btn-text-span" onclick="modifyMemberPrompt(2, event)">媽媽</span></label>
+                <label class="member-label" id="slot_label_3"><input type="checkbox" name="members" id="slot_cb_3" value="爺爺" onclick="syncTargetPhone(3)"> <span class="btn-text-span" onclick="modifyMemberPrompt(3, event)">爺爺</span></label>
+                <label class="member-label" id="slot_label_4"><input type="checkbox" name="members" id="slot_cb_4" value="嫲嫲" onclick="syncTargetPhone(4)"> <span class="btn-text-span" onclick="modifyMemberPrompt(4, event)">嫲嫲</span></label>
+                <label class="member-label" id="slot_label_5"><input type="checkbox" name="members" id="slot_cb_5" value="小明" onclick="syncTargetPhone(5)"> <span class="btn-text-span" onclick="modifyMemberPrompt(5, event)">小明</span></label>
+                <label class="member-label" id="slot_label_6"><input type="checkbox" name="members" id="slot_cb_6" value="治療師" onclick="syncTargetPhone(6)"> <span class="btn-text-span" onclick="modifyMemberPrompt(6, event)">治療師</span></label>
+                <label class="member-label" id="slot_label_7"><input type="checkbox" name="members" id="slot_cb_7" value="叔叔" onclick="syncTargetPhone(7)"> <span class="btn-text-span" onclick="modifyMemberPrompt(7, event)">叔叔</span></label>
+                <label class="member-label" id="slot_label_8"><input type="checkbox" name="members" id="slot_cb_8" value="嬸嬸" onclick="syncTargetPhone(8)"> <span class="btn-text-span" onclick="modifyMemberPrompt(8, event)">嬸嬸</span></label>
+                <label class="member-label" id="slot_label_9"><input type="checkbox" name="members" id="slot_cb_9" value="姑姐" onclick="syncTargetPhone(9)"> <span class="btn-text-span" onclick="modifyMemberPrompt(9, event)">姑姐</span></label>
+                <label class="member-label" id="slot_label_10"><input type="checkbox" name="members" id="slot_cb_10" value="鄰居" onclick="syncTargetPhone(10)"> <span class="btn-text-span" onclick="modifyMemberPrompt(10, event)">鄰居</span></label>
+            </div>
+
+            <label for="targetPhone" style="font-size:15px; color:#666; display: block;">接收者 / 通知對象電話號碼 <span style="font-size:13px; color:#8c8c8c;">(支援鍵盤輸入數字)</span>：</label>
+            <input type="tel" id="targetPhone" placeholder="例如：91234567 (留空則發送到大群組)">
+
+            <label for="whatsappBtnText" style="font-size:15px; color:#666; display: block;">自訂 WhatsApp 按鈕鍵顯示名稱：</label>
+            <input type="text" id="whatsappBtnText" value="💬 WhatsApp 通知" placeholder="可以自訂修改按鈕文字名稱">
+
+            <label for="eventNote" style="font-size:15px; color:#666; display: block;">備註：</label>
+            <textarea id="eventNote" rows="2" placeholder="詳細備忘事項..."></textarea>
+            
+            <button id="submitBtn" class="action-btn" style="background:#25D366; margin-top: 15px;" onclick="addFamilyEvent()">儲存至此日期</button>
+            <button id="cancelBtn" class="action-btn" style="background:#8c8c8c; margin-top:5px;" onclick="closeEventPopup()">關閉不儲存</button>
         </div>
-
-        <label for="targetPhone" style="font-size:15px; color:#666;">接收者 / 通知對象電話號碼 <span style="font-size:13px; color:#8c8c8c;">(支援鍵盤輸入數字。剔選上方參與者可自動連動帶入電話)</span>：</label>
-        <input type="tel" id="targetPhone" placeholder="例如：91234567 (留空則發送到群組)">
-
-        <label for="whatsappBtnText" style="font-size:15px; color:#666;">自訂 WhatsApp 按鈕鍵顯示名稱：</label>
-        <input type="text" id="whatsappBtnText" value="💬 WhatsApp 通知" placeholder="可以自訂修改按鈕文字名稱">
-
-        <label for="eventNote" style="font-size:15px; color:#666;">備註：</label>
-        <textarea id="eventNote" rows="2" placeholder="詳細備忘事項..."></textarea>
-        
-        <button id="submitBtn" class="action-btn" onclick="addFamilyEvent()">儲存至此日期</button>
-        <button id="cancelBtn" class="action-btn" style="background:#8c8c8c; display:none; margin-top:5px;" onclick="clearForm()">取消修改</button>
     </div>
 
 </div>
 
 <script>
 
-// ─── 1. 數據庫端點宣告 ───
+// ─── 1. 雲端資料庫端點宣告 ───
 const dbURL = "https://familycalender-a62ae-default-rtdb.firebaseio.com/family_calendar_activities";
 
 let activities = [];
 let current = new Date();
 let selectedDateStr = new Date().toISOString().slice(0, 10); // 預設選擇今天
 
-// 全域記憶 10 個按鈕槽位的實際「名稱」與「電話」，預設自本地緩存加載歷史配置
+// 10 個槽位的記憶對照表
 let slotsMapping = JSON.parse(localStorage.getItem('member_slots_extended_config')) || {
     1: { name: "爸爸", phone: "" },
     2: { name: "媽媽", phone: "" },
@@ -364,6 +416,40 @@ let slotsMapping = JSON.parse(localStorage.getItem('member_slots_extended_config
     9: { name: "姑姐", phone: "" },
     10: { name: "鄰居", phone: "" }
 };
+
+// ─── 🔄 新增：彈窗顯示/關閉控制器 ───
+function openAddFormPopup() {
+    document.getElementById('addEventPopupOverlay').style.display = 'block';
+    document.body.style.overflow = 'hidden'; // 鎖定底層網頁捲軸，方便單手操作
+    document.getElementById('eventTitle').focus();
+}
+
+function closeEventPopup() {
+    // 關閉時清空輸入內容
+    document.getElementById('editKey').value = "";
+    document.getElementById('eventTime').value = "18:00";
+    document.getElementById('notifyTime').value = "17:00";
+    document.getElementById('eventTitle').value = "";
+    document.getElementById('targetPhone').value = "";
+    document.getElementById('eventNote').value = "";
+    document.getElementById('whatsappBtnText').value = "💬 WhatsApp 通知"; 
+    
+    let checkboxes = document.querySelectorAll('input[name="members"]');
+    checkboxes.forEach(cb => cb.checked = false);
+
+    document.getElementById('formTitle').innerText = "➕ 新增家庭活動";
+    document.getElementById('submitBtn').innerText = "儲存至此日期";
+
+    document.getElementById('addEventPopupOverlay').style.display = 'none';
+    document.body.style.overflow = 'auto'; // 還原底層網頁捲軸
+}
+
+// 點擊黑半透明灰色遮罩外部，自動安全關閉彈窗
+function closePopupOverlayOutside(event) {
+    if (event.target === document.getElementById('addEventPopupOverlay')) {
+        closeEventPopup();
+    }
+}
 
 // ─── 2. 刷新並重繪介面按鈕文字與電話標記 ───
 function refreshMemberButtonsUI() {
@@ -380,7 +466,6 @@ function refreshMemberButtonsUI() {
     localStorage.setItem('member_slots_extended_config', JSON.stringify(slotsMapping));
 }
 
-// 剔選剔方格時，自動將該成員的電話帶入下方號碼框中（貼心輔助功能）
 function syncTargetPhone(slotId) {
     let cb = document.getElementById(`slot_cb_${slotId}`);
     let phoneInput = document.getElementById('targetPhone');
@@ -389,7 +474,6 @@ function syncTargetPhone(slotId) {
     }
 }
 
-// ─── 3. 直接點擊文字彈出提示視窗修改 10 位對象名稱與電話 ───
 function modifyMemberPrompt(slotId, event) {
     event.preventDefault();
     event.stopPropagation();
@@ -412,7 +496,7 @@ function modifyMemberPrompt(slotId, event) {
     refreshMemberButtonsUI();
 }
 
-// ─── 4. 雲端高效同步引擎 ───
+// ─── 3. 雲端高效同步引擎 ───
 function fetchCloudData() {
     fetch(`${dbURL}.json`, { method: "GET", mode: "cors" })
         .then(response => response.json())
@@ -421,7 +505,6 @@ function fetchCloudData() {
             if (data) {
                 for (let key in data) {
                     if (data[key]) {
-                        // 雲端按鈕與電話配置快照自動融合同步
                         if (data[key].slotsSnapshot) {
                             for(let id in data[key].slotsSnapshot){
                                 if(data[key].slotsSnapshot[id].name) {
@@ -436,7 +519,7 @@ function fetchCloudData() {
                             time: data[key].time,
                             notifyTime: data[key].notifyTime || "17:00",
                             title: data[key].title,
-                            members: data[key].members || [], // 儲存被打勾的活動參與者
+                            members: data[key].members || [], 
                             targetPhone: data[key].targetPhone || "",
                             slotsSnapshot: data[key].slotsSnapshot || {}, 
                             whatsappBtnText: data[key].whatsappBtnText || "💬 WhatsApp 通知", 
@@ -500,7 +583,6 @@ function selectDate(dateStr) {
         if (cell.getAttribute('data-date') === dateStr) { cell.classList.add('selected-day'); } else { cell.classList.remove('selected-day'); }
     });
     renderDayEvents();
-    clearForm();
 }
 
 /* ✅ 點擊發送 WhatsApp 通知 */
@@ -562,7 +644,7 @@ function renderDayEvents() {
     dayEventsContainer.innerHTML = html;
 }
 
-/* ✅ 儲存活動（新增與修改蓋寫） */
+/* ✅ 儲存活動 */
 function addFamilyEvent() {
     let titleInput = document.getElementById('eventTitle');
     let timeInput = document.getElementById('eventTime');
@@ -577,7 +659,6 @@ function addFamilyEvent() {
         return;
     }
 
-    // 🔍 收集被剔選（有打勾）的活動參與者顯示名稱
     let checkedMembers = [];
     let checkboxes = document.querySelectorAll('input[name="members"]:checked');
     checkboxes.forEach(cb => { checkedMembers.push(cb.value); });
@@ -587,7 +668,7 @@ function addFamilyEvent() {
         time: timeInput.value.trim() || "18:00",
         notifyTime: notifyTimeInput.value.trim() || "17:00", 
         title: titleInput.value.trim(),
-        members: checkedMembers, // 儲存活動參與者清單
+        members: checkedMembers, 
         targetPhone: targetPhoneInput.value.trim(), 
         slotsSnapshot: slotsMapping, 
         whatsappBtnText: whatsappBtnTextInput.value.trim() || "💬 WhatsApp 通知", 
@@ -607,7 +688,7 @@ function addFamilyEvent() {
     })
     .then(response => response.json())
     .then(() => {
-        clearForm();
+        closeEventPopup(); // 儲存完畢後自動關閉彈窗
         fetchCloudData();
     })
     .catch(err => {
@@ -634,7 +715,6 @@ function startEditEvent(id) {
         refreshMemberButtonsUI();
     }
 
-    // 根據歷史行程紀錄，自動重新剔選（打勾）參與者方格
     let checkboxes = document.querySelectorAll('input[name="members"]');
     checkboxes.forEach(cb => {
         if(ev.members && ev.members.includes(cb.value)) {
@@ -644,29 +724,12 @@ function startEditEvent(id) {
         }
     });
 
-    document.getElementById('formTitle').innerText = "✏️ 修改項目內容";
+    // 進入修改狀態時動態喚醒彈窗，並調整標題
+    document.getElementById('formTitle').innerText = "✏️ 修改行程內容";
     document.getElementById('submitBtn').innerText = "確認修改更新至雲端";
-    document.getElementById('cancelBtn').style.display = "inline-block";
     
-    document.getElementById('formTitle').scrollIntoView({ behavior: 'smooth' });
-}
-
-/* ✅ 清空並重設表單狀態 */
-function clearForm() {
-    document.getElementById('editKey').value = "";
-    document.getElementById('eventTime').value = "18:00";
-    document.getElementById('notifyTime').value = "17:00";
-    document.getElementById('eventTitle').value = "";
-    document.getElementById('targetPhone').value = "";
-    document.getElementById('eventNote').value = "";
-    document.getElementById('whatsappBtnText').value = "💬 WhatsApp 通知"; 
-    
-    let checkboxes = document.querySelectorAll('input[name="members"]');
-    checkboxes.forEach(cb => cb.checked = false);
-
-    document.getElementById('formTitle').innerText = "➕ 新增家庭活動";
-    document.getElementById('submitBtn').innerText = "儲存至此日期";
-    document.getElementById('cancelBtn').style.display = "none";
+    document.getElementById('addEventPopupOverlay').style.display = 'block';
+    document.body.style.overflow = 'hidden';
 }
 
 /* ✅ 刪除活動 */
