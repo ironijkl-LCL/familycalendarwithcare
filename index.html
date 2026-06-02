@@ -365,6 +365,11 @@ input, textarea {
     height: 1px;
     pointer-events: none;
 }
+
+/* 新增：修改成員專用彈窗內部樣式 */
+.member-edit-fields {
+    margin-top: 15px;
+}
 </style>
 </head>
 
@@ -485,6 +490,26 @@ input, textarea {
         </div>
     </div>
 
+    <div class="popup-overlay" id="memberEditPopupOverlay" onclick="closeMemberPopupOverlayOutside(event)">
+        <div class="popup-content-card" style="max-width: 420px; margin: 100px auto;">
+            <span class="popup-close-x" onclick="closeMemberEditPopup()">&times;</span>
+            <h3 style="margin-top:0; color:#333;">✏️ 修改成員資料</h3>
+            
+            <div class="member-edit-fields">
+                <input type="hidden" id="currentEditSlotId" value="">
+                
+                <label for="editMemberName" style="font-size:15px; color:#666; display: block;">參與者顯示名稱：</label>
+                <input type="text" id="editMemberName" placeholder="例如：陳先生">
+                
+                <label for="editMemberPhone" style="font-size:15px; color:#666; display: block; margin-top: 10px;">WhatsApp 電話號碼：</label>
+                <input type="tel" id="editMemberPhone" placeholder="例如：91234567 (留空發送到大群組)">
+                
+                <button class="action-btn" style="background:#25D366; margin-top: 15px;" onclick="saveMemberSettings()">儲存更新</button>
+                <button class="action-btn" style="background:#8c8c8c; margin-top: 8px;" onclick="closeMemberEditPopup()">取消</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -520,7 +545,6 @@ function syncWheelToText(pickerId, txtInputId, type) {
     let picker = document.getElementById(pickerId);
     let txtInput = document.getElementById(txtInputId);
     if (!picker || !picker.value || !txtInput) return;
-
     if (type === 'TIME') {
         txtInput.value = picker.value;
     } else if (type === 'DATE') {
@@ -536,7 +560,8 @@ function syncWheelToText(pickerId, txtInputId, type) {
             let datePart = currentTxt.split("日")[0] + "日";
             txtInput.value = `${datePart} ${picker.value}`;
         } else {
-            txtInput.value = currentTxt ? `${currentTxt} ${picker.value}` : picker.value;
+            txtInput.value = currentTxt ?
+            `${currentTxt} ${picker.value}` : picker.value;
         }
     }
 }
@@ -545,11 +570,10 @@ function verifyGatePassword() {
     let passwordInput = document.getElementById('popupPassword');
     if (passwordInput.value === "8679") {
         document.getElementById('lockSection').style.display = 'none';
-        passwordInput.value = ""; 
-
+        passwordInput.value = "";
         if (currentPopupMode === "MANAGE") {
             document.getElementById('secureManagePanel').style.display = 'block';
-            renderPopupManageListUI(); 
+            renderPopupManageListUI();
         } else if (currentPopupMode === "WHATSAPP") {
             document.getElementById('secureWhatsAppPanel').style.display = 'block';
             renderPopupWhatsAppListUI(); 
@@ -616,7 +640,6 @@ function renderPopupWhatsAppListUI() {
     let container = document.getElementById('popupWhatsAppList');
     let filtered = activities.filter(a => a.date === selectedDateStr);
     filtered.sort((a, b) => a.time.localeCompare(b.time));
-
     if (filtered.length === 0) {
         container.innerHTML = `<p style="color:gray; font-size:16px; text-align:center; padding:10px;">此日期暫無可傳送通知的項目。</p>`;
         return;
@@ -642,7 +665,6 @@ function renderPopupWhatsAppListUI() {
 function triggerEditFromPopup(id) {
     let ev = activities.find(a => a.id === id);
     if (!ev) return;
-
     document.getElementById('editKey').value = ev.id;
     document.getElementById('eventTitle').value = ev.title;
     document.getElementById('eventTime').value = ev.time;
@@ -660,7 +682,6 @@ function triggerEditFromPopup(id) {
     checkboxes.forEach(cb => {
         cb.checked = !!(ev.members && ev.members.includes(cb.value));
     });
-
     document.getElementById('formTitle').innerText = "✏️ 修改項目內容";
     document.getElementById('submitBtn').innerText = "確認修改更新至雲端";
 
@@ -682,7 +703,7 @@ function closeEventPopup() {
     checkboxes.forEach(cb => cb.checked = false);
 
     document.getElementById('addEventPopupOverlay').style.display = 'none';
-    document.body.style.overflow = 'auto'; 
+    document.body.style.overflow = 'auto';
 }
 
 function popupPasswordInputKeydown(e) {
@@ -715,30 +736,57 @@ function syncTargetPhone(slotId) {
     }
 }
 
-// ─── 🔄 完美重寫：點擊名字文字獨立跳轉彈窗進行改名稱與修改電話 ───
+/* ─── 🔄 重寫：點擊名字文字開啟獨立彈窗（高齡友善優化） ─── */
 function modifyMemberPrompt(slotId, event) {
-    // 嚴格阻斷冒泡，避免點擊文字影響到 checkbox 方格的狀態
     if (event) {
         event.preventDefault();
         event.stopPropagation();
     }
 
-    let currentName = slotsMapping[slotId].name;
-    let currentPhone = slotsMapping[slotId].phone;
+    // 寫入當前選取成員的資料到彈窗欄位中
+    document.getElementById('currentEditSlotId').value = slotId;
+    document.getElementById('editMemberName').value = slotsMapping[slotId].name;
+    document.getElementById('editMemberPhone').value = slotsMapping[slotId].phone || "";
 
-    let newName = prompt(`請輸入新的參與者顯示名稱：`, currentName);
-    if (newName === null) return; 
-    newName = newName.trim();
-    if (!newName) newName = currentName; 
+    // 顯示獨立的成員修改彈窗
+    document.getElementById('memberEditPopupOverlay').style.display = 'block';
+    document.getElementById('editMemberName').focus();
+}
 
-    let newPhone = prompt(`請輸入 [ ${newName} ] 的 WhatsApp 電話號碼：\n(若要發送到大群組此處可留空)`, currentPhone);
-    if (newPhone === null) return;
-    newPhone = newPhone.replace(/\s+/g, ''); 
+/* ─── 💾 新增：儲存成員自訂設定 ─── */
+function saveMemberSettings() {
+    let slotId = document.getElementById('currentEditSlotId').value;
+    let newName = document.getElementById('editMemberName').value.trim();
+    let newPhone = document.getElementById('editMemberPhone').value.replace(/\s+/g, '');
 
+    if (!newName) {
+        alert("顯示名稱不能留空！");
+        return;
+    }
+
+    // 更新本地資料對映
     slotsMapping[slotId].name = newName;
     slotsMapping[slotId].phone = newPhone;
     
+    // 刷新介面按鈕文字與快取
     refreshMemberButtonsUI();
+    
+    // 關閉修改視窗
+    closeMemberEditPopup();
+}
+
+/* ─── 🚪 新增：關閉成員修改彈窗邏輯 ─── */
+function closeMemberEditPopup() {
+    document.getElementById('memberEditPopupOverlay').style.display = 'none';
+    document.getElementById('currentEditSlotId').value = "";
+    document.getElementById('editMemberName').value = "";
+    document.getElementById('editMemberPhone').value = "";
+}
+
+function closeMemberPopupOverlayOutside(event) {
+    if (event.target === document.getElementById('memberEditPopupOverlay')) {
+        closeMemberEditPopup();
+    }
 }
 
 function fetchCloudData() {
@@ -772,12 +820,12 @@ function fetchCloudData() {
                     }
                 }
             }
-            refreshMemberButtonsUI(); 
+            refreshMemberButtonsUI();
             renderCalendar();
             renderDayEvents();
             
             if(document.getElementById('secureManagePanel').style.display === 'block') {
-                renderPopupManageListUI(); 
+                renderPopupManageListUI();
             }
             if(document.getElementById('secureWhatsAppPanel').style.display === 'block') {
                 renderPopupWhatsAppListUI();
@@ -793,26 +841,33 @@ setInterval(fetchCloudData, 4000);
 const holidays = {
     "01-01":"元旦", "04-04":"清明節", "05-01":"勞動節", "07-01":"香港回歸日", "10-01":"國慶日", "12-25":"聖誕節", "12-26":"聖誕翌日"
 };
-
 function getDynamicHoliday(y, m, d) {
-    let mm = String(m).padStart(2, '0'); let dd = String(d).padStart(2, '0'); let key = `${mm}-${dd}`;
+    let mm = String(m).padStart(2, '0'); let dd = String(d).padStart(2, '0');
+    let key = `${mm}-${dd}`;
     if (holidays[key]) return holidays[key];
     if (y === 2026) {
-        if (key === "02-17") return "年初一"; if (key === "02-18") return "年初二"; if (key === "02-19") return "年初三";
-        if (key === "04-03") return "受難節"; if (key === "04-06") return "復活節"; if (key === "05-24") return "佛誕";
-        if (key === "06-19") return "端午節"; if (key === "09-26") return "中秋翌日"; if (key === "10-19") return "重陽節";
+        if (key === "02-17") return "年初一";
+        if (key === "02-18") return "年初二"; if (key === "02-19") return "年初三";
+        if (key === "04-03") return "受難節";
+        if (key === "04-06") return "復活節"; if (key === "05-24") return "佛誕";
+        if (key === "06-19") return "端午節";
+        if (key === "09-26") return "中秋翌日"; if (key === "10-19") return "重陽節";
     }
     if (y === 2027) {
-        if (key === "02-06") return "年初一"; if (key === "02-08") return "年初二"; if (key === "02-09") return "年初三";
-        if (key === "03-26") return "受難節"; if (key === "03-29") return "復活節"; if (key === "05-13") return "佛誕";
-        if (key === "06-09") return "端午節"; if (key === "09-16") return "中秋翌日"; if (key === "10-08") return "重陽節";
+        if (key === "02-06") return "年初一";
+        if (key === "02-08") return "年初二"; if (key === "02-09") return "年初三";
+        if (key === "03-26") return "受難節";
+        if (key === "03-29") return "復活節"; if (key === "05-13") return "佛誕";
+        if (key === "06-09") return "端午節";
+        if (key === "09-16") return "中秋翌日"; if (key === "10-08") return "重陽節";
     }
     return "";
 }
 
 function getLunar(date){
     try {
-        let d = new Date(date); if (isNaN(d.getTime())) return "";
+        let d = new Date(date);
+        if (isNaN(d.getTime())) return "";
         let parts = new Intl.DateTimeFormat("zh-Hant-u-ca-chinese", {month:"numeric", day:"numeric"}).formatToParts(d);
         let month = parts.find(p=>p.type==='month').value; let day = parts.find(p=>p.type==='day').value;
         const CN=["","一","二","三","四","五","六","七","八","九","十"];
@@ -834,22 +889,20 @@ function selectDate(dateStr) {
 function sendWhatsAppNotification(id) {
     let ev = activities.find(a => a.id === id);
     if (!ev) return;
-
     let remark = ev.note ? `\n📝 備註備忘：${ev.note}` : "";
     let participants = ev.members && ev.members.length > 0 ? ev.members.join('、') : "全體成員";
 
     let textMessage = `💡【麟李互助家庭日誌 - 行程提醒】\n\n📢 有一項最新日程提醒：\n\n📅 日期：${ev.date}\n⏰ 活動時間：${ev.time}\n👥 活動參與者：${participants}\n📌 項目名稱 / 地點：${ev.title}${remark}\n\n🔔 提醒發送設定為：${ev.notifyTime}，請大家留意安排，互相照顧扶持！❤️`;
-
     let cleanPhone = ev.targetPhone ? ev.targetPhone.replace(/\s+/g, '') : "";
     if (cleanPhone) {
         if (cleanPhone.length === 8 && /^[569]/.test(cleanPhone)) {
-            cleanPhone = "852" + cleanPhone; 
+            cleanPhone = "852" + cleanPhone;
         }
     }
 
-    let whatsappUrl = cleanPhone ? 
-        `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(textMessage)}` : 
-        `https://api.whatsapp.com/send?text=${encodeURIComponent(textMessage)}`;
+    let whatsappUrl = cleanPhone ?
+    `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(textMessage)}` : 
+    `https://api.whatsapp.com/send?text=${encodeURIComponent(textMessage)}`;
     
     window.open(whatsappUrl, '_blank');
 }
@@ -892,7 +945,6 @@ function addFamilyEvent() {
     let noteInput = document.getElementById('eventNote');
     let whatsappBtnTextInput = document.getElementById('whatsappBtnText');
     let editKey = document.getElementById('editKey').value;
-    
     if (!titleInput.value.trim()) {
         alert("請輸入活動名稱或地點！");
         return;
@@ -913,10 +965,8 @@ function addFamilyEvent() {
         whatsappBtnText: whatsappBtnTextInput.value.trim() || "💬 WhatsApp 通知", 
         note: noteInput.value.trim()
     };
-
     let targetURL = editKey ? `${dbURL}/${editKey}.json` : `${dbURL}.json`;
     let reqMethod = editKey ? "PUT" : "POST";
-
     fetch(targetURL, {
         method: reqMethod,
         mode: "cors",
@@ -944,20 +994,20 @@ function deleteEventFromPopup(id) {
 function renderCalendar(){
     let y = current.getFullYear(); let m = current.getMonth();
     monthLabel.innerText = y + "年 " + (m + 1) + "月";
-    let first = new Date(y, m, 1).getDay(); let days = new Date(y, m + 1, 0).getDate();
+    let first = new Date(y, m, 1).getDay();
+    let days = new Date(y, m + 1, 0).getDate();
     let html = "", total = 0;
-
     for(let i=0; i<first; i++){ html += `<div class="calendar-day empty"></div>`; total++; }
 
     for(let i=1; i<=days; i++){
         let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
         let isToday = new Date().toISOString().slice(0,10) === dStr;
         let isSelected = selectedDateStr === dStr;
-        let lunar = getLunar(dStr); let holiday = getDynamicHoliday(y, m+1, i);
+        let lunar = getLunar(dStr);
+        let holiday = getDynamicHoliday(y, m+1, i);
         
         let dayActivities = activities.filter(a => a.date === dStr);
         dayActivities.sort((a, b) => a.time.localeCompare(b.time));
-
         let eventsHtml = "";
         dayActivities.forEach(act => {
             eventsHtml += `<span class="day-event-badge" title="${act.time} ${act.title}">${act.time} ${act.title}</span>`;
