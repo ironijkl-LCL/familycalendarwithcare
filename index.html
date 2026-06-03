@@ -102,7 +102,8 @@ header {
 }
 .empty:hover { background:transparent; }
 
-.today { border:3px solid orange; }
+.today { border:3px solid orange;
+}
 .selected-day { background: #d0f5db !important; border: 2px solid #25D366; }
 
 /* 農曆 */
@@ -219,6 +220,31 @@ input, textarea {
     color: #555;
 }
 
+/* 關鍵字特別標註樣式 */
+.keyword-badge-sms {
+    display: inline-block;
+    background: #fff1f0;
+    color: #f5222d;
+    border: 1px solid #ffa39e;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.keyword-badge-group {
+    display: inline-block;
+    background: #e6f7ff;
+    color: #1890ff;
+    border: 1px solid #91d5ff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
 /* 參與者複選群組排版 */
 .member-checkbox-group {
     display: flex;
@@ -300,7 +326,8 @@ input, textarea {
 
 /* 彈窗動畫 */
 @keyframes popupSlideIn {
-    from { transform: translateY(-30px); opacity: 0; }
+    from { transform: translateY(-30px); opacity: 0;
+    }
     to { transform: translateY(0); opacity: 1; }
 }
 
@@ -443,9 +470,9 @@ input, textarea {
                     <input type="time" id="nativeTimeWheelA" class="hidden-wheel-picker" onchange="syncWheelToText('nativeTimeWheelA', 'eventTime', 'TIME')">
                 </div>
 
-                <label for="notifyTime" style="font-size:15px; color:#666; display: block; margin-top:10px;">WhatsApp 提醒發送時間：</label>
+                <label for="notifyTime" style="font-size:15px; color:#666; display: block; margin-top:10px;">WhatsApp 提醒發送時間（支援多重時間，請用逗號隔開或寫「前30分鐘」）：</label>
                 <div class="twin-input-wrapper">
-                    <input type="text" id="notifyTime" value="17:00" placeholder="例如：6月1日 17:00 或 明日下午5點">
+                    <input type="text" id="notifyTime" value="17:00" placeholder="例如：17:00, 前30分鐘, 前15分鐘">
                     <div class="wheel-trigger-box">
                         <button type="button" class="wheel-btn" onclick="triggerTimeWheel('notifyTime', 'nativeDateWheel')">📅 日期</button>
                         <button type="button" class="wheel-btn" onclick="triggerTimeWheel('notifyTime', 'nativeTimeWheelB')">⏰ 時間</button>
@@ -470,14 +497,11 @@ input, textarea {
                     <label class="member-label" id="slot_label_12"><input type="checkbox" name="members" id="slot_cb_12" value="成員12" onclick="syncTargetPhone(12)"> <span class="btn-text-span" onclick="modifyMemberPrompt(12, event)">成員12</span></label>
                 </div>
 
-                <label for="targetPhone" style="font-size:15px; color:#666; display: block;">接收者 / 通知對象電話號碼：</label>
-                <input type="tel" id="targetPhone" placeholder="例如：91234567 (留空則發送到大群組)">
+                <input type="hidden" id="targetPhone" value="">
+                <input type="hidden" id="whatsappBtnText" value="💬 WhatsApp 通知">
 
-                <label for="whatsappBtnText" style="font-size:15px; color:#666; display: block;">自訂 WhatsApp 按鈕鍵顯示名稱：</label>
-                <input type="text" id="whatsappBtnText" value="💬 WhatsApp 通知" placeholder="可以自訂修改按鈕文字名稱">
-
-                <label for="eventNote" style="font-size:15px; color:#666; display: block;">備註：</label>
-                <textarea id="eventNote" rows="2" placeholder="詳細備忘事項..."></textarea>
+                <label for="eventNote" style="font-size:15px; color:#666; display: block;">備註（加入「個人短訊」或「大群組」可觸發特別標註）：</label>
+                <textarea id="eventNote" rows="2" placeholder="詳細備忘事項...例如：此項目需發送個人短訊確認"></textarea>
                 
                 <button id="submitBtn" class="action-btn" style="background:#25D366; margin-top: 15px;" onclick="addFamilyEvent()">儲存至此日期</button>
             </div>
@@ -528,8 +552,9 @@ input, textarea {
             <h3 style="margin-top:0; color:#25D366; font-size: 22px;">⏰ WhatsApp 發送提醒時間到了！</h3>
             <hr style="border: 0; border-top: 1px solid #eee; margin: 12px 0;">
             <div id="whatsappAlertMessage" style="font-size: 17px; color: #333; text-align: left; line-height: 1.6; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                </div>
+            </div>
             <input type="hidden" id="currentAlertEventId" value="">
+            <input type="hidden" id="currentAlertTriggerTimeKey" value="">
             <button class="action-btn" style="background:#25D366; font-size: 17px; padding: 12px;" onclick="triggerAlertWhatsAppSend()">💬 立即傳送 WhatsApp 通知</button>
             <button class="action-btn" style="background:#8c8c8c; font-size: 15px; padding: 8px; margin-top: 8px;" onclick="dismissAlertPopup()">稍後處理 / 關閉提示</button>
         </div>
@@ -564,7 +589,7 @@ let slotsMapping = JSON.parse(localStorage.getItem('member_slots_extended_config
 function triggerTimeWheel(txtInputId, nativePickerId) {
     let picker = document.getElementById(nativePickerId);
     if (picker) {
-        picker.showPicker(); 
+        picker.showPicker();
     }
 }
 
@@ -587,8 +612,7 @@ function syncWheelToText(pickerId, txtInputId, type) {
             let datePart = currentTxt.split("日")[0] + "日";
             txtInput.value = `${datePart} ${picker.value}`;
         } else {
-            txtInput.value = currentTxt ?
-            `${currentTxt} ${picker.value}` : picker.value;
+            txtInput.value = currentTxt ? `${currentTxt} ${picker.value}` : picker.value;
         }
     }
 }
@@ -801,7 +825,6 @@ function saveMemberSettings() {
     let slotId = document.getElementById('currentEditSlotId').value;
     let newName = document.getElementById('editMemberName').value.trim();
     let newPhone = document.getElementById('editMemberPhone').value.replace(/\s+/g, '');
-
     if (!newName) {
         alert("顯示名稱不能留空！");
         return;
@@ -879,78 +902,123 @@ function fetchCloudData() {
 
 setInterval(fetchCloudData, 4000);
 
+// 🛠️ 支援多重時間與相對時間算式的智慧匹配引擎
 function checkNotificationTimers() {
     let now = new Date();
     let currentY = now.getFullYear();
     let currentM = String(now.getMonth() + 1).padStart(2, '0');
     let currentD = String(now.getDate()).padStart(2, '0');
     let todayStr = `${currentY}-${currentM}-${currentD}`;
-    
     let currentHH = String(now.getHours()).padStart(2, '0');
     let currentMM = String(now.getMinutes()).padStart(2, '0');
     let timeHHMM = `${currentHH}:${currentMM}`; 
 
-    let dismissedAlerts = JSON.parse(localStorage.getItem('dismissed_whatsapp_alerts')) || {};
+    let dismissedAlerts = JSON.parse(localStorage.getItem('dismissed_whatsapp_alerts_v2')) || {};
 
     activities.forEach(ev => {
-        if (dismissedAlerts[ev.id] === todayStr) return;
-
-        let isTimeMatch = false;
         let notifyRaw = ev.notifyTime ? ev.notifyTime.trim() : "";
-
         if (!notifyRaw) return;
 
-        if (ev.date === todayStr && notifyRaw.includes(":")) {
-            let match = notifyRaw.match(/([0-1]?[0-9]|2[0-3]):[0-5][0-9]/);
-            if (match && match[0]) {
-                let parts = match[0].split(':');
-                let formattedNotifyTime = `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
-                if (formattedNotifyTime === timeHHMM) {
+        // 支援用逗號隔開的多重時間設定
+        let timeTokens = notifyRaw.split(/[,，;\s]+/);
+
+        timeTokens.forEach(token => {
+            token = token.trim();
+            if (!token) return;
+
+            let isTimeMatch = false;
+            let triggerKey = `${ev.id}_${token}_${todayStr}`; // 唯一觸發鎖金鑰
+
+            if (dismissedAlerts[triggerKey]) return; // 此行程此時間今天已處理過
+
+            // 模式 A: 傳統的 24小時絕對時間 (例如 17:00)
+            if (/^\d{1,2}:\d{2}$/.test(token)) {
+                let parts = token.split(':');
+                let formattedToken = `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+                if (ev.date === todayStr && formattedToken === timeHHMM) {
                     isTimeMatch = true;
                 }
             }
-        }
-        
-        if (notifyRaw.includes("月") && notifyRaw.includes("日") && notifyRaw.includes(":")) {
-            let monthLabel = parseInt(currentM) + "月";
-            let dateLabel = parseInt(currentD) + "日";
-            if (notifyRaw.includes(monthLabel) && notifyRaw.includes(dateLabel)) {
-                let match = notifyRaw.match(/([0-1]?[0-9]|2[0-3]):[0-5][0-9]/);
-                if (match && match[0]) {
-                    let parts = match[0].split(':');
-                    let formattedNotifyTime = `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
-                    if (formattedNotifyTime === timeHHMM) {
-                        isTimeMatch = true;
+            // 模式 B: 包含日期的絕對時間 (例如 6月1日 17:00)
+            else if (token.includes("月") && token.includes("日") && token.includes(":")) {
+                let monthLabel = parseInt(currentM) + "月";
+                let dateLabel = parseInt(currentD) + "日";
+                if (token.includes(monthLabel) && token.includes(dateLabel)) {
+                    let match = token.match(/([0-1]?[0-9]|2[0-3]):[0-5][0-9]/);
+                    if (match && match[0]) {
+                        let parts = match[0].split(':');
+                        let formattedNotifyTime = `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+                        if (formattedNotifyTime === timeHHMM) {
+                            isTimeMatch = true;
+                        }
                     }
                 }
             }
-        }
+            // 模式 C: 相對算式提醒 (例如 前30分鐘, 前15分鐘, 前1小時)
+            else if (token.startsWith("前") && (token.includes("分鐘") || token.includes("小時"))) {
+                if (ev.date === todayStr && /^\d{1,2}:\d{2}$/.test(ev.time)) {
+                    let evTimeParts = ev.time.split(':');
+                    let evDateObj = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(evTimeParts[0]), parseInt(evTimeParts[1]), 0);
+                    
+                    let diffMinutes = 0;
+                    if (token.includes("分鐘")) {
+                        let numMatch = token.match(/\d+/);
+                        if (numMatch) diffMinutes = parseInt(numMatch[0]);
+                    } else if (token.includes("小時")) {
+                        let numMatch = token.match(/\d+/);
+                        if (numMatch) diffMinutes = parseInt(numMatch[0]) * 60;
+                    }
 
-        if (isTimeMatch) {
-            showAlertPopup(ev, todayStr);
-        }
+                    if (diffMinutes > 0) {
+                        let triggerDateObj = new Date(evDateObj.getTime() - diffMinutes * 60000);
+                        let trigHH = String(triggerDateObj.getHours()).padStart(2, '0');
+                        let trigMM = String(triggerDateObj.getMinutes()).padStart(2, '0');
+                        let trigHHMM = `${trigHH}:${trigMM}`;
+
+                        if (trigHHMM === timeHHMM) {
+                            isTimeMatch = true;
+                        }
+                    }
+                }
+            }
+
+            if (isTimeMatch) {
+                showAlertPopup(ev, todayStr, triggerKey, token);
+            }
+        });
     });
 }
 
-function showAlertPopup(ev, todayStr) {
+function showAlertPopup(ev, todayStr, triggerKey, token) {
     let overlay = document.getElementById('whatsappAlertPopupOverlay');
     if (overlay.style.display === 'block') return;
 
     document.getElementById('currentAlertEventId').value = ev.id;
+    document.getElementById('currentAlertTriggerTimeKey').value = triggerKey;
     
     let participants = ev.members && ev.members.length > 0 ? ev.members.join('、') : "全體成員";
+    
+    // 🔍 智慧備註關鍵字分析與特別標註
+    let keywordAlertHtml = "";
+    let noteLower = ev.note ? ev.note.toLowerCase() : "";
+    if (noteLower.includes("個人短訊")) {
+        keywordAlertHtml = `<div class="keyword-badge-sms">⚠️ 系統提示：此項目需發送個人短訊</div><br>`;
+    } else if (noteLower.includes("大群組")) {
+        keywordAlertHtml = `<div class="keyword-badge-group">👥 系統提示：此項目需發送至大群組</div><br>`;
+    }
+
     let remarkText = ev.note ? `<br>📝 <strong>備註：</strong>${ev.note}` : "";
     let targetText = ev.targetPhone ? `<br>📞 <strong>指定對象：</strong>${ev.targetPhone}` : "<br>👥 <strong>接收對象：</strong>家庭大群組";
-
+    
     let msgHtml = `
+        ${keywordAlertHtml}
         📌 <strong>活動名稱：</strong>${ev.title}<br>
         ⏰ <strong>活動時間：</strong>${ev.time}<br>
         👥 <strong>參與成員：</strong>${participants}
         ${targetText}
         ${remarkText}<br><br>
-        🔔 <strong>設定提醒時間：</strong>${ev.notifyTime}
+        🔔 <strong>本次觸發提醒來源：</strong><span style="color:#ff4d4f; font-weight:bold;">${token}</span>
     `;
-    
     document.getElementById('whatsappAlertMessage').innerHTML = msgHtml;
     overlay.style.display = 'block';
     document.body.style.overflow = 'hidden'; 
@@ -965,14 +1033,11 @@ function triggerAlertWhatsAppSend() {
 }
 
 function dismissAlertPopup() {
-    let id = document.getElementById('currentAlertEventId').value;
-    if (id) {
-        let now = new Date();
-        let todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        
-        let dismissedAlerts = JSON.parse(localStorage.getItem('dismissed_whatsapp_alerts')) || {};
-        dismissedAlerts[id] = todayStr; 
-        localStorage.setItem('dismissed_whatsapp_alerts', JSON.stringify(dismissedAlerts));
+    let triggerKey = document.getElementById('currentAlertTriggerTimeKey').value;
+    if (triggerKey) {
+        let dismissedAlerts = JSON.parse(localStorage.getItem('dismissed_whatsapp_alerts_v2')) || {};
+        dismissedAlerts[triggerKey] = true; 
+        localStorage.setItem('dismissed_whatsapp_alerts_v2', JSON.stringify(dismissedAlerts));
     }
     
     document.getElementById('whatsappAlertPopupOverlay').style.display = 'none';
@@ -1012,10 +1077,13 @@ function getLunar(date){
         let parts = new Intl.DateTimeFormat("zh-Hant-u-ca-chinese", {month:"numeric", day:"numeric"}).formatToParts(d);
         let month = parts.find(p=>p.type==='month').value; let day = parts.find(p=>p.type==='day').value;
         const CN=["","一","二","三","四","五","六","七","八","九","十"];
-        function dCN(n){ n=Number(n); if(n<=10) return "初"+CN[n]; if(n<20) return "十"+CN[n-10]; if(n==20) return "二十"; if(n<30) return "廿"+CN[n-20]; return "三十"; }
-        function mCN(n){ return ["","一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","冬月","臘月"][n]; }
+        function dCN(n){ n=Number(n); if(n<=10) return "初"+CN[n]; if(n<20) return "十"+CN[n-10]; if(n==20) return "二十"; if(n<30) return "廿"+CN[n-20]; return "三十";
+        }
+        function mCN(n){ return ["","一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","冬月","臘月"][n];
+        }
         return day==1 ? mCN(month) : dCN(day);
-    } catch(e) { return ""; }
+    } catch(e) { return "";
+    }
 }
 
 function selectDate(dateStr) {
@@ -1030,10 +1098,20 @@ function selectDate(dateStr) {
 function sendWhatsAppNotification(id) {
     let ev = activities.find(a => a.id === id);
     if (!ev) return;
-    let remark = ev.note ? `\n📝 備註備忘：${ev.note}` : "";
+    let remark = ev.note ? `
+📝 備註備忘：${ev.note}` : "";
     let participants = ev.members && ev.members.length > 0 ? ev.members.join('、') : "全體成員";
 
-    let textMessage = `💡【麟李互助家庭日誌 - 行程提醒】\n\n📢 有一項最新日程提醒：\n\n📅 日期：${ev.date}\n⏰ 活動時間：${ev.time}\n👥 活動參與者：${participants}\n📌 項目名稱 / 地點：${ev.title}${remark}\n\n🔔 提醒發送設定為：${ev.notifyTime}，請大家留意安排，互相照顧扶持！❤️`;
+    let textMessage = `💡【麟李互助家庭日誌 - 行程提醒】
+
+📢 有一項最新日程提醒：
+
+📅 日期：${ev.date}
+⏰ 活動時間：${ev.time}
+👥 活動參與者：${participants}
+📌 項目名稱 / 地點：${ev.title}${remark}
+
+🔔 提醒發送設定為：${ev.notifyTime}，請大家留意安排，互相照顧扶持！❤️`;
     let cleanPhone = ev.targetPhone ? ev.targetPhone.replace(/\s+/g, '') : "";
     if (cleanPhone) {
         if (cleanPhone.length === 8 && /^[569]/.test(cleanPhone)) {
@@ -1041,10 +1119,7 @@ function sendWhatsAppNotification(id) {
         }
     }
 
-    let whatsappUrl = cleanPhone ?
-    `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(textMessage)}` : 
-    `https://api.whatsapp.com/send?text=${encodeURIComponent(textMessage)}`;
-    
+    let whatsappUrl = cleanPhone ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(textMessage)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(textMessage)}`;
     window.open(whatsappUrl, '_blank');
 }
 
@@ -1064,9 +1139,16 @@ function renderDayEvents() {
         let membersTxt = ev.members && ev.members.length > 0 ? `👥 活動參與者：${ev.members.join('、')}` : "👥 活動參與者：全體成員";
         let phoneInfo = ev.targetPhone ? `<div class="event-desc" style="font-size:14px; color:#1890ff;">📞 指定接收號碼：${ev.targetPhone}</div>` : `<div class="event-desc" style="font-size:14px; color:#8c8c8c;">👥 接收對象：家庭大群組 / 自選聯絡人</div>`;
 
+        // 🔍 在主頁行程列表也同時顯示關鍵字標籤
+        let badgeHtml = "";
+        if (ev.note) {
+            if (ev.note.includes("個人短訊")) badgeHtml = `<span class="keyword-badge-sms" style="margin-top:2px; display:inline-block; padding:2px 6px; font-size:12px;">⚠️ 個人短訊</span>`;
+            if (ev.note.includes("大群組")) badgeHtml = `<span class="keyword-badge-group" style="margin-top:2px; display:inline-block; padding:2px 6px; font-size:12px;">👥 大群組</span>`;
+        }
+
         html += `
         <div class="event-item">
-            <div class="event-time">⏰ 活動時間：${ev.time}</div>
+            <div class="event-time">⏰ 活動時間：${ev.time} ${badgeHtml}</div>
             <div class="event-desc" style="font-size:14px; color:#666;">🔔 提醒發送時間：${ev.notifyTime}</div>
             <div class="event-desc">📌 <strong>${ev.title}</strong></div>
             <div class="event-desc" style="font-size:14px; color:#555;">${membersTxt}</div>
@@ -1139,7 +1221,8 @@ function renderCalendar(){
     let first = new Date(y, m, 1).getDay();
     let days = new Date(y, m + 1, 0).getDate();
     let html = "", total = 0;
-    for(let i=0; i<first; i++){ html += `<div class="calendar-day empty"></div>`; total++; }
+    for(let i=0; i<first; i++){ html += `<div class="calendar-day empty"></div>`; total++;
+    }
 
     for(let i=1; i<=days; i++){
         let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
@@ -1167,14 +1250,14 @@ function renderCalendar(){
         `;
         total++;
     }
-    while(total % 7 !== 0){ html += `<div class="calendar-day empty"></div>`; total++; }
+    while(total % 7 !== 0){ html += `<div class="calendar-day empty"></div>`; total++;
+    }
     calendar.innerHTML = html;
 }
 
 function changeMonth(n){ current.setMonth(current.getMonth() + n); renderCalendar(); }
 
 document.getElementById('popupPassword').addEventListener('keydown', popupPasswordInputKeydown);
-
 document.getElementById('memberPopupPassword').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') verifyMemberGatePassword();
 });
