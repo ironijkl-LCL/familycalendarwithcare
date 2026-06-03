@@ -51,28 +51,32 @@ header {
     font-weight:bold;
 }
 
-/* 星期 */
+/* 星期 - 🛠️ 優化：使用 Flex 排版徹底解決走位問題 */
 .weekdays-container {
-    display: block;
+    display: flex;
     width: 100%;
     margin-bottom: 5px;
 }
 
 .weekday {
-    display:inline-block;
-    width:14.28%;
+    flex: 1;
     text-align:center;
     color:gray;
     font-weight:bold;
     font-size:16px;
 }
 
-/* 非Grid */
-.calendar { font-size:0; }
+/* 日曆格子區域 - 🛠️ 優化：改用 flex-wrap 彈性排版確保六日完美對齊 */
+.calendar { 
+    font-size:0; 
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+}
 
 .calendar-day {
-    display:inline-block;
-    width:14.28%;
+    display: inline-block;
+    width: 14.2857%;
     padding:6px 2px;
     text-align:center;
     background:white;
@@ -866,7 +870,6 @@ function fetchCloudData() {
                 renderPopupWhatsAppListUI();
             }
             
-            // 🌟 每次載入雲端資料時同時執行提醒偵測
             checkNotificationTimers();
         })
         .catch(error => {
@@ -874,10 +877,8 @@ function fetchCloudData() {
         });
 }
 
-// 提高全域背景更新頻率，每 4 秒同步雲端，維持原架構
 setInterval(fetchCloudData, 4000);
 
-/* 🌟 新增：定時偵測與時間匹配處理核心邏輯 */
 function checkNotificationTimers() {
     let now = new Date();
     let currentY = now.getFullYear();
@@ -892,7 +893,6 @@ function checkNotificationTimers() {
     let dismissedAlerts = JSON.parse(localStorage.getItem('dismissed_whatsapp_alerts')) || {};
 
     activities.forEach(ev => {
-        // 如果這個日程項目已經彈窗點擊關閉或發送過，今天內不再重複打擾
         if (dismissedAlerts[ev.id] === todayStr) return;
 
         let isTimeMatch = false;
@@ -900,12 +900,9 @@ function checkNotificationTimers() {
 
         if (!notifyRaw) return;
 
-        // 場景1：如果輸入欄位單純包含時間格式 (如 17:00)，且該活動日期是今天
         if (ev.date === todayStr && notifyRaw.includes(":")) {
-            // 用正規表達式提取 HH:MM
             let match = notifyRaw.match(/([0-1]?[0-9]|2[0-3]):[0-5][0-9]/);
             if (match && match[0]) {
-                // 將提取出來的小時和分鐘補零對齊 (例如將 5:00 格式化為 05:00)
                 let parts = match[0].split(':');
                 let formattedNotifyTime = `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
                 if (formattedNotifyTime === timeHHMM) {
@@ -914,7 +911,6 @@ function checkNotificationTimers() {
             }
         }
         
-        // 場景2：如果填寫包含特定月日文字 (如 6月2日 17:00)
         if (notifyRaw.includes("月") && notifyRaw.includes("日") && notifyRaw.includes(":")) {
             let monthLabel = parseInt(currentM) + "月";
             let dateLabel = parseInt(currentD) + "日";
@@ -930,16 +926,13 @@ function checkNotificationTimers() {
             }
         }
 
-        // 如果匹配成功，則開啟自訂醒目彈窗提示
         if (isTimeMatch) {
             showAlertPopup(ev, todayStr);
         }
     });
 }
 
-/* 🌟 新增：顯示自訂發送提醒彈窗 */
 function showAlertPopup(ev, todayStr) {
-    // 防止同時彈出多個，如果當前已經打開了，則暫不覆蓋
     let overlay = document.getElementById('whatsappAlertPopupOverlay');
     if (overlay.style.display === 'block') return;
 
@@ -963,7 +956,6 @@ function showAlertPopup(ev, todayStr) {
     document.body.style.overflow = 'hidden'; 
 }
 
-/* 🌟 新增：點擊彈窗內部的傳送按鈕 */
 function triggerAlertWhatsAppSend() {
     let id = document.getElementById('currentAlertEventId').value;
     if (id) {
@@ -972,7 +964,6 @@ function triggerAlertWhatsAppSend() {
     }
 }
 
-/* 🌟 新增：關閉/跳過目前提醒彈窗 */
 function dismissAlertPopup() {
     let id = document.getElementById('currentAlertEventId').value;
     if (id) {
@@ -980,7 +971,7 @@ function dismissAlertPopup() {
         let todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         
         let dismissedAlerts = JSON.parse(localStorage.getItem('dismissed_whatsapp_alerts')) || {};
-        dismissedAlerts[id] = todayStr; // 標記今天已處理
+        dismissedAlerts[id] = todayStr; 
         localStorage.setItem('dismissed_whatsapp_alerts', JSON.stringify(dismissedAlerts));
     }
     
