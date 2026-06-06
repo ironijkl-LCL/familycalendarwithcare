@@ -376,10 +376,58 @@ input, textarea {
 .member-edit-fields {
     margin-top: 15px;
 }
+
+/* ─── 🔄 動態視圖切換模式 CSS 控制群 ─── */
+/* 精簡視圖 */
+.view-精簡 .day-event-badge {
+    display: none !important;
+}
+
+/* 疊放視圖 */
+.view-疊放 .day-event-badge {
+    padding: 1px 2px !important;
+    margin-top: 1px !important;
+    font-size: 10px !important;
+    line-height: 1.1 !important;
+    border-left-width: 2px !important;
+}
+
+/* 詳細資料視圖 */
+.view-詳細資料 .calendar-day {
+    min-height: 140px !important;
+}
+.view-詳細資料 .day-event-badge {
+    white-space: normal !important;
+    word-break: break-all !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+
+/* 視圖切換單選列樣式 */
+.view-option-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 15px;
+}
+.view-radio-label {
+    display: flex;
+    align-items: center;
+    background: #f5f5f5;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.view-radio-label input {
+    width: auto;
+    margin: 0 10px 0 0;
+    transform: scale(1.3);
+}
 </style>
 </head>
 
-<body>
+<body class="view-列表" id="bodyNode">
 
 <header>📅 麟李互助家庭日誌</header>
 
@@ -412,11 +460,12 @@ input, textarea {
         <div id="dayEvents"></div>
     </div>
 
-    <div class="card" style="display: flex; flex-direction: row; gap: 10px; padding: 12px; justify-content: center; align-items: center;">
+    <div class="card" style="display: flex; flex-direction: row; gap: 10px; padding: 12px; justify-content: center; align-items: center; flex-wrap: wrap;">
         <button class="action-btn" style="background: #25D366; font-size: 24px; padding: 12px; margin: 0; flex: 1; border-radius: 12px; display: flex; justify-content: center; align-items: center;" onclick="openAddFormPopup('ADD')" title="新增家庭活動">➕</button>
         <div style="display: flex; gap: 10px; flex: 2; width: 100%;">
             <button class="action-btn" style="background: #1890ff; font-size: 24px; padding: 12px; margin: 0; flex: 1; border-radius: 12px; display: flex; justify-content: center; align-items: center;" onclick="openAddFormPopup('MANAGE')" title="管理/修改舊活動">⚙️</button>
             <button class="action-btn" style="background: #00c642; font-size: 24px; padding: 12px; margin: 0; flex: 1; border-radius: 12px; display: flex; justify-content: center; align-items: center;" onclick="openAddFormPopup('WHATSAPP')" title="傳送 WhatsApp 通知">💬</button>
+            <button class="action-btn" style="background: #722ed1; font-size: 24px; padding: 12px; margin: 0; flex: 1; border-radius: 12px; display: flex; justify-content: center; align-items: center;" onclick="openAddFormPopup('SWITCH_VIEW')" title="視誌視圖切換">👁️</button>
         </div>
     </div>
 
@@ -443,7 +492,6 @@ input, textarea {
                     <input type="text" id="eventTime" value="18:00" placeholder="例如：18:00 或 下午6:00">
                     <div class="wheel-trigger-box">
                         <button type="button" class="wheel-btn" onclick="triggerTimeWheel('eventTime', 'nativeTimeWheelA')">⏰ 自選</button>
-     
                     </div>
                     <input type="time" id="nativeTimeWheelA" class="hidden-wheel-picker" onchange="syncWheelToText('nativeTimeWheelA', 'eventTime', 'TIME')">
                 </div>
@@ -453,33 +501,27 @@ input, textarea {
                     <input type="text" id="notifyTime" value="17:00" placeholder="例如：6月1日 17:00 或 明日下午5點">
                     <div class="wheel-trigger-box">
                         <button type="button" class="wheel-btn" onclick="triggerTimeWheel('notifyTime', 'nativeDateWheel')">📅 日期</button>
-  
                        <button type="button" class="wheel-btn" onclick="triggerTimeWheel('notifyTime', 'nativeTimeWheelB')">⏰ 時間</button>
                     </div>
                     <input type="date" id="nativeDateWheel" class="hidden-wheel-picker" onchange="syncWheelToText('nativeDateWheel', 'notifyTime', 'DATE')">
                     <input type="time" id="nativeTimeWheelB" class="hidden-wheel-picker" onchange="syncWheelToText('nativeTimeWheelB', 'notifyTime', 'TIME_APPEND')">
- 
                 </div>
                 
                 <label style="font-size:15px; color:#666; display: block; margin-top: 12px;">活動參與者：</label>
                 <div class="member-checkbox-group" id="memberCheckboxContainer">
                     <label class="member-label" id="slot_label_1"><input type="checkbox" name="members" id="slot_cb_1" value="阿鐵" onclick="syncTargetPhone(1)"> <span class="btn-text-span" onclick="modifyMemberPrompt(1, event)">阿鐵</span></label>
                     <label class="member-label" id="slot_label_2"><input type="checkbox" name="members" id="slot_cb_2" value="Jolie" onclick="syncTargetPhone(2)"> <span class="btn-text-span" onclick="modifyMemberPrompt(2, event)">Jolie</span></label>
-                
-     <label class="member-label" id="slot_label_3"><input type="checkbox" name="members" id="slot_cb_3" value="Daddy" onclick="syncTargetPhone(3)"> <span class="btn-text-span" onclick="modifyMemberPrompt(3, event)">Daddy</span></label>
+                    <label class="member-label" id="slot_label_3"><input type="checkbox" name="members" id="slot_cb_3" value="Daddy" onclick="syncTargetPhone(3)"> <span class="btn-text-span" onclick="modifyMemberPrompt(3, event)">Daddy</span></label>
                     <label class="member-label" id="slot_label_4"><input type="checkbox" name="members" id="slot_cb_4" value="Mummy" onclick="syncTargetPhone(4)"> <span class="btn-text-span" onclick="modifyMemberPrompt(4, event)">Mummy</span></label>
                     <label class="member-label" id="slot_label_5"><input type="checkbox" name="members" id="slot_cb_5" value="Karis" onclick="syncTargetPhone(5)"> <span class="btn-text-span" onclick="modifyMemberPrompt(5, event)">Karis</span></label>
-                    <label class="member-label" id="slot_label_6"><input 
-type="checkbox" name="members" id="slot_cb_6" value="Leisel" onclick="syncTargetPhone(6)"> <span class="btn-text-span" onclick="modifyMemberPrompt(6, event)">Leisel</span></label>
+                    <label class="member-label" id="slot_label_6"><input type="checkbox" name="members" id="slot_cb_6" value="Leisel" onclick="syncTargetPhone(6)"> <span class="btn-text-span" onclick="modifyMemberPrompt(6, event)">Leisel</span></label>
                     <label class="member-label" id="slot_label_7"><input type="checkbox" name="members" id="slot_cb_7" value="Debby" onclick="syncTargetPhone(7)"> <span class="btn-text-span" onclick="modifyMemberPrompt(7, event)">Debby</span></label>
                     <label class="member-label" id="slot_label_8"><input type="checkbox" name="members" id="slot_cb_8" value="Hardy" onclick="syncTargetPhone(8)"> <span class="btn-text-span" onclick="modifyMemberPrompt(8, event)">Hardy</span></label>
-                    <label class="member-label" id="slot_label_9"><input type="checkbox" name="members" id="slot_cb_9" value="姑姐" onclick="syncTargetPhone(9)"> <span class="btn-text-span" 
-onclick="modifyMemberPrompt(9, event)">姑姐</span></label>
+                    <label class="member-label" id="slot_label_9"><input type="checkbox" name="members" id="slot_cb_9" value="姑姐" onclick="syncTargetPhone(9)"> <span class="btn-text-span" onclick="modifyMemberPrompt(9, event)">姑姐</span></label>
                     <label class="member-label" id="slot_label_10"><input type="checkbox" name="members" id="slot_cb_10" value="鄰居" onclick="syncTargetPhone(10)"> <span class="btn-text-span" onclick="modifyMemberPrompt(10, event)">鄰居</span></label>
                     <label class="member-label" id="slot_label_11"><input type="checkbox" name="members" id="slot_cb_11" value="成員11" onclick="syncTargetPhone(11)"> <span class="btn-text-span" onclick="modifyMemberPrompt(11, event)">成員11</span></label>
                     <label class="member-label" id="slot_label_12"><input type="checkbox" name="members" id="slot_cb_12" value="成員12" onclick="syncTargetPhone(12)"> <span class="btn-text-span" onclick="modifyMemberPrompt(12, event)">成員12</span></label>
-      
-           </div>
+                </div>
 
                 <label for="targetPhone" style="font-size:15px; color:#666; display: block;">接收者 / 通知對象電話號碼：</label>
                 <input type="tel" id="targetPhone" placeholder="例如：91234567 (留空則發送到大群組)">
@@ -501,6 +543,15 @@ onclick="modifyMemberPrompt(9, event)">姑姐</span></label>
             <div class="secure-form-fields" id="secureWhatsAppPanel">
                 <label style="font-size:15px; color:#666; font-weight:bold; display:block; margin-bottom:10px;">請選擇欲傳送 WhatsApp 通知的行程項目：</label>
                 <div id="popupWhatsAppList"></div>
+            </div>
+
+            <div class="secure-form-fields" id="secureViewSwitchPanel">
+                <div class="view-option-group">
+                    <label class="view-radio-label"><input type="radio" name="viewMode" value="精簡" onclick="changeGlobalViewMode('精簡')"> ▤ 精簡</label>
+                    <label class="view-radio-label"><input type="radio" name="viewMode" value="疊放" onclick="changeGlobalViewMode('疊放')"> ⪢ 疊放</label>
+                    <label class="view-radio-label"><input type="radio" name="viewMode" value="詳細資料" onclick="changeGlobalViewMode('詳細資料')"> 📋 詳細資料</label>
+                    <label class="view-radio-label"><input type="radio" name="viewMode" value="列表" onclick="changeGlobalViewMode('列表')"> ✓ ☰ 列表</label>
+                </div>
             </div>
             
             <button id="cancelBtn" class="action-btn" style="background:#8c8c8c; margin-top:15px;" onclick="closeEventPopup()">關閉面板</button>
@@ -538,8 +589,7 @@ onclick="modifyMemberPrompt(9, event)">姑姐</span></label>
         <div class="popup-content-card" style="max-width: 460px; margin: 120px auto; border: 3px solid #25D366; text-align: center;">
             <h3 style="margin-top:0; color:#25D366; font-size: 22px;">⏰ WhatsApp 發送提醒時間到了！</h3>
             <hr style="border: 0; border-top: 1px solid #eee; margin: 12px 0;">
-            <div id="whatsappAlertMessage" style="font-size: 17px; color: #333; text-align: left; line-height: 1.6; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                </div>
+            <div id="whatsappAlertMessage" style="font-size: 17px; color: #333; text-align: left; line-height: 1.6; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px;"></div>
             <input type="hidden" id="currentAlertEventId" value="">
             <button class="action-btn" style="background:#25D366; font-size: 17px; padding: 12px;" onclick="triggerAlertWhatsAppSend()">💬 立即傳送 WhatsApp 通知</button>
             <button class="action-btn" style="background:#8c8c8c; font-size: 15px; padding: 8px; margin-top: 8px;" onclick="dismissAlertPopup()">稍後處理 / 關閉提示</button>
@@ -557,14 +607,15 @@ let current = new Date();
 let selectedDateStr = new Date().toISOString().slice(0, 10); 
 let currentPopupMode = "ADD"; 
 
+let currentGlobalMode = localStorage.getItem('family_日誌_view_mode') || "列表";
+
 let slotsMapping = JSON.parse(localStorage.getItem('member_slots_extended_config')) || {
     1: { name: "阿鐵", phone: "" },
     2: { name: "Jolie", phone: "" },
     3: { name: "Daddy", phone: "" },
     4: { name: "Mummy", phone: "" },
     5: { name: "Karis", phone: "" },
-    6: 
-{ name: "Leisel", phone: "" },
+    6: { name: "Leisel", phone: "" },
     7: { name: "Debby", phone: "" },
     8: { name: "Hardy", phone: "" },
     9: { name: "姑姐", phone: "" },
@@ -573,74 +624,80 @@ let slotsMapping = JSON.parse(localStorage.getItem('member_slots_extended_config
     12: { name: "成員12", phone: "" }
 };
 
+function changeGlobalViewMode(modeStr) {
+    currentGlobalMode = modeStr;
+    localStorage.setItem('family_日誌_view_mode', modeStr);
+    document.getElementById('bodyNode').className = `view-${modeStr}`;
+    renderCalendar();
+    closeEventPopup();
+}
+
 function triggerTimeWheel(txtInputId, nativePickerId) {
     let picker = document.getElementById(nativePickerId);
-if (picker) {
-        picker.showPicker();
-}
+    if (picker) picker.showPicker();
 }
 
 function syncWheelToText(pickerId, txtInputId, type) {
     let picker = document.getElementById(pickerId);
     let txtInput = document.getElementById(txtInputId);
-if (!picker || !picker.value || !txtInput) return;
+    if (!picker || !picker.value || !txtInput) return;
     if (type === 'TIME') {
         txtInput.value = picker.value;
-} else if (type === 'DATE') {
+    } else if (type === 'DATE') {
         let d = new Date(picker.value);
-if (!isNaN(d.getTime())) {
+        if (!isNaN(d.getTime())) {
             let m = d.getMonth() + 1;
-let dateVal = d.getDate();
+            let dateVal = d.getDate();
             txtInput.value = `${m}月${dateVal}日`;
         }
     } else if (type === 'TIME_APPEND') {
         let currentTxt = txtInput.value.trim();
-if (currentTxt.includes("日")) {
+        if (currentTxt.includes("日")) {
             let datePart = currentTxt.split("日")[0] + "日";
-txtInput.value = `${datePart} ${picker.value}`;
+            txtInput.value = `${datePart} ${picker.value}`;
         } else {
-            txtInput.value = currentTxt ?
-`${currentTxt} ${picker.value}` : picker.value;
+            txtInput.value = currentTxt ? `${currentTxt} ${picker.value}` : picker.value;
         }
     }
 }
 
 function verifyGatePassword() {
     let passwordInput = document.getElementById('popupPassword');
-if (passwordInput.value === "8679") {
+    if (passwordInput.value === "8679") {
         document.getElementById('lockSection').style.display = 'none';
         passwordInput.value = "";
-if (currentPopupMode === "MANAGE") {
+        if (currentPopupMode === "MANAGE") {
             document.getElementById('secureManagePanel').style.display = 'block';
             renderPopupManageListUI();
-} else if (currentPopupMode === "WHATSAPP") {
+        } else if (currentPopupMode === "WHATSAPP") {
             document.getElementById('secureWhatsAppPanel').style.display = 'block';
-renderPopupWhatsAppListUI(); 
+            renderPopupWhatsAppListUI(); 
         } else {
             document.getElementById('secureFormPanel').style.display = 'block';
             document.getElementById('eventTitle').focus();
-}
+        }
     } else {
         alert("❌ 密碼錯誤，無法開啟詳細設定欄位！");
         passwordInput.value = "";
         passwordInput.focus();
-}
+    }
 }
 
 function verifyMemberGatePassword() {
     let passwordInput = document.getElementById('memberPopupPassword');
-if (passwordInput.value === "8679") {
+    if (passwordInput.value === "8679") {
         document.getElementById('memberLockSection').style.display = 'none';
         document.getElementById('secureMemberPanel').style.display = 'block';
-passwordInput.value = "";
+        passwordInput.value = "";
         document.getElementById('editMemberName').focus();
     } else {
         alert("❌ 密碼錯誤，無法修改成員配置！");
         passwordInput.value = "";
         passwordInput.focus();
-}
+    }
 }
 
+// ─── 🔄 優化：智慧路由分流，如果是視圖切換模式則一鍵免密碼進入 ───
 function openAddFormPopup(mode) {
     currentPopupMode = mode || "ADD";
     
@@ -648,28 +705,38 @@ function openAddFormPopup(mode) {
     document.getElementById('secureFormPanel').style.display = 'none';
     document.getElementById('secureManagePanel').style.display = 'none';
     document.getElementById('secureWhatsAppPanel').style.display = 'none';
+    document.getElementById('secureViewSwitchPanel').style.display = 'none';
 
     if (currentPopupMode === "MANAGE") {
         document.getElementById('formTitle').innerText = "⚙️ 管理/修改舊活動";
-} else if (currentPopupMode === "WHATSAPP") {
+    } else if (currentPopupMode === "WHATSAPP") {
         document.getElementById('formTitle').innerText = "💬 傳送 WhatsApp 通知";
-} else {
+    } else if (currentPopupMode === "SWITCH_VIEW") {
+        document.getElementById('formTitle').innerText = "👁️ 視誌切換模式";
+        // 🚀 關鍵調整：免密碼直接解除阻擋，亮出 4 大視圖切換單選鈕
+        document.getElementById('lockSection').style.display = 'none';
+        document.getElementById('secureViewSwitchPanel').style.display = 'block';
+        let radios = document.getElementsByName('viewMode');
+        radios.forEach(r => { if(r.value === currentGlobalMode) r.checked = true; });
+    } else {
         document.getElementById('formTitle').innerText = "➕ 新增家庭活動";
-}
+    }
     
     document.getElementById('addEventPopupOverlay').style.display = 'block';
     document.body.style.overflow = 'hidden'; 
-    document.getElementById('popupPassword').focus();
+    if (currentPopupMode !== "SWITCH_VIEW") {
+        document.getElementById('popupPassword').focus();
+    }
 }
 
 function renderPopupManageListUI() {
     let container = document.getElementById('popupManageList');
     let filtered = activities.filter(a => a.date === selectedDateStr);
-filtered.sort((a, b) => a.time.localeCompare(b.time));
+    filtered.sort((a, b) => a.time.localeCompare(b.time));
 
     if (filtered.length === 0) {
         container.innerHTML = `<p style="color:gray; font-size:16px; text-align:center; padding:10px;">此日期暫無安排活動項目。</p>`;
-return;
+        return;
     }
 
     let html = "";
@@ -680,24 +747,23 @@ return;
                 <strong>${ev.time}</strong> - ${ev.title}
             </div>
             <div style="display:flex;">
-            
-    <button class="edit-btn" onclick="triggerEditFromPopup('${ev.id}')">✏️ 修改</button>
+                <button class="edit-btn" onclick="triggerEditFromPopup('${ev.id}')">✏️ 修改</button>
                 <button class="delete-btn" onclick="deleteEventFromPopup('${ev.id}')">❌ 刪除</button>
             </div>
         </div>
         `;
     });
-container.innerHTML = html;
+    container.innerHTML = html;
 }
 
 function renderPopupWhatsAppListUI() {
     let container = document.getElementById('popupWhatsAppList');
-let filtered = activities.filter(a => a.date === selectedDateStr);
+    let filtered = activities.filter(a => a.date === selectedDateStr);
     filtered.sort((a, b) => a.time.localeCompare(b.time));
-if (filtered.length === 0) {
+    if (filtered.length === 0) {
         container.innerHTML = `<p style="color:gray; font-size:16px; text-align:center; padding:10px;">此日期暫無可傳送通知的項目。</p>`;
         return;
-}
+    }
 
     let html = "";
     filtered.forEach(ev => {
@@ -707,37 +773,36 @@ if (filtered.length === 0) {
             <div style="flex:1; padding-right:10px; font-size:16px;">
                 <strong>${ev.time}</strong> - ${ev.title}
             </div>
-          
-    <div>
+            <div>
                 <button class="whatsapp-btn" onclick="sendWhatsAppNotification('${ev.id}')">${btnLabel}</button>
             </div>
         </div>
         `;
     });
-container.innerHTML = html;
+    container.innerHTML = html;
 }
 
 function triggerEditFromPopup(id) {
     let ev = activities.find(a => a.id === id);
     if (!ev) return;
-document.getElementById('editKey').value = ev.id;
+    document.getElementById('editKey').value = ev.id;
     document.getElementById('eventTitle').value = ev.title;
     document.getElementById('eventTime').value = ev.time;
     document.getElementById('notifyTime').value = ev.notifyTime;
     document.getElementById('targetPhone').value = ev.targetPhone || "";
     document.getElementById('eventNote').value = ev.note;
-document.getElementById('whatsappBtnText').value = ev.whatsappBtnText || "💬 WhatsApp 通知";
+    document.getElementById('whatsappBtnText').value = ev.whatsappBtnText || "💬 WhatsApp 通知";
 
     if (ev.slotsSnapshot) {
         slotsMapping = ev.slotsSnapshot;
-refreshMemberButtonsUI();
+        refreshMemberButtonsUI();
     }
 
     let checkboxes = document.querySelectorAll('input[name="members"]');
     checkboxes.forEach(cb => {
         cb.checked = !!(ev.members && ev.members.includes(cb.value));
     });
-document.getElementById('formTitle').innerText = "✏️ 修改項目內容";
+    document.getElementById('formTitle').innerText = "✏️ 修改項目內容";
     document.getElementById('submitBtn').innerText = "確認修改更新至雲端";
 
     document.getElementById('secureManagePanel').style.display = 'none';
@@ -749,13 +814,13 @@ function closeEventPopup() {
     document.getElementById('eventTime').value = "18:00";
     document.getElementById('notifyTime').value = "17:00";
     document.getElementById('eventTitle').value = "";
-document.getElementById('targetPhone').value = "";
+    document.getElementById('targetPhone').value = "";
     document.getElementById('eventNote').value = "";
     document.getElementById('whatsappBtnText').value = "💬 WhatsApp 通知"; 
     document.getElementById('popupPassword').value = "";
     
     let checkboxes = document.querySelectorAll('input[name="members"]');
-checkboxes.forEach(cb => cb.checked = false);
+    checkboxes.forEach(cb => cb.checked = false);
 
     document.getElementById('addEventPopupOverlay').style.display = 'none';
     document.body.style.overflow = 'auto';
@@ -772,30 +837,31 @@ function closePopupOverlayOutside(event) {
 function refreshMemberButtonsUI() {
     for (let slotId in slotsMapping) {
         let cb = document.getElementById(`slot_cb_${slotId}`);
-let labelSpan = document.querySelector(`#slot_label_${slotId} .btn-text-span`);
+        let labelSpan = document.querySelector(`#slot_label_${slotId} .btn-text-span`);
         
         if (cb && labelSpan) {
             cb.value = slotsMapping[slotId].name;
-let phoneBadge = slotsMapping[slotId].phone ? `<span class="phone-indicator">📞</span>` : "";
+            let phoneBadge = slotsMapping[slotId].phone ? `<span class="phone-indicator">📞</span>` : "";
             labelSpan.innerHTML = slotsMapping[slotId].name + phoneBadge;
-}
+        }
     }
     localStorage.setItem('member_slots_extended_config', JSON.stringify(slotsMapping));
 }
 
 function syncTargetPhone(slotId) {
     let cb = document.getElementById(`slot_cb_${slotId}`);
-let phoneInput = document.getElementById('targetPhone');
+    let phoneInput = document.getElementById('targetPhone');
     if (cb && cb.checked && slotsMapping[slotId].phone) {
         phoneInput.value = slotsMapping[slotId].phone;
-}
+    }
 }
 
+// ─── 🔄 完美切分：點擊名字文字本身，徹底阻斷剔方格 checkbox 事件冒泡 ───
 function modifyMemberPrompt(slotId, event) {
     if (event) {
         event.preventDefault();
-        event.stopPropagation();
-}
+        event.stopPropagation(); // 徹底斬斷冒泡，方格狀態絕對保持靜態
+    }
 
     document.getElementById('memberLockSection').style.display = 'block';
     document.getElementById('secureMemberPanel').style.display = 'none';
@@ -803,7 +869,7 @@ function modifyMemberPrompt(slotId, event) {
 
     document.getElementById('currentEditSlotId').value = slotId;
     document.getElementById('editMemberName').value = slotsMapping[slotId].name;
-document.getElementById('editMemberPhone').value = slotsMapping[slotId].phone || "";
+    document.getElementById('editMemberPhone').value = slotsMapping[slotId].phone || "";
 
     document.getElementById('memberFormTitle').innerText = `✏️ 修改成員資料 (${slotsMapping[slotId].name})`;
 
@@ -815,13 +881,13 @@ function saveMemberSettings() {
     let slotId = document.getElementById('currentEditSlotId').value;
     let newName = document.getElementById('editMemberName').value.trim();
     let newPhone = document.getElementById('editMemberPhone').value.replace(/\s+/g, '');
-if (!newName) {
+    if (!newName) {
         alert("顯示名稱不能留空！");
         return;
     }
 
     slotsMapping[slotId].name = newName;
-slotsMapping[slotId].phone = newPhone;
+    slotsMapping[slotId].phone = newPhone;
     
     refreshMemberButtonsUI();
     closeMemberEditPopup();
@@ -831,14 +897,14 @@ function closeMemberEditPopup() {
     document.getElementById('memberEditPopupOverlay').style.display = 'none';
     document.getElementById('currentEditSlotId').value = "";
     document.getElementById('editMemberName').value = "";
-document.getElementById('editMemberPhone').value = "";
+    document.getElementById('editMemberPhone').value = "";
     document.getElementById('memberPopupPassword').value = "";
 }
 
 function closeMemberPopupOverlayOutside(event) {
     if (event.target === document.getElementById('memberEditPopupOverlay')) {
         closeMemberEditPopup();
-}
+    }
 }
 
 function fetchCloudData() {
@@ -848,52 +914,43 @@ function fetchCloudData() {
             activities = [];
             if (data) {
                 for (let key in data) {
-                   
- if (data[key]) {
+                    if (data[key]) {
                         if (data[key].slotsSnapshot) {
                             for(let id in data[key].slotsSnapshot){
                                 if(data[key].slotsSnapshot[id].name) {
-       
                                      slotsMapping[id] = data[key].slotsSnapshot[id];
                                 }
                             }
-         
-                }
+                        }
 
                         activities.push({
                             id: key,
                             date: data[key].date,
-   
-                          time: data[key].time,
+                            time: data[key].time,
                             notifyTime: data[key].notifyTime || "17:00",
                             title: data[key].title,
-              
-               members: data[key].members ||
-[], 
-                            targetPhone: data[key].targetPhone ||
-"",
-                            slotsSnapshot: data[key].slotsSnapshot ||
-{}, 
-                            whatsappBtnText: data[key].whatsappBtnText ||
-"💬 WhatsApp 通知", 
+                            members: data[key].members || [], 
+                            targetPhone: data[key].targetPhone || "",
+                            slotsSnapshot: data[key].slotsSnapshot || {}, 
+                            whatsappBtnText: data[key].whatsappBtnText || "💬 WhatsApp 通知", 
                             note: data[key].note
                         });
-}
+                    }
                 }
             }
             refreshMemberButtonsUI();
-renderCalendar();
+            renderCalendar();
             renderDayEvents();
             
             if(document.getElementById('secureManagePanel').style.display === 'block') {
                 renderPopupManageListUI();
-}
+            }
             if(document.getElementById('secureWhatsAppPanel').style.display === 'block') {
                 renderPopupWhatsAppListUI();
-}
+            }
             
             checkNotificationTimers();
-})
+        })
         .catch(error => {
             console.error(error);
         });
@@ -912,7 +969,7 @@ function checkNotificationTimers() {
     let timeHHMM = `${currentHH}:${currentMM}`; 
 
     let dismissedAlerts = JSON.parse(localStorage.getItem('dismissed_whatsapp_alerts')) || {};
-activities.forEach(ev => {
+    activities.forEach(ev => {
         if (dismissedAlerts[ev.id] === todayStr) return;
 
         let isTimeMatch = false;
@@ -923,48 +980,46 @@ activities.forEach(ev => {
         if (ev.date === todayStr && notifyRaw.includes(":")) {
             let match = notifyRaw.match(/([0-1]?[0-9]|2[0-3]):[0-5][0-9]/);
             if (match && match[0]) {
-     
-            let parts = match[0].split(':');
+                let parts = match[0].split(':');
                 let formattedNotifyTime = `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
                 if (formattedNotifyTime === timeHHMM) {
                     isTimeMatch = true;
                 }
-       
-      }
+            }
         }
         
         if (notifyRaw.includes("月") && notifyRaw.includes("日") && notifyRaw.includes(":")) {
             let monthLabel = parseInt(currentM) + "月";
             let dateLabel = parseInt(currentD) + "日";
             if (notifyRaw.includes(monthLabel) && notifyRaw.includes(dateLabel)) {
-               
- let match = notifyRaw.match(/([0-1]?[0-9]|2[0-3]):[0-5][0-9]/);
+                let match = notifyRaw.match(/([0-1]?[0-9]|2[0-3]):[0-5][0-9]/);
                 if (match && match[0]) {
                     let parts = match[0].split(':');
                     let formattedNotifyTime = `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
                     if (formattedNotifyTime === timeHHMM) {
                         isTimeMatch = true;
-}
+                    }
                 }
             }
         }
 
         if (isTimeMatch) {
             showAlertPopup(ev, todayStr);
-}
+        }
     });
 }
 
 function showAlertPopup(ev, todayStr) {
     let overlay = document.getElementById('whatsappAlertPopupOverlay');
-if (overlay.style.display === 'block') return;
+    if (overlay.style.display === 'block') return;
 
     document.getElementById('currentAlertEventId').value = ev.id;
     
     let participants = ev.members && ev.members.length > 0 ? ev.members.join('、') : "全體成員";
     let remarkText = ev.note ? `<br>📝 <strong>備註：</strong>${ev.note}` : "";
     let targetText = ev.targetPhone ? `<br>📞 <strong>指定對象：</strong>${ev.targetPhone}` : "<br>👥 <strong>接收對象：</strong>家庭大群組";
-mdHtml = `
+    
+    let msgHtml = `
         📌 <strong>活動名稱：</strong>${ev.title}<br>
         ⏰ <strong>活動時間：</strong>${ev.time}<br>
         👥 <strong>參與成員：</strong>${participants}
@@ -972,29 +1027,29 @@ mdHtml = `
         ${remarkText}<br><br>
         🔔 <strong>設定提醒時間：</strong>${ev.notifyTime}
     `;
-document.getElementById('whatsappAlertMessage').innerHTML = msgHtml;
+    document.getElementById('whatsappAlertMessage').innerHTML = msgHtml;
     overlay.style.display = 'block';
     document.body.style.overflow = 'hidden'; 
 }
 
 function triggerAlertWhatsAppSend() {
     let id = document.getElementById('currentAlertEventId').value;
-if (id) {
+    if (id) {
         sendWhatsAppNotification(id);
         dismissAlertPopup();
-}
+    }
 }
 
 function dismissAlertPopup() {
     let id = document.getElementById('currentAlertEventId').value;
-if (id) {
+    if (id) {
         let now = new Date();
-let todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        let todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         
         let dismissedAlerts = JSON.parse(localStorage.getItem('dismissed_whatsapp_alerts')) || {};
         dismissedAlerts[id] = todayStr; 
         localStorage.setItem('dismissed_whatsapp_alerts', JSON.stringify(dismissedAlerts));
-}
+    }
     
     document.getElementById('whatsappAlertPopupOverlay').style.display = 'none';
     document.body.style.overflow = 'auto';
@@ -1005,23 +1060,23 @@ const holidays = {
 };
 function getDynamicHoliday(y, m, d) {
     let mm = String(m).padStart(2, '0'); let dd = String(d).padStart(2, '0');
-let key = `${mm}-${dd}`;
+    let key = `${mm}-${dd}`;
     if (holidays[key]) return holidays[key];
     if (y === 2026) {
         if (key === "02-17") return "年初一";
-if (key === "02-18") return "年初二"; if (key === "02-19") return "年初三";
+        if (key === "02-18") return "年初二"; if (key === "02-19") return "年初三";
         if (key === "04-03") return "受難節";
-if (key === "04-06") return "復活節"; if (key === "05-24") return "佛誕";
+        if (key === "04-06") return "復活節"; if (key === "05-24") return "佛誕";
         if (key === "06-19") return "端午節";
-if (key === "09-26") return "中秋翌日"; if (key === "10-19") return "重陽節";
-}
+        if (key === "09-26") return "中秋翌日"; if (key === "10-19") return "重陽節";
+    }
     if (y === 2027) {
         if (key === "02-06") return "年初一";
-if (key === "02-08") return "年初二"; if (key === "02-09") return "年初三";
+        if (key === "02-08") return "年初二"; if (key === "02-09") return "年初三";
         if (key === "03-26") return "受難節";
-if (key === "03-29") return "復活節"; if (key === "05-13") return "佛誕";
+        if (key === "03-29") return "復活節"; if (key === "05-13") return "佛誕";
         if (key === "06-09") return "端午節";
-if (key === "09-16") return "中秋翌日"; if (key === "10-08") return "重陽節";
+        if (key === "09-16") return "中秋翌日"; if (key === "10-08") return "重陽節";
     }
     return "";
 }
@@ -1029,62 +1084,61 @@ if (key === "09-16") return "中秋翌日"; if (key === "10-08") return "重陽�
 function getLunar(date){
     try {
         let d = new Date(date);
-if (isNaN(d.getTime())) return "";
+        if (isNaN(d.getTime())) return "";
         let parts = new Intl.DateTimeFormat("zh-Hant-u-ca-chinese", {month:"numeric", day:"numeric"}).formatToParts(d);
         let month = parts.find(p=>p.type==='month').value; let day = parts.find(p=>p.type==='day').value;
-const CN=["","一","二","三","四","五","六","七","八","九","十"];
+        const CN=["","一","二","三","四","五","六","七","八","九","十"];
         function dCN(n){ n=Number(n); if(n<=10) return "初"+CN[n]; if(n<20) return "十"+CN[n-10]; if(n==20) return "二十"; if(n<30) return "廿"+CN[n-20]; return "三十";
-}
+        }
         function mCN(n){ return ["","一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","冬月","臘月"][n];
-}
+        }
         return day==1 ? mCN(month) : dCN(day);
     } catch(e) { return "";
-}
+    }
 }
 
 function selectDate(dateStr) {
     selectedDateStr = dateStr;
     let cells = document.querySelectorAll('.calendar-day');
-cells.forEach(cell => {
+    cells.forEach(cell => {
         if (cell.getAttribute('data-date') === dateStr) { cell.classList.add('selected-day'); } else { cell.classList.remove('selected-day'); }
     });
-renderDayEvents();
+    renderDayEvents();
 }
 
 function sendWhatsAppNotification(id) {
     let ev = activities.find(a => a.id === id);
     if (!ev) return;
-let remark = ev.note ? `\n📝 備註備忘：${ev.note}` : "";
-    let participants = ev.members && ev.members.length > 0 ?
-ev.members.join('、') : "全體成員";
+    let remark = ev.note ? `\n📝 備註備忘：${ev.note}` : "";
+    let participants = ev.members && ev.members.length > 0 ? ev.members.join('、') : "全體成員";
 
     let textMessage = `💡【麟李互助家庭日誌 - 行程提醒】\n\n📢 有一項最新日程提醒：\n\n📅 日期：${ev.date}\n⏰ 活動時間：${ev.time}\n👥 活動參與者：${participants}\n📌 項目名稱 / 地點：${ev.title}${remark}\n\n🔔 提醒發送設定為：${ev.notifyTime}，請大家留意安排，互相照顧扶持！❤️`;
-let cleanPhone = ev.targetPhone ? ev.targetPhone.replace(/\s+/g, '') : "";
+    let cleanPhone = ev.targetPhone ? ev.targetPhone.replace(/\s+/g, '') : "";
     if (cleanPhone) {
         if (cleanPhone.length === 8 && /^[569]/.test(cleanPhone)) {
             cleanPhone = "852" + cleanPhone;
-}
+        }
     }
 
     let whatsappUrl = cleanPhone ?
     `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(textMessage)}` : 
     `https://api.whatsapp.com/send?text=${encodeURIComponent(textMessage)}`;
-window.open(whatsappUrl, '_blank');
+    window.open(whatsappUrl, '_blank');
 }
 
 function renderDayEvents() {
     document.getElementById('selectedDateLabel').innerText = selectedDateStr;
     let dayEventsContainer = document.getElementById('dayEvents');
-let filtered = activities.filter(a => a.date === selectedDateStr);
+    let filtered = activities.filter(a => a.date === selectedDateStr);
     
     filtered.sort((a, b) => a.time.localeCompare(b.time));
-if (filtered.length === 0) {
+    if (filtered.length === 0) {
         dayEventsContainer.innerHTML = `<p style="color:gray; font-size:16px;">此日期暫無安排家庭活動。</p>`;
         return;
-}
+    }
     
     let html = "";
-filtered.forEach(ev => {
+    filtered.forEach(ev => {
         let membersTxt = ev.members && ev.members.length > 0 ? `👥 活動參與者：${ev.members.join('、')}` : "👥 活動參與者：全體成員";
         let phoneInfo = ev.targetPhone ? `<div class="event-desc" style="font-size:14px; color:#1890ff;">📞 指定接收號碼：${ev.targetPhone}</div>` : `<div class="event-desc" style="font-size:14px; color:#8c8c8c;">👥 接收對象：家庭大群組 / 自選聯絡人</div>`;
 
@@ -1100,43 +1154,40 @@ filtered.forEach(ev => {
         </div>
         `;
     });
-dayEventsContainer.innerHTML = html;
+    dayEventsContainer.innerHTML = html;
 }
 
 function addFamilyEvent() {
     let titleInput = document.getElementById('eventTitle');
     let timeInput = document.getElementById('eventTime');
-let notifyTimeInput = document.getElementById('notifyTime');
+    let notifyTimeInput = document.getElementById('notifyTime');
     let targetPhoneInput = document.getElementById('targetPhone');
     let noteInput = document.getElementById('eventNote');
     let whatsappBtnTextInput = document.getElementById('whatsappBtnText');
     let editKey = document.getElementById('editKey').value;
-if (!titleInput.value.trim()) {
+    if (!titleInput.value.trim()) {
         alert("請輸入活動名稱或地點！");
         return;
     }
 
     let checkedMembers = [];
-let checkboxes = document.querySelectorAll('input[name="members"]:checked');
+    let checkboxes = document.querySelectorAll('input[name="members"]:checked');
     checkboxes.forEach(cb => { checkedMembers.push(cb.value); });
     
     let eventData = {
         date: selectedDateStr,
-        time: timeInput.value.trim() ||
-"18:00",
-        notifyTime: notifyTimeInput.value.trim() ||
-"17:00", 
+        time: timeInput.value.trim() || "18:00",
+        notifyTime: notifyTimeInput.value.trim() || "17:00", 
         title: titleInput.value.trim(),
         members: checkedMembers, 
         targetPhone: targetPhoneInput.value.trim(), 
         slotsSnapshot: slotsMapping, 
-        whatsappBtnText: whatsappBtnTextInput.value.trim() ||
-"💬 WhatsApp 通知", 
+        whatsappBtnText: whatsappBtnTextInput.value.trim() || "💬 WhatsApp 通知", 
         note: noteInput.value.trim()
     };
-let targetURL = editKey ? `${dbURL}/${editKey}.json` : `${dbURL}.json`;
+    let targetURL = editKey ? `${dbURL}/${editKey}.json` : `${dbURL}.json`;
     let reqMethod = editKey ? "PUT" : "POST";
-fetch(targetURL, {
+    fetch(targetURL, {
         method: reqMethod,
         mode: "cors",
         headers: { "Content-Type": "application/json" },
@@ -1149,8 +1200,7 @@ fetch(targetURL, {
     })
     .catch(err => {
         alert("儲存未成功，請確認 Firebase Rules 規則。");
-      
-   console.error(err);
+        console.error(err);
     });
 }
 
@@ -1158,48 +1208,54 @@ function deleteEventFromPopup(id) {
     if (confirm("確定要刪除這項活動嗎？")) {
         fetch(`${dbURL}/${id}.json`, { method: "DELETE", mode: "cors" })
             .then(() => { fetchCloudData(); });
-}
+    }
 }
 
 /* 渲染日曆 */
 function renderCalendar(){
     let y = current.getFullYear(); let m = current.getMonth();
-monthLabel.innerText = y + "年 " + (m + 1) + "月";
+    monthLabel.innerText = y + "年 " + (m + 1) + "月";
     let first = new Date(y, m, 1).getDay();
-let days = new Date(y, m + 1, 0).getDate();
+    let days = new Date(y, m + 1, 0).getDate();
     let html = "", total = 0;
-for(let i=0; i<first; i++){ html += `<div class="calendar-day empty"></div>`; total++;
-}
+    for(let i=0; i<first; i++){ html += `<div class="calendar-day empty"></div>`; total++;
+    }
 
     for(let i=1; i<=days; i++){
         let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-let isToday = new Date().toISOString().slice(0,10) === dStr;
+        let isToday = new Date().toISOString().slice(0,10) === dStr;
         let isSelected = selectedDateStr === dStr;
         let lunar = getLunar(dStr);
-let holiday = getDynamicHoliday(y, m+1, i);
+        let holiday = getDynamicHoliday(y, m+1, i);
         
         let dayActivities = activities.filter(a => a.date === dStr);
         dayActivities.sort((a, b) => a.time.localeCompare(b.time));
-let eventsHtml = "";
+        let eventsHtml = "";
+        
         dayActivities.forEach(act => {
-            eventsHtml += `<span class="day-event-badge" title="${act.time} ${act.title}">${act.time} ${act.title}</span>`;
+            if (currentGlobalMode === "詳細資料") {
+                let pTxt = act.members && act.members.length > 0 ? `(${act.members.join(',')})` : "";
+                eventsHtml += `<span class="day-event-badge" style="background:#e8f9ed; color:#25D366; border-left-color:#25D366;" title="${act.title}">${act.time} ${pTxt} ${act.title}</span>`;
+            } else {
+                eventsHtml += `<span class="day-event-badge" title="${act.time} ${act.title}">${act.time} ${act.title}</span>`;
+            }
         });
-let dayClass = "calendar-day";
+        
+        let dayClass = "calendar-day";
         if (isToday) dayClass += " today";
         if (isSelected) dayClass += " selected-day";
-html += `
+        html += `
         <div class="${dayClass}" data-date="${dStr}" onclick="selectDate('${dStr}')">
             <strong>${i}</strong>
             <div class="lunar">${lunar}</div>
-            ${holiday ?
-`<div class="holiday">🔴 ${holiday}</div>` : ""}
+            ${holiday ? `<div class="holiday">🔴 ${holiday}</div>` : ""}
             <div class="day-events-container">${eventsHtml}</div>
         </div>
         `;
-total++;
+        total++;
     }
     while(total % 7 !== 0){ html += `<div class="calendar-day empty"></div>`; total++;
-}
+    }
     calendar.innerHTML = html;
 }
 
@@ -1209,6 +1265,9 @@ document.getElementById('popupPassword').addEventListener('keydown', popupPasswo
 document.getElementById('memberPopupPassword').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') verifyMemberGatePassword();
 });
+
+// 初始化載入本地記憶的視圖類別
+document.getElementById('bodyNode').className = `view-${currentGlobalMode}`;
 
 fetchCloudData();
 </script>
