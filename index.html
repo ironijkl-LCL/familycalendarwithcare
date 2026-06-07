@@ -19,6 +19,23 @@ header {
 
 .container { padding:10px; }
 
+/* 頂部操作按鈕控制卡片樣式 */
+.top-action-card {
+    background: white;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.top-button-row {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+}
+
 .card {
     background:white;
     padding:15px;
@@ -29,7 +46,7 @@ header {
 
 /* 頭 */
 .calendar-header {
-    display:flex;
+    display: flex;
     justify-content:space-between;
     align-items:center;
     margin-bottom: 15px;
@@ -51,7 +68,7 @@ header {
     font-weight:bold;
 }
 
-/* 星期 - 🛠️ 優化：使用 Flex 排版徹底解決走位問題 */
+/* 星期 */
 .weekdays-container {
     display: flex;
     width: 100%;
@@ -66,7 +83,7 @@ header {
     font-size:16px;
 }
 
-/* 日曆格子區域 - 🛠️ 優化：改用 flex-wrap 彈性排版確保六日完美對齊 */
+/* 日曆格子區域 */
 .calendar { 
     font-size:0; 
     display: flex;
@@ -89,6 +106,7 @@ header {
     cursor: pointer;
     border: 1px solid #f0f0f0;
     overflow: hidden;
+    position: relative;
 }
 
 .calendar-day:hover {
@@ -102,9 +120,13 @@ header {
 }
 .empty:hover { background:transparent; }
 
-.today { border:3px solid orange;
-}
+.today { border:3px solid orange; }
 .selected-day { background: #d0f5db !important; border: 2px solid #25D366; }
+
+/* 橫跨日子專用半透明舒服透色樣式 */
+.multiday-pass-range {
+    background: rgba(37, 211, 102, 0.12) !important;
+}
 
 /* 農曆 */
 .lunar {
@@ -177,7 +199,6 @@ button.edit-btn {
     margin-right: 5px;
 }
 
-/* WhatsApp 快捷按鈕樣式 */
 button.whatsapp-btn {
     background:#25D366;
     padding:6px 12px;
@@ -220,26 +241,47 @@ input, textarea {
     color: #555;
 }
 
-/* 參與者複選群組排版 */
+/* 附圖預覽樣式 */
+.event-image-preview-box {
+    margin-top: 8px;
+    max-width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e0e0e0;
+    display: inline-block;
+}
+.event-image-preview-box img {
+    max-height: 140px;
+    display: block;
+    object-fit: contain;
+}
+
+/* 參與者「收入式選項」高級整合排版樣式 */
 .member-checkbox-group {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    margin: 6px 0 14px 0;
+    margin: 8px 0 14px 0;
+    background: #f9f9f9;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
 }
 .member-label {
     font-size: 15px;
     display: flex;
     align-items: center;
     cursor: pointer;
-    background: #f0f0f0;
-    padding: 6px 12px;
+    background: white;
+    padding: 6px 14px;
     border-radius: 20px;
     user-select: none;
-    transition: background 0.2s;
+    border: 1px solid #ddd;
+    transition: all 0.2s;
 }
 .member-label:hover {
-    background: #e0e0e0;
+    background: #eefbf2;
+    border-color: #25D366;
 }
 .member-label input[type="checkbox"] {
     width: auto;
@@ -257,6 +299,60 @@ input, textarea {
     font-size: 11px;
     color: #1890ff;
     margin-left: 3px;
+}
+
+/* 智慧型雙向輸入列排版樣式 */
+.twin-input-wrapper {
+    display: flex;
+    align-items: center;
+    position: relative;
+    width: 100%;
+}
+.twin-input-wrapper input[type="text"] {
+    flex: 1;
+    cursor: pointer;
+}
+.wheel-trigger-box {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    pointer-events: none;
+}
+.wheel-btn {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    pointer-events: auto;
+}
+.picker-overlay-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0 !important;
+    cursor: pointer;
+    z-index: 5;
+    padding: 0;
+    margin: 0;
+}
+
+.time-picker-label {
+    font-size: 15px; 
+    color: #555; 
+    margin-top: 10px; 
+    display: block;
+    font-weight: bold;
 }
 
 /* 高級黑半透明彈窗遮罩層與容器樣式 */
@@ -284,7 +380,6 @@ input, textarea {
     animation: popupSlideIn 0.3s ease-out; 
 }
 
-/* 關閉 X 按鈕樣式 */
 .popup-close-x {
     position: absolute;
     top: 15px;
@@ -299,10 +394,8 @@ input, textarea {
     color: #333;
 }
 
-/* 彈窗動畫 */
 @keyframes popupSlideIn {
-    from { transform: translateY(-30px); opacity: 0;
-    }
+    from { transform: translateY(-30px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
 }
 
@@ -322,7 +415,6 @@ input, textarea {
     margin-top: 15px;
 }
 
-/* 管理舊活動與 WhatsApp 清單內的條目排版 */
 .manage-item-row {
     background: #f5f5f5;
     padding: 10px;
@@ -333,57 +425,8 @@ input, textarea {
     align-items: center;
 }
 
-/* 雙模合一智慧型輸入列排版樣式 */
-.twin-input-wrapper {
-    display: flex;
-    align-items: center;
-    position: relative;
-    width: 100%;
-}
-.twin-input-wrapper input[type="text"] {
-    flex: 1;
-    padding-right: 90px; 
-}
-.wheel-trigger-box {
-    position: absolute;
-    right: 8px;
-    display: flex;
-    gap: 5px;
-}
-.wheel-btn {
-    background: #e6f7ff;
-    color: #1890ff;
-    border: 1px solid #91d5ff;
-    padding: 5px 8px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: bold;
-    cursor: pointer;
-}
-.wheel-btn:hover {
-    background: #1890ff;
-    color: white;
-}
-.hidden-wheel-picker {
-    position: absolute;
-    opacity: 0;
-    width: 1px;
-    height: 1px;
-    pointer-events: none;
-}
-
-/* 修改成員自訂彈窗排版與輸入框優化 */
-.member-edit-fields {
-    margin-top: 15px;
-}
-
-/* ─── 🔄 動態視圖切換模式 CSS 控制群 ─── */
-/* 精簡視圖 */
-.view-精簡 .day-event-badge {
-    display: none !important;
-}
-
-/* 疊放視圖 */
+/* 視圖切換模式群 */
+.view-精簡 .day-event-badge { display: none !important; }
 .view-疊放 .day-event-badge {
     padding: 1px 2px !important;
     margin-top: 1px !important;
@@ -391,39 +434,16 @@ input, textarea {
     line-height: 1.1 !important;
     border-left-width: 2px !important;
 }
-
-/* 詳細資料視圖 */
-.view-詳細資料 .calendar-day {
-    min-height: 140px !important;
-}
+.view-詳細資料 .calendar-day { min-height: 140px !important; }
 .view-詳細資料 .day-event-badge {
     white-space: normal !important;
     word-break: break-all !important;
     overflow: visible !important;
     text-overflow: clip !important;
 }
-
-/* 視圖切換單選列樣式 */
-.view-option-group {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 15px;
-}
-.view-radio-label {
-    display: flex;
-    align-items: center;
-    background: #f5f5f5;
-    padding: 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-}
-.view-radio-label input {
-    width: auto;
-    margin: 0 10px 0 0;
-    transform: scale(1.3);
-}
+.view-option-group { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
+.view-radio-label { display: flex; align-items: center; background: #f5f5f5; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+.view-radio-label input { width: auto; margin: 0 10px 0 0; transform: scale(1.3); }
 </style>
 </head>
 
@@ -432,6 +452,15 @@ input, textarea {
 <header>📅 麟李互助家庭日誌</header>
 
 <div class="container">
+
+    <div class="top-action-card">
+        <button class="action-btn" style="background: #25D366; font-size: 17px; padding: 12px; margin: 0;" onclick="openAddFormPopup('ADD')">➕ 新增家庭活動</button>
+        <div class="top-button-row">
+            <button class="action-btn" style="background: #1890ff; font-size: 16px; padding: 12px; margin: 0; flex: 1;" onclick="openAddFormPopup('MANAGE')">⚙️ 管理/修改舊活動</button>
+            <button class="action-btn" style="background: #00c642; font-size: 16px; padding: 12px; margin: 0; flex: 1;" onclick="openAddFormPopup('WHATSAPP')">💬 傳送 WhatsApp 通知</button>
+            <button class="action-btn" style="background: #722ed1; font-size: 16px; padding: 12px; margin: 0; flex: 1;" onclick="openAddFormPopup('SWITCH_VIEW')">👁️ 視誌視圖切換</button>
+        </div>
+    </div>
 
     <div class="card">
         <div class="calendar-header">
@@ -442,7 +471,6 @@ input, textarea {
 
         <div class="weekdays-container">
             <div class="weekday">日</div>
- 
             <div class="weekday">一</div>
             <div class="weekday">二</div>
             <div class="weekday">三</div>
@@ -454,19 +482,9 @@ input, textarea {
         <div id="calendar" class="calendar"></div>
     </div>
 
- 
     <div class="card">
         <h3 style="margin-top:0; color:#333;">📋 <span id="selectedDateLabel"></span> 活動日程</h3>
         <div id="dayEvents"></div>
-    </div>
-
-    <div class="card" style="display: flex; flex-direction: row; gap: 10px; padding: 12px; justify-content: center; align-items: center; flex-wrap: wrap;">
-        <button class="action-btn" style="background: #25D366; font-size: 24px; padding: 12px; margin: 0; flex: 1; border-radius: 12px; display: flex; justify-content: center; align-items: center;" onclick="openAddFormPopup('ADD')" title="新增家庭活動">➕</button>
-        <div style="display: flex; gap: 10px; flex: 2; width: 100%;">
-            <button class="action-btn" style="background: #1890ff; font-size: 24px; padding: 12px; margin: 0; flex: 1; border-radius: 12px; display: flex; justify-content: center; align-items: center;" onclick="openAddFormPopup('MANAGE')" title="管理/修改舊活動">⚙️</button>
-            <button class="action-btn" style="background: #00c642; font-size: 24px; padding: 12px; margin: 0; flex: 1; border-radius: 12px; display: flex; justify-content: center; align-items: center;" onclick="openAddFormPopup('WHATSAPP')" title="傳送 WhatsApp 通知">💬</button>
-            <button class="action-btn" style="background: #722ed1; font-size: 24px; padding: 12px; margin: 0; flex: 1; border-radius: 12px; display: flex; justify-content: center; align-items: center;" onclick="openAddFormPopup('SWITCH_VIEW')" title="視誌視圖切換">👁️</button>
-        </div>
     </div>
 
     <div class="popup-overlay" id="addEventPopupOverlay" onclick="closePopupOverlayOutside(event)">
@@ -487,26 +505,44 @@ input, textarea {
                 <label for="eventTitle" style="font-size:15px; color:#666; margin-top: 10px; display: block;">活動名稱 / 地點：</label>
                 <input type="text" id="eventTitle" placeholder="例如：陪爺爺飲茶、家族聚餐、樂活金掌家會議">
 
-                <label for="eventTime" style="font-size:15px; color:#666; display: block;">活動時間：</label>
+                <label class="time-picker-label" for="eventTime">📅 開始時間與日期：</label>
                 <div class="twin-input-wrapper">
-                    <input type="text" id="eventTime" value="18:00" placeholder="例如：18:00 或 下午6:00">
+                    <input type="text" id="eventTime" value="" placeholder="點擊此處選取開始日期與時間">
                     <div class="wheel-trigger-box">
-                        <button type="button" class="wheel-btn" onclick="triggerTimeWheel('eventTime', 'nativeTimeWheelA')">⏰ 自選</button>
+                        <div class="wheel-btn">
+                            <input type="datetime-local" class="picker-overlay-input" onchange="syncComboPicker(this, 'eventTime', 'START')">
+                        </div>
                     </div>
-                    <input type="time" id="nativeTimeWheelA" class="hidden-wheel-picker" onchange="syncWheelToText('nativeTimeWheelA', 'eventTime', 'TIME')">
                 </div>
+                <input type="time" id="hiddenTimePickerA" style="position:absolute; opacity:0; width:1px; height:1px; pointer-events:none;">
 
-                <label for="notifyTime" style="font-size:15px; color:#666; display: block; margin-top:10px;">WhatsApp 提醒發送時間：</label>
+
+                <label class="time-picker-label" for="eventEndTime">📆 結束時間與日期：</label>
                 <div class="twin-input-wrapper">
-                    <input type="text" id="notifyTime" value="17:00" placeholder="例如：6月1日 17:00 或 明日下午5點">
+                    <input type="text" id="eventEndTime" placeholder="點擊此處選取結束日期與時間 (選填)">
                     <div class="wheel-trigger-box">
-                        <button type="button" class="wheel-btn" onclick="triggerTimeWheel('notifyTime', 'nativeDateWheel')">📅 日期</button>
-                       <button type="button" class="wheel-btn" onclick="triggerTimeWheel('notifyTime', 'nativeTimeWheelB')">⏰ 時間</button>
+                        <div class="wheel-btn">
+                            <input type="datetime-local" class="picker-overlay-input" onchange="syncComboPicker(this, 'eventEndTime', 'END')">
+                        </div>
                     </div>
-                    <input type="date" id="nativeDateWheel" class="hidden-wheel-picker" onchange="syncWheelToText('nativeDateWheel', 'notifyTime', 'DATE')">
-                    <input type="time" id="nativeTimeWheelB" class="hidden-wheel-picker" onchange="syncWheelToText('nativeTimeWheelB', 'notifyTime', 'TIME_APPEND')">
                 </div>
+                <input type="time" id="hiddenTimePickerB" style="position:absolute; opacity:0; width:1px; height:1px; pointer-events:none;">
+
+
+                <label class="time-picker-label" for="notifyTime">🔔 WhatsApp 提醒時間：</label>
+                <div class="twin-input-wrapper">
+                    <input type="text" id="notifyTime" value="" placeholder="點擊此處選取提醒日期與時間">
+                    <div class="wheel-trigger-box">
+                        <div class="wheel-btn">
+                            <input type="datetime-local" class="picker-overlay-input" onchange="syncComboPicker(this, 'notifyTime', 'NOTIFY')">
+                        </div>
+                    </div>
+                </div>
+                <input type="time" id="hiddenTimePickerC" style="position:absolute; opacity:0; width:1px; height:1px; pointer-events:none;">
                 
+                <label for="eventImageUrl" style="font-size:15px; color:#1890ff; display: block; margin-top:12px; font-weight: bold;">🖼️ 附圖簡潔版面選項 (圖片網址連結)：</label>
+                <input type="text" id="eventImageUrl" placeholder="請貼上網頁相片連結、雲端相冊或單據圖片網址">
+
                 <label style="font-size:15px; color:#666; display: block; margin-top: 12px;">活動參與者：</label>
                 <div class="member-checkbox-group" id="memberCheckboxContainer">
                     <label class="member-label" id="slot_label_1"><input type="checkbox" name="members" id="slot_cb_1" value="阿鐵" onclick="syncTargetPhone(1)"> <span class="btn-text-span" onclick="modifyMemberPrompt(1, event)">阿鐵</span></label>
@@ -517,10 +553,10 @@ input, textarea {
                     <label class="member-label" id="slot_label_6"><input type="checkbox" name="members" id="slot_cb_6" value="Leisel" onclick="syncTargetPhone(6)"> <span class="btn-text-span" onclick="modifyMemberPrompt(6, event)">Leisel</span></label>
                     <label class="member-label" id="slot_label_7"><input type="checkbox" name="members" id="slot_cb_7" value="Debby" onclick="syncTargetPhone(7)"> <span class="btn-text-span" onclick="modifyMemberPrompt(7, event)">Debby</span></label>
                     <label class="member-label" id="slot_label_8"><input type="checkbox" name="members" id="slot_cb_8" value="Hardy" onclick="syncTargetPhone(8)"> <span class="btn-text-span" onclick="modifyMemberPrompt(8, event)">Hardy</span></label>
-                    <label class="member-label" id="slot_label_9"><input type="checkbox" name="members" id="slot_cb_9" value="姑姐" onclick="syncTargetPhone(9)"> <span class="btn-text-span" onclick="modifyMemberPrompt(9, event)">姑姐</span></label>
-                    <label class="member-label" id="slot_label_10"><input type="checkbox" name="members" id="slot_cb_10" value="鄰居" onclick="syncTargetPhone(10)"> <span class="btn-text-span" onclick="modifyMemberPrompt(10, event)">鄰居</span></label>
-                    <label class="member-label" id="slot_label_11"><input type="checkbox" name="members" id="slot_cb_11" value="成員11" onclick="syncTargetPhone(11)"> <span class="btn-text-span" onclick="modifyMemberPrompt(11, event)">成員11</span></label>
-                    <label class="member-label" id="slot_label_12"><input type="checkbox" name="members" id="slot_cb_12" value="成員12" onclick="syncTargetPhone(12)"> <span class="btn-text-span" onclick="modifyMemberPrompt(12, event)">成員12</span></label>
+                    <label class="member-label" id="slot_label_9"><input type="checkbox" name="members" id="slot_cb_9" value="其他" onclick="syncTargetPhone(9)"> <span class="btn-text-span" onclick="modifyMemberPrompt(9, event)">其他</span></label>
+                    <label class="member-label" id="slot_label_10"><input type="checkbox" name="members" id="slot_cb_10" value="無需參與者" onclick="syncTargetPhone(10)"> <span class="btn-text-span" onclick="modifyMemberPrompt(10, event)">無需參與者</span></label>
+                    <label class="member-label" id="slot_label_11" style="display:none;"><input type="checkbox" name="members" id="slot_cb_11" value="成員11" onclick="syncTargetPhone(11)"> <span class="btn-text-span" onclick="modifyMemberPrompt(11, event)">成員11</span></label>
+                    <label class="member-label" id="slot_label_12" style="display:none;"><input type="checkbox" name="members" id="slot_cb_12" value="成員12" onclick="syncTargetPhone(12)"> <span class="btn-text-span" onclick="modifyMemberPrompt(12, event)">成員12</span></label>
                 </div>
 
                 <label for="targetPhone" style="font-size:15px; color:#666; display: block;">接收者 / 通知對象電話號碼：</label>
@@ -577,7 +613,7 @@ input, textarea {
                 <input type="text" id="editMemberName" placeholder="例如：陳先生">
                 
                 <label for="editMemberPhone" style="font-size:15px; color:#666; display: block; margin-top: 12px;">WhatsApp 電話號碼：</label>
-                <input type="tel" id="editMemberPhone" placeholder="例如：91234567 (留空發送到大群組)">
+                <input type="tel" id="editMemberPhone" placeholder="手提號碼">
                 
                 <button class="action-btn" style="background:#25D366; margin-top: 20px;" onclick="saveMemberSettings()">儲存更新</button>
             </div>
@@ -609,6 +645,7 @@ let currentPopupMode = "ADD";
 
 let currentGlobalMode = localStorage.getItem('family_日誌_view_mode') || "列表";
 
+// 更新預設對應資料結構，符合取消與新增欄位
 let slotsMapping = JSON.parse(localStorage.getItem('member_slots_extended_config')) || {
     1: { name: "阿鐵", phone: "" },
     2: { name: "Jolie", phone: "" },
@@ -618,8 +655,8 @@ let slotsMapping = JSON.parse(localStorage.getItem('member_slots_extended_config
     6: { name: "Leisel", phone: "" },
     7: { name: "Debby", phone: "" },
     8: { name: "Hardy", phone: "" },
-    9: { name: "姑姐", phone: "" },
-    10: { name: "鄰居", phone: "" },
+    9: { name: "其他", phone: "" },
+    10: { name: "無需參與者", phone: "" },
     11: { name: "成員11", phone: "" },
     12: { name: "成員12", phone: "" }
 };
@@ -632,32 +669,19 @@ function changeGlobalViewMode(modeStr) {
     closeEventPopup();
 }
 
-function triggerTimeWheel(txtInputId, nativePickerId) {
-    let picker = document.getElementById(nativePickerId);
-    if (picker) picker.showPicker();
-}
-
-function syncWheelToText(pickerId, txtInputId, type) {
-    let picker = document.getElementById(pickerId);
+function syncComboPicker(inputElement, txtInputId, flag) {
     let txtInput = document.getElementById(txtInputId);
-    if (!picker || !picker.value || !txtInput) return;
-    if (type === 'TIME') {
-        txtInput.value = picker.value;
-    } else if (type === 'DATE') {
-        let d = new Date(picker.value);
-        if (!isNaN(d.getTime())) {
-            let m = d.getMonth() + 1;
-            let dateVal = d.getDate();
-            txtInput.value = `${m}月${dateVal}日`;
-        }
-    } else if (type === 'TIME_APPEND') {
-        let currentTxt = txtInput.value.trim();
-        if (currentTxt.includes("日")) {
-            let datePart = currentTxt.split("日")[0] + "日";
-            txtInput.value = `${datePart} ${picker.value}`;
-        } else {
-            txtInput.value = currentTxt ? `${currentTxt} ${picker.value}` : picker.value;
-        }
+    if (!inputElement || !inputElement.value || !txtInput) return;
+
+    let parts = inputElement.value.split('T');
+    let datePart = parts[0]; 
+    let timePart = parts[1]; 
+
+    let d = new Date(datePart);
+    if (!isNaN(d.getTime())) {
+        txtInput.value = `${d.getMonth() + 1}月${d.getDate()}日 ${timePart}`;
+        txtInput.setAttribute('data-raw-date', datePart);
+        txtInput.setAttribute('data-raw-time', timePart);
     }
 }
 
@@ -674,6 +698,20 @@ function verifyGatePassword() {
             renderPopupWhatsAppListUI(); 
         } else {
             document.getElementById('secureFormPanel').style.display = 'block';
+            
+            let d = new Date(selectedDateStr);
+            if(!document.getElementById('eventTime').value) {
+                document.getElementById('eventTime').value = `${d.getMonth() + 1}月${d.getDate()}日 18:00`;
+                document.getElementById('eventTime').setAttribute('data-raw-date', selectedDateStr);
+                document.getElementById('eventTime').setAttribute('data-raw-time', "18:00");
+            }
+            
+            if(!document.getElementById('notifyTime').value) {
+                document.getElementById('notifyTime').value = `${d.getMonth() + 1}月${d.getDate()}日 17:00`;
+                document.getElementById('notifyTime').setAttribute('data-raw-date', selectedDateStr);
+                document.getElementById('notifyTime').setAttribute('data-raw-time', "17:00");
+            }
+            
             document.getElementById('eventTitle').focus();
         }
     } else {
@@ -697,7 +735,6 @@ function verifyMemberGatePassword() {
     }
 }
 
-// ─── 🔄 優化：智慧路由分流，如果是視圖切換模式則一鍵免密碼進入 ───
 function openAddFormPopup(mode) {
     currentPopupMode = mode || "ADD";
     
@@ -713,7 +750,6 @@ function openAddFormPopup(mode) {
         document.getElementById('formTitle').innerText = "💬 傳送 WhatsApp 通知";
     } else if (currentPopupMode === "SWITCH_VIEW") {
         document.getElementById('formTitle').innerText = "👁️ 視誌切換模式";
-        // 🚀 關鍵調整：免密碼直接解除阻擋，亮出 4 大視圖切換單選鈕
         document.getElementById('lockSection').style.display = 'none';
         document.getElementById('secureViewSwitchPanel').style.display = 'block';
         let radios = document.getElementsByName('viewMode');
@@ -741,10 +777,11 @@ function renderPopupManageListUI() {
 
     let html = "";
     filtered.forEach(ev => {
+        let hasImgTag = ev.eventImageUrl ? " 🖼️" : "";
         html += `
         <div class="manage-item-row">
             <div style="flex:1; padding-right:10px; font-size:16px;">
-                <strong>${ev.time}</strong> - ${ev.title}
+                <strong>${ev.time}</strong> - ${ev.title}${hasImgTag}
             </div>
             <div style="display:flex;">
                 <button class="edit-btn" onclick="triggerEditFromPopup('${ev.id}')">✏️ 修改</button>
@@ -787,11 +824,15 @@ function triggerEditFromPopup(id) {
     if (!ev) return;
     document.getElementById('editKey').value = ev.id;
     document.getElementById('eventTitle').value = ev.title;
+    
     document.getElementById('eventTime').value = ev.time;
+    document.getElementById('eventTime').setAttribute('data-raw-date', ev.date);
+    
     document.getElementById('notifyTime').value = ev.notifyTime;
     document.getElementById('targetPhone').value = ev.targetPhone || "";
     document.getElementById('eventNote').value = ev.note;
     document.getElementById('whatsappBtnText').value = ev.whatsappBtnText || "💬 WhatsApp 通知";
+    document.getElementById('eventImageUrl').value = ev.eventImageUrl || "";
 
     if (ev.slotsSnapshot) {
         slotsMapping = ev.slotsSnapshot;
@@ -811,13 +852,21 @@ function triggerEditFromPopup(id) {
 
 function closeEventPopup() {
     document.getElementById('editKey').value = "";
-    document.getElementById('eventTime').value = "18:00";
-    document.getElementById('notifyTime').value = "17:00";
+    document.getElementById('eventTime').value = "";
+    document.getElementById('eventTime').removeAttribute('data-raw-date');
+    document.getElementById('eventTime').removeAttribute('data-raw-time');
+    document.getElementById('notifyTime').value = "";
+    document.getElementById('notifyTime').removeAttribute('data-raw-date');
+    document.getElementById('notifyTime').removeAttribute('data-raw-time');
     document.getElementById('eventTitle').value = "";
     document.getElementById('targetPhone').value = "";
     document.getElementById('eventNote').value = "";
     document.getElementById('whatsappBtnText').value = "💬 WhatsApp 通知"; 
     document.getElementById('popupPassword').value = "";
+    document.getElementById('eventEndTime').value = "";
+    document.getElementById('eventEndTime').removeAttribute('data-raw-date');
+    document.getElementById('eventEndTime').removeAttribute('data-raw-time');
+    document.getElementById('eventImageUrl').value = "";
     
     let checkboxes = document.querySelectorAll('input[name="members"]');
     checkboxes.forEach(cb => cb.checked = false);
@@ -856,11 +905,10 @@ function syncTargetPhone(slotId) {
     }
 }
 
-// ─── 🔄 完美切分：點擊名字文字本身，徹底阻斷剔方格 checkbox 事件冒泡 ───
 function modifyMemberPrompt(slotId, event) {
     if (event) {
         event.preventDefault();
-        event.stopPropagation(); // 徹底斬斷冒泡，方格狀態絕對保持靜態
+        event.stopPropagation(); 
     }
 
     document.getElementById('memberLockSection').style.display = 'block';
@@ -933,7 +981,10 @@ function fetchCloudData() {
                             targetPhone: data[key].targetPhone || "",
                             slotsSnapshot: data[key].slotsSnapshot || {}, 
                             whatsappBtnText: data[key].whatsappBtnText || "💬 WhatsApp 通知", 
-                            note: data[key].note
+                            note: data[key].note,
+                            isMultiDayEvent: data[key].isMultiDayEvent || false,
+                            multiDayRangeArray: data[key].multiDayRangeArray || [],
+                            eventImageUrl: data[key].eventImageUrl || ""
                         });
                     }
                 }
@@ -977,25 +1028,13 @@ function checkNotificationTimers() {
 
         if (!notifyRaw) return;
 
-        if (ev.date === todayStr && notifyRaw.includes(":")) {
+        if (notifyRaw.includes(":")) {
             let match = notifyRaw.match(/([0-1]?[0-9]|2[0-3]):[0-5][0-9]/);
             if (match && match[0]) {
                 let parts = match[0].split(':');
                 let formattedNotifyTime = `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
-                if (formattedNotifyTime === timeHHMM) {
-                    isTimeMatch = true;
-                }
-            }
-        }
-        
-        if (notifyRaw.includes("月") && notifyRaw.includes("日") && notifyRaw.includes(":")) {
-            let monthLabel = parseInt(currentM) + "月";
-            let dateLabel = parseInt(currentD) + "日";
-            if (notifyRaw.includes(monthLabel) && notifyRaw.includes(dateLabel)) {
-                let match = notifyRaw.match(/([0-1]?[0-9]|2[0-3]):[0-5][0-9]/);
-                if (match && match[0]) {
-                    let parts = match[0].split(':');
-                    let formattedNotifyTime = `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+                
+                if (ev.date === todayStr || notifyRaw.includes(`${now.getMonth() + 1}月${now.getDate()}日`)) {
                     if (formattedNotifyTime === timeHHMM) {
                         isTimeMatch = true;
                     }
@@ -1018,13 +1057,15 @@ function showAlertPopup(ev, todayStr) {
     let participants = ev.members && ev.members.length > 0 ? ev.members.join('、') : "全體成員";
     let remarkText = ev.note ? `<br>📝 <strong>備註：</strong>${ev.note}` : "";
     let targetText = ev.targetPhone ? `<br>📞 <strong>指定對象：</strong>${ev.targetPhone}` : "<br>👥 <strong>接收對象：</strong>家庭大群組";
+    let imgPreviewHtml = ev.eventImageUrl ? `<br><div class="event-image-preview-box"><img src="${ev.eventImageUrl}"></div>` : "";
     
     let msgHtml = `
         📌 <strong>活動名稱：</strong>${ev.title}<br>
         ⏰ <strong>活動時間：</strong>${ev.time}<br>
         👥 <strong>參與成員：</strong>${participants}
         ${targetText}
-        ${remarkText}<br><br>
+        ${remarkText}
+        ${imgPreviewHtml}<br><br>
         🔔 <strong>設定提醒時間：</strong>${ev.notifyTime}
     `;
     document.getElementById('whatsappAlertMessage').innerHTML = msgHtml;
@@ -1066,17 +1107,6 @@ function getDynamicHoliday(y, m, d) {
         if (key === "02-17") return "年初一";
         if (key === "02-18") return "年初二"; if (key === "02-19") return "年初三";
         if (key === "04-03") return "受難節";
-        if (key === "04-06") return "復活節"; if (key === "05-24") return "佛誕";
-        if (key === "06-19") return "端午節";
-        if (key === "09-26") return "中秋翌日"; if (key === "10-19") return "重陽節";
-    }
-    if (y === 2027) {
-        if (key === "02-06") return "年初一";
-        if (key === "02-08") return "年初二"; if (key === "02-09") return "年初三";
-        if (key === "03-26") return "受難節";
-        if (key === "03-29") return "復活節"; if (key === "05-13") return "佛誕";
-        if (key === "06-09") return "端午節";
-        if (key === "09-16") return "中秋翌日"; if (key === "10-08") return "重陽節";
     }
     return "";
 }
@@ -1103,6 +1133,16 @@ function selectDate(dateStr) {
     cells.forEach(cell => {
         if (cell.getAttribute('data-date') === dateStr) { cell.classList.add('selected-day'); } else { cell.classList.remove('selected-day'); }
     });
+    
+    let d = new Date(dateStr);
+    document.getElementById('eventTime').value = `${d.getMonth() + 1}月${d.getDate()}日 18:00`;
+    document.getElementById('eventTime').setAttribute('data-raw-date', dateStr);
+    document.getElementById('eventTime').setAttribute('data-raw-time', "18:00");
+
+    document.getElementById('notifyTime').value = `${d.getMonth() + 1}月${d.getDate()}日 17:00`;
+    document.getElementById('notifyTime').setAttribute('data-raw-date', dateStr);
+    document.getElementById('notifyTime').setAttribute('data-raw-time', "17:00");
+    
     renderDayEvents();
 }
 
@@ -1110,9 +1150,10 @@ function sendWhatsAppNotification(id) {
     let ev = activities.find(a => a.id === id);
     if (!ev) return;
     let remark = ev.note ? `\n📝 備註備忘：${ev.note}` : "";
+    let imageLinkInfo = ev.eventImageUrl ? `\n🖼️ 附圖網址：${ev.eventImageUrl}` : "";
     let participants = ev.members && ev.members.length > 0 ? ev.members.join('、') : "全體成員";
 
-    let textMessage = `💡【麟李互助家庭日誌 - 行程提醒】\n\n📢 有一項最新日程提醒：\n\n📅 日期：${ev.date}\n⏰ 活動時間：${ev.time}\n👥 活動參與者：${participants}\n📌 項目名稱 / 地點：${ev.title}${remark}\n\n🔔 提醒發送設定為：${ev.notifyTime}，請大家留意安排，互相照顧扶持！❤️`;
+    let textMessage = `💡【麟李互助家庭日誌 - 行程提醒】\n\n📢 有一項最新日程提醒：\n\n📅 日期：${ev.date}\n⏰ 活動時間：${ev.time}\n👥 活動參與者：${participants}\n📌 項目名稱 / 地點：${ev.title}${remark}${imageLinkInfo}\n\n🔔 提醒發送設定為：${ev.notifyTime}，請大家留意安排，互相照顧扶持！❤️`;
     let cleanPhone = ev.targetPhone ? ev.targetPhone.replace(/\s+/g, '') : "";
     if (cleanPhone) {
         if (cleanPhone.length === 8 && /^[569]/.test(cleanPhone)) {
@@ -1126,37 +1167,6 @@ function sendWhatsAppNotification(id) {
     window.open(whatsappUrl, '_blank');
 }
 
-function renderDayEvents() {
-    document.getElementById('selectedDateLabel').innerText = selectedDateStr;
-    let dayEventsContainer = document.getElementById('dayEvents');
-    let filtered = activities.filter(a => a.date === selectedDateStr);
-    
-    filtered.sort((a, b) => a.time.localeCompare(b.time));
-    if (filtered.length === 0) {
-        dayEventsContainer.innerHTML = `<p style="color:gray; font-size:16px;">此日期暫無安排家庭活動。</p>`;
-        return;
-    }
-    
-    let html = "";
-    filtered.forEach(ev => {
-        let membersTxt = ev.members && ev.members.length > 0 ? `👥 活動參與者：${ev.members.join('、')}` : "👥 活動參與者：全體成員";
-        let phoneInfo = ev.targetPhone ? `<div class="event-desc" style="font-size:14px; color:#1890ff;">📞 指定接收號碼：${ev.targetPhone}</div>` : `<div class="event-desc" style="font-size:14px; color:#8c8c8c;">👥 接收對象：家庭大群組 / 自選聯絡人</div>`;
-
-        html += `
-        <div class="event-item">
-            <div class="event-time">⏰ 活動時間：${ev.time}</div>
-            <div class="event-desc" style="font-size:14px; color:#666;">🔔 提醒發送時間：${ev.notifyTime}</div>
-   
-          <div class="event-desc">📌 <strong>${ev.title}</strong></div>
-            <div class="event-desc" style="font-size:14px; color:#555;">${membersTxt}</div>
-            ${phoneInfo}
-            ${ev.note ? `<div class="event-desc" style="font-size:14px; color:#777; padding-left:14px;">📝 ${ev.note}</div>` : ""}
-        </div>
-        `;
-    });
-    dayEventsContainer.innerHTML = html;
-}
-
 function addFamilyEvent() {
     let titleInput = document.getElementById('eventTitle');
     let timeInput = document.getElementById('eventTime');
@@ -1165,43 +1175,100 @@ function addFamilyEvent() {
     let noteInput = document.getElementById('eventNote');
     let whatsappBtnTextInput = document.getElementById('whatsappBtnText');
     let editKey = document.getElementById('editKey').value;
+    let imageUrlInput = document.getElementById('eventImageUrl');
+    
+    let endTimeInput = document.getElementById('eventEndTime');
+
     if (!titleInput.value.trim()) {
         alert("請輸入活動名稱或地點！");
         return;
     }
 
+    let finalStartRaw = timeInput.getAttribute('data-raw-date') || selectedDateStr;
+    let finalEndRaw = endTimeInput.getAttribute('data-raw-date') || "";
+
     let checkedMembers = [];
     let checkboxes = document.querySelectorAll('input[name="members"]:checked');
     checkboxes.forEach(cb => { checkedMembers.push(cb.value); });
     
-    let eventData = {
-        date: selectedDateStr,
-        time: timeInput.value.trim() || "18:00",
+    let baseData = {
+        time: timeInput.value.trim(),
         notifyTime: notifyTimeInput.value.trim() || "17:00", 
         title: titleInput.value.trim(),
         members: checkedMembers, 
         targetPhone: targetPhoneInput.value.trim(), 
         slotsSnapshot: slotsMapping, 
         whatsappBtnText: whatsappBtnTextInput.value.trim() || "💬 WhatsApp 通知", 
-        note: noteInput.value.trim()
+        note: noteInput.value.trim(),
+        eventImageUrl: imageUrlInput.value.trim()
     };
-    let targetURL = editKey ? `${dbURL}/${editKey}.json` : `${dbURL}.json`;
-    let reqMethod = editKey ? "PUT" : "POST";
-    fetch(targetURL, {
-        method: reqMethod,
-        mode: "cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(eventData)
-    })
-    .then(response => response.json())
-    .then(() => {
-        closeEventPopup(); 
-        fetchCloudData();
-    })
-    .catch(err => {
-        alert("儲存未成功，請確認 Firebase Rules 規則。");
-        console.error(err);
-    });
+
+    if (finalEndRaw && finalEndRaw !== finalStartRaw) {
+        let startDate = new Date(finalStartRaw);
+        let endDate = new Date(finalEndRaw);
+
+        if (endDate < startDate) {
+            alert("結束時間不能早於開始時間！");
+            return;
+        }
+
+        let processDate = new Date(startDate);
+        let rangeArray = [];
+        while (processDate <= endDate) {
+            rangeArray.push(processDate.toISOString().slice(0, 10));
+            processDate.setDate(processDate.getDate() + 1);
+        }
+
+        let fetchPromises = [];
+        rangeArray.forEach(loopDateStr => {
+            let loopPayload = Object.assign({}, baseData);
+            loopPayload.date = loopDateStr;
+            loopPayload.time = `${timeInput.value.trim()} 至 ${endTimeInput.value.trim()}`;
+            loopPayload.isMultiDayEvent = true;
+            loopPayload.multiDayRangeArray = rangeArray; 
+
+            let postURL = `${dbURL}.json`;
+            fetchPromises.push(
+                fetch(postURL, {
+                    method: "POST",
+                    mode: "cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(loopPayload)
+                })
+            );
+        });
+
+        Promise.all(fetchPromises)
+        .then(() => {
+            closeEventPopup();
+            fetchCloudData();
+        })
+        .catch(err => console.error(err));
+
+    } else {
+        let eventData = Object.assign({}, baseData);
+        eventData.date = finalStartRaw;
+        eventData.isMultiDayEvent = false;
+
+        let targetURL = editKey ? `${dbURL}/${editKey}.json` : `${dbURL}.json`;
+        let reqMethod = editKey ? "PUT" : "POST";
+        
+        fetch(targetURL, {
+            method: reqMethod,
+            mode: "cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(eventData)
+        })
+        .then(response => response.json())
+        .then(() => {
+            closeEventPopup(); 
+            fetchCloudData();
+        })
+        .catch(err => {
+            alert("儲存未成功，請確認 Firebase Rules 規則。");
+            console.error(err);
+        });
+    }
 }
 
 function deleteEventFromPopup(id) {
@@ -1211,7 +1278,51 @@ function deleteEventFromPopup(id) {
     }
 }
 
-/* 渲染日曆 */
+function renderDayEvents() {
+    let container = document.getElementById('dayEvents');
+    let filtered = activities.filter(a => a.date === selectedDateStr);
+    filtered.sort((a, b) => a.time.localeCompare(b.time));
+    
+    document.getElementById('selectedDateLabel').innerText = selectedDateStr;
+    
+    if (filtered.length === 0) {
+        container.innerHTML = `<p style="color:gray; text-align:center; padding:20px 0;">今日無任何排定活動，大家可以輕鬆享受樂活時光！</p>`;
+        return;
+    }
+    
+    let html = "";
+    filtered.forEach(ev => {
+        let participants = ev.members && ev.members.length > 0 ? ev.members.join('、') : "目前尚無人填報";
+        let btnLabel = ev.whatsappBtnText || "💬 WhatsApp 通知";
+        let targetText = ev.targetPhone ? ` (指定對象電話: ${ev.targetPhone})` : " (發送到大群組)";
+        let imgPreviewHtml = ev.eventImageUrl ? `<div class="event-image-preview-box"><img src="${ev.eventImageUrl}"></div>` : "";
+        
+        html += `
+        <div class="event-item">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <div class="event-time">⏰ 時間：${ev.time}</div>
+                    <div class="event-desc">📌 項目：<strong>${ev.title}</strong></div>
+                    <div class="event-desc" style="color:#1890ff; font-weight:bold;">👥 參與成員：${participants}</div>
+                    ${ev.note ? `<div class="event-desc" style="font-size:15px; color:#666; background:#fff; padding:6px; border-radius:4px; margin-top:5px; border:1px dashed #ccc;">📝 備忘：${ev.note}</div>` : ""}
+                    ${imgPreviewHtml}
+                    <div class="event-desc" style="font-size:13px; color:#999; margin-top:4px;">🔔 提醒：${ev.notifyTime}${targetText}</div>
+                </div>
+                <div>
+                    <button class="whatsapp-btn" onclick="sendWhatsAppNotification('${ev.id}')">${btnLabel}</button>
+                </div>
+            </div>
+        </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+function changeMonth(dir) {
+    current.setMonth(current.getMonth() + dir);
+    renderCalendar();
+}
+
 function renderCalendar(){
     let y = current.getFullYear(); let m = current.getMonth();
     monthLabel.innerText = y + "年 " + (m + 1) + "月";
@@ -1230,20 +1341,25 @@ function renderCalendar(){
         
         let dayActivities = activities.filter(a => a.date === dStr);
         dayActivities.sort((a, b) => a.time.localeCompare(b.time));
-        let eventsHtml = "";
         
+        let belongsToMultiDay = activities.some(act => act.isMultiDayEvent && act.multiDayRangeArray && act.multiDayRangeArray.includes(dStr));
+
+        let eventsHtml = "";
         dayActivities.forEach(act => {
+            let imgIcon = act.eventImageUrl ? " 🖼️" : "";
             if (currentGlobalMode === "詳細資料") {
                 let pTxt = act.members && act.members.length > 0 ? `(${act.members.join(',')})` : "";
-                eventsHtml += `<span class="day-event-badge" style="background:#e8f9ed; color:#25D366; border-left-color:#25D366;" title="${act.title}">${act.time} ${pTxt} ${act.title}</span>`;
+                eventsHtml += `<span class="day-event-badge" style="background:#e8f9ed; color:#25D366; border-left-color:#25D366;" title="${act.title}">${act.time} ${pTxt} ${act.title}${imgIcon}</span>`;
             } else {
-                eventsHtml += `<span class="day-event-badge" title="${act.time} ${act.title}">${act.time} ${act.title}</span>`;
+                eventsHtml += `<span class="day-event-badge" title="${act.time} ${act.title}">${act.time} ${act.title}${imgIcon}</span>`;
             }
         });
         
         let dayClass = "calendar-day";
         if (isToday) dayClass += " today";
         if (isSelected) dayClass += " selected-day";
+        if (belongsToMultiDay) dayClass += " multiday-pass-range";
+
         html += `
         <div class="${dayClass}" data-date="${dStr}" onclick="selectDate('${dStr}')">
             <strong>${i}</strong>
@@ -1259,14 +1375,11 @@ function renderCalendar(){
     calendar.innerHTML = html;
 }
 
-function changeMonth(n){ current.setMonth(current.getMonth() + n); renderCalendar(); }
-
 document.getElementById('popupPassword').addEventListener('keydown', popupPasswordInputKeydown);
 document.getElementById('memberPopupPassword').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') verifyMemberGatePassword();
 });
 
-// 初始化載入本地記憶的視圖類別
 document.getElementById('bodyNode').className = `view-${currentGlobalMode}`;
 
 fetchCloudData();
