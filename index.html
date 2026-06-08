@@ -497,7 +497,7 @@ input, textarea {
         <div class="top-button-row">
             <button class="action-btn" style="background: #1890ff; font-size: 15px; padding: 12px 6px; margin: 0; flex: 1;" onclick="openAddFormPopup('MANAGE')">⚙️ 管理舊活動</button>
             
-            <button type="button" id="centerHubBtn" class="action-btn" style="background: #00802b; font-size: 15px; font-weight: bold; color: white; border-radius: 10px;" onclick="fetchCloudData()">🗓️ 麟李家庭日誌</button>
+            <button type="button" id="centerHubBtn" class="action-btn" style="background: #d46b08; font-size: 14px; font-weight: bold; color: white; border-radius: 10px;" onclick="handleCenterHubClick()">⚙️ 點此自動寫入 6月放學時間</button>
             
             <button class="action-btn" style="background: #00c642; font-size: 15px; padding: 12px 6px; margin: 0; flex: 1;" onclick="openAddFormPopup('WHATSAPP')">💬 傳送通知</button>
             
@@ -703,6 +703,83 @@ let slotsMapping = JSON.parse(localStorage.getItem('member_slots_extended_config
     11: { name: "成員11", phone: "" },
     12: { name: "成員12", phone: "" }
 };
+
+// ─── 📦 2026年6月份 蓓(P)與熹(H) 放學與活動精準日程數據庫包 ───
+const juneSchoolData = [
+    { date: "2026-06-01", time: "08:30 放學", title: "蓓(P) 放學 [特別安排項目第一天]", members: ["其他"] },
+    { date: "2026-06-02", time: "07:15 / 09:45", title: "蓓(P) 7:15 放學 ｜ 熹(H) 9:45 放學", members: ["其他"] },
+    { date: "2026-06-03", time: "11:15放學 / 放假", title: "蓓(P) 11:15 放學 ｜ 熹(H) 放假放學", members: ["其他"] },
+    { date: "2026-06-04", time: "放假 / 09:25放學", title: "蓓(P) 放假 ｜ 熹(H) 9:25 放學 (Cynthia/Comfort)", members: ["其他"] },
+    { date: "2026-06-05", time: "11:15 / 09:45", title: "蓓(P) 11:15 放學 ｜ 熹(H) 9:45 放學", members: ["其他"] },
+    { date: "2026-06-07", time: "全天活動", title: "特別圈注日程安排 (Ada)", members: ["其他"] },
+    { date: "2026-06-08", time: "12:00 / 09:45", title: "蓓(P) 12:00 放學 ｜ 熹(H) 9:45 放學", members: ["其他"] },
+    { date: "2026-06-09", time: "10:00 / 08:15", title: "蓓(P) 10:00 放學 ｜ 熹(H) 8:15 放學", members: ["其他"] },
+    { date: "2026-06-10", time: "11:15 / 08:15", title: "蓓(P) 11:15 放學 ｜ 熹(H) 8:15 放學", members: ["其他"] },
+    { date: "2026-06-11", time: "10:00放學 / 放假", title: "蓓(P) 10:00 放學 ｜ 熹(H) 放假", members: ["其他"] },
+    { date: "2026-06-12", time: "11:10 / 09:15", title: "蓓(P) 11:10 放學 ｜ 熹(H) 9:15 放學 [全日 二胡]", members: ["其他"] },
+    { date: "2026-06-15", time: "10:00 / 15:00", title: "蓓(P) 10:00 放學 ｜ 熹(H) 15:00 放學", members: ["其他"] },
+    { date: "2026-06-16", time: "10:20 / 11:15", title: "蓓(P) 10:20 放學 ｜ 熹(H) 11:15 放學", members: ["其他"] },
+    { date: "2026-06-17", time: "11:30放學 / 放假", title: "蓓(P) 11:30 放學 ｜ 熹(H) 放假", members: ["其他"] },
+    { date: "2026-06-18", time: "放假 / 10:15放學", title: "蓓(P) 放假 ｜ 熹(H) 10:15 放學", members: ["其他"] },
+    { date: "2026-06-19", time: "放假紅日", title: "🔴 端午節特別假期 🟢", members: ["無需參與者"] },
+    { date: "2026-06-22", time: "16:00 Bball / 13:20", title: "蓓(P) 4:00pm 籃球 ｜ 熹(H) 1:20 放學", members: ["其他"] },
+    { date: "2026-06-23", time: "13:20放學 / 14:30 Sing", title: "圈注日程 Pin ｜ 熹(H) 1:20放學，2:30唱歌活動", members: ["其他"] },
+    { date: "2026-06-24", time: "13:20 放學", title: "熹(H) 1:20 準時放學", members: ["其他"] },
+    { date: "2026-06-25", time: "1:50放學 / 4:00活動", title: "熹(H) 1:50 放學 ｜ 下午 4:00 安排活動", members: ["其他"] },
+    { date: "2026-06-26", time: "13:00 放學", title: "熹(H) 1:00pm 提前放學", members: ["其他"] },
+    { date: "2026-06-27", time: "全天", title: "蓓(P) Bball 籃球活動項目 ｜ SPN 項目安排", members: ["其他"] },
+    { date: "2026-06-29", time: "16:00有安排 / 放假", title: "蓓(P) 下午 4:00pm 專屬日程 ｜ 熹(H) 放假", members: ["其他"] },
+    { date: "2026-06-30", time: "08:50放學 / 11:00活動", title: "熹(H) 8:50 放學 ｜ 11:00 藍字模糊安排項目", members: ["其他"] }
+];
+
+// ─── 🚀 智慧中樞按鈕判定與寫入控制器 ───
+function handleCenterHubClick() {
+    let btn = document.getElementById('centerHubBtn');
+    if (btn.innerText.includes("自動寫入")) {
+        if (confirm("確認是否要將 2026年6月份 蓓(P)與熹(H) 的放學與特別日程一鍵自動注入雲端資料庫？")) {
+            btn.innerText = "⏳ 正在自動同步寫入中...";
+            btn.style.background = "#8c8c8c";
+            
+            let promises = juneSchoolData.map(item => {
+                let payload = {
+                    date: item.date,
+                    time: item.time,
+                    notifyTime: `${parseInt(item.date.split('-')[1])}月${parseInt(item.date.split('-')[2])}日 07:30`, 
+                    title: item.title,
+                    members: item.members,
+                    targetPhone: "",
+                    slotsSnapshot: slotsMapping,
+                    whatsappBtnText: "💬 WhatsApp 通知",
+                    note: "系統自動導入放學日程表項目",
+                    isMultiDayEvent: false
+                };
+                return fetch(`${dbURL}.json`, {
+                    method: "POST",
+                    mode: "cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+            });
+
+            Promise.all(promises)
+            .then(() => {
+                alert("🎉 2026年6月份放學日程表已順暢安全地自動寫入雲端數據庫！");
+                btn.innerText = "🗓️ 麟李家庭日誌";
+                btn.style.background = "#00802b";
+                fetchCloudData();
+            })
+            .catch(err => {
+                console.error(err);
+                alert("寫入失敗，請確認網路連線。");
+                btn.innerText = "⚙️ 點此自動寫入 6月放學時間";
+                btn.style.background = "#d46b08";
+            });
+        }
+    } else {
+        // 若已完成寫入，按鈕功能自動退回經典的實時刷新功能
+        fetchCloudData();
+    }
+}
 
 function changeGlobalViewMode(modeStr) {
     currentGlobalMode = modeStr;
@@ -977,7 +1054,6 @@ function syncTargetPhone(slotId) {
     }
 }
 
-// 點選修改人名時觸發安全鎖
 function modifyMemberPrompt(slotId, event) {
     if (event) {
         event.preventDefault();
@@ -1033,6 +1109,7 @@ function fetchCloudData() {
         .then(response => response.json())
         .then(data => {
             activities = [];
+            let hasJuneData = false;
             if (data) {
                 for (let key in data) {
                     if (data[key]) {
@@ -1042,6 +1119,10 @@ function fetchCloudData() {
                                      slotsMapping[id] = data[key].slotsSnapshot[id];
                                 }
                             }
+                        }
+
+                        if (data[key].date && data[key].date.includes("2026-06")) {
+                            hasJuneData = true; // 探測到 6 月行程已存在
                         }
 
                         activities.push({
@@ -1062,6 +1143,17 @@ function fetchCloudData() {
                     }
                 }
             }
+
+            // 防呆按鈕顯示切換機制
+            let hubBtn = document.getElementById('centerHubBtn');
+            if (hasJuneData) {
+                hubBtn.innerText = "🗓️ 麟李家庭日誌";
+                hubBtn.style.background = "#00802b";
+            } else {
+                hubBtn.innerText = "⚙️ 點此自動寫入 6月放學時間";
+                hubBtn.style.background = "#d46b08";
+            }
+
             refreshMemberButtonsUI();
             renderCalendar();
             renderDayEvents();
@@ -1154,7 +1246,6 @@ function triggerAlertWhatsAppSend() {
     }
 }
 
-// 關閉提醒彈窗
 function dismissAlertPopup() {
     let id = document.getElementById('currentAlertEventId').value;
     if (id) {
@@ -1288,7 +1379,6 @@ function addFamilyEvent() {
         eventImageUrl: imageUrlInput.value.trim()
     };
 
-    // 跨日多天行程智慧寫入與重置覆寫
     if (finalEndRaw && finalEndRaw !== finalStartRaw) {
         let startDate = new Date(finalStartRaw);
         let endDate = new Date(finalEndRaw);
@@ -1305,7 +1395,6 @@ function addFamilyEvent() {
             processDate.setDate(processDate.getDate() + 1);
         }
 
-        // 修改舊跨日項目時，先刪除舊記錄以防止數據污染
         let deletePromise = editKey ? fetch(`${dbURL}/${editKey}.json`, { method: "DELETE", mode: "cors" }) : Promise.resolve();
 
         deletePromise.then(() => {
@@ -1338,7 +1427,6 @@ function addFamilyEvent() {
         });
 
     } else {
-        // 單日普通行程：全面兼容 POST（新增）與 PUT（覆寫更新）
         let eventData = Object.assign({}, baseData);
         eventData.date = finalStartRaw;
         eventData.isMultiDayEvent = false;
@@ -1382,7 +1470,7 @@ function renderDayEvents() {
     document.getElementById('selectedDateLabel').innerText = selectedDateStr;
     
     if (filtered.length === 0) {
-        container.innerHTML = `<p style="color:gray; text-align:center; padding:20px 0;">今日無任何排定活動，大家可以輕鬆享受樂活時光！</p>`;
+        container.innerHTML = `<p style="color:gray; text-align:center; padding:20px 0;">今日無 any 排定活動，大家可以輕鬆享受樂活時光！</p>`;
         return;
     }
     
