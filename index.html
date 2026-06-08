@@ -279,7 +279,7 @@ input, textarea {
     color: #555;
 }
 
-/* 附圖預覽樣式 */
+/* 附圖預覽與活動顯示樣式升級 */
 .event-image-preview-box {
     margin-top: 8px;
     max-width: 100%;
@@ -289,9 +289,26 @@ input, textarea {
     display: inline-block;
 }
 .event-image-preview-box img {
-    max-height: 140px;
+    max-height: 180px;
+    max-width: 100%;
     display: block;
     object-fit: contain;
+}
+
+/* 現場影相/選擇檔案按鈕樣式 */
+.photo-upload-container {
+    background: #f0f5ff;
+    border: 2px dashed #1890ff;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 8px 0;
+    text-align: center;
+}
+.photo-upload-label {
+    cursor: pointer;
+    color: #1890ff;
+    font-weight: bold;
+    display: block;
 }
 
 /* 參與者「收入式選項」高級整合排版樣式 */
@@ -583,8 +600,17 @@ input, textarea {
                 </div>
                 <input type="time" id="hiddenTimePickerC" style="position:absolute; opacity:0; width:1px; height:1px; pointer-events:none;">
                 
-                <label for="eventImageUrl" style="font-size:15px; color:#1890ff; display: block; margin-top:12px; font-weight: bold;">🖼️ 附圖簡潔版面選項 (圖片網址連結)：</label>
-                <input type="text" id="eventImageUrl" placeholder="請貼上網頁相片連結、雲端相冊或單據圖片網址">
+                <label for="eventImageUrl" style="font-size:15px; color:#1890ff; display: block; margin-top:12px; font-weight: bold;">🖼️ 附圖網址連結：</label>
+                <input type="text" id="eventImageUrl" placeholder="請貼上網頁相片、雲端相冊網址">
+
+                <div class="photo-upload-container">
+                    <label for="photoFileInput" class="photo-upload-label">📸 點此現場影相 或 選擇手機圖片</label>
+                    <input type="file" id="photoFileInput" accept="image/*" capture="environment" style="display:none;" onchange="processLocalPhotoUpload(this)">
+                    <div id="popupPhotoPreviewWrapper" style="display:none; margin-top:8px;">
+                        <img id="popupPhotoPreviewImg" src="" style="max-height:120px; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.15);">
+                        <br><button type="button" style="background:#ff4d4f; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:12px; margin-top:4px; cursor:pointer;" onclick="clearLoadedPhoto()">移除相片</button>
+                    </div>
+                </div>
 
                 <label style="font-size:15px; color:#666; display: block; margin-top: 12px;">活動參與者：</label>
                 <div class="member-checkbox-group" id="memberCheckboxContainer">
@@ -708,7 +734,7 @@ let slotsMapping = JSON.parse(localStorage.getItem('member_slots_extended_config
 const juneSchoolData = [
     { date: "2026-06-01", time: "08:30 放學", title: "蓓(P) 放學 [特別安排項目第一天]", members: ["其他"] },
     { date: "2026-06-02", time: "07:15 / 09:45", title: "蓓(P) 7:15 放學 ｜ 熹(H) 9:45 放學", members: ["其他"] },
-    { date: "2026-06-03", time: "11:15放學 / 放假", title: "蓓(P) 11:15 放學 ｜ 熹(H) 放假放學", members: ["其他"] },
+    { date: "2026-06-03", time: "11:15放學 / 放假", title: "蓓(P) 11:15 放學 ｜ 熹(H) 放假放學", members: ["開他"] },
     { date: "2026-06-04", time: "放假 / 09:25放學", title: "蓓(P) 放假 ｜ 熹(H) 9:25 放學 (Cynthia/Comfort)", members: ["其他"] },
     { date: "2026-06-05", time: "11:15 / 09:45", title: "蓓(P) 11:15 放學 ｜ 熹(H) 9:45 放學", members: ["其他"] },
     { date: "2026-06-07", time: "全天活動", title: "特別圈注日程安排 (Ada)", members: ["其他"] },
@@ -776,7 +802,6 @@ function handleCenterHubClick() {
             });
         }
     } else {
-        // 若已完成寫入，按鈕功能自動退回經典的實時刷新功能
         fetchCloudData();
     }
 }
@@ -803,6 +828,33 @@ function syncComboPicker(inputElement, txtInputId, flag) {
         txtInput.setAttribute('data-raw-date', datePart);
         txtInput.setAttribute('data-raw-time', timePart);
     }
+}
+
+// ─── 📸 本地拍照解碼與預覽中樞處理邏輯 ───
+function processLocalPhotoUpload(inputNode) {
+    if (inputNode.files && inputNode.files[0]) {
+        let file = inputNode.files[0];
+        // 限制本地壓縮與上傳上限避免超載
+        if (file.size > 8 * 1024 * 1024) {
+            alert("⚠️ 相片檔案過大，請拍攝更精簡清晰的畫面或選取小於 8MB 的相片！");
+            return;
+        }
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            let base64Data = e.target.result;
+            document.getElementById('eventImageUrl').value = base64Data; // 封裝寫入既有欄位
+            document.getElementById('popupPhotoPreviewImg').src = base64Data;
+            document.getElementById('popupPhotoPreviewWrapper').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function clearLoadedPhoto() {
+    document.getElementById('photoFileInput').value = "";
+    document.getElementById('eventImageUrl').value = "";
+    document.getElementById('popupPhotoPreviewImg').src = "";
+    document.getElementById('popupPhotoPreviewWrapper').style.display = 'none';
 }
 
 function verifyGatePassword() {
@@ -868,6 +920,7 @@ function openAddFormPopup(mode) {
     document.getElementById('secureManagePanel').style.display = 'none';
     document.getElementById('secureWhatsAppPanel').style.display = 'none';
     document.getElementById('secureViewSwitchPanel').style.display = 'none';
+    clearLoadedPhoto(); // 初始化清空暫存
 
     if (currentPopupMode === "MANAGE") {
         document.getElementById('formTitle').innerText = "⚙️ 管理/修改舊活動";
@@ -983,6 +1036,12 @@ function triggerEditFromPopup(id) {
     document.getElementById('whatsappBtnText').value = ev.whatsappBtnText || "💬 WhatsApp 通知";
     document.getElementById('eventImageUrl').value = ev.eventImageUrl || "";
 
+    // 如果內含相片數據，載入編輯器預覽
+    if (ev.eventImageUrl && ev.eventImageUrl.startsWith("data:image")) {
+        document.getElementById('popupPhotoPreviewImg').src = ev.eventImageUrl;
+        document.getElementById('popupPhotoPreviewWrapper').style.display = 'block';
+    }
+
     if (ev.slotsSnapshot) {
         slotsMapping = ev.slotsSnapshot;
         refreshMemberButtonsUI();
@@ -1016,6 +1075,7 @@ function closeEventPopup() {
     document.getElementById('eventEndTime').removeAttribute('data-raw-date');
     document.getElementById('eventEndTime').removeAttribute('data-raw-time');
     document.getElementById('eventImageUrl').value = "";
+    clearLoadedPhoto();
     
     let checkboxes = document.querySelectorAll('input[name="members"]');
     checkboxes.forEach(cb => cb.checked = false);
@@ -1122,7 +1182,7 @@ function fetchCloudData() {
                         }
 
                         if (data[key].date && data[key].date.includes("2026-06")) {
-                            hasJuneData = true; // 探測到 6 月行程已存在
+                            hasJuneData = true; 
                         }
 
                         activities.push({
@@ -1144,7 +1204,6 @@ function fetchCloudData() {
                 }
             }
 
-            // 防呆按鈕顯示切換機制
             let hubBtn = document.getElementById('centerHubBtn');
             if (hasJuneData) {
                 hubBtn.innerText = "🗓️ 麟李家庭日誌";
@@ -1320,7 +1379,9 @@ function sendWhatsAppNotification(id) {
     let ev = activities.find(a => a.id === id);
     if (!ev) return;
     let remark = ev.note ? `\n📝 備註備忘：${ev.note}` : "";
-    let imageLinkInfo = ev.eventImageUrl ? `\n🖼️ 附圖網址：${ev.eventImageUrl}` : "";
+    // 如果是本地圖片 Base64，不塞入 WhatsApp 連結文本中，避免字數過長折斷
+    let isBase64 = ev.eventImageUrl && ev.eventImageUrl.startsWith("data:image");
+    let imageLinkInfo = (ev.eventImageUrl && !isBase64) ? `\n🖼️ 附圖網址：${ev.eventImageUrl}` : (isBase64 ? "\n📸 [此活動內含實地拍攝相片，請進入日誌面板查看]" : "");
     let participants = ev.members && ev.members.length > 0 ? ev.members.join('、') : "全體成員";
 
     let textMessage = `💡【麟李互助家庭日誌 - 行程提醒】\n\n📢 有一項最新日程提醒：\n\n📅 日期：${ev.date}\n⏰ 活動時間：${ev.time}\n👥 活動參與者：${participants}\n📌 項目名稱 / 地點：${ev.title}${remark}${imageLinkInfo}\n\n🔔 提醒發送設定為：${ev.notifyTime}，請大家留意安排，互相照顧扶持！❤️`;
@@ -1376,7 +1437,7 @@ function addFamilyEvent() {
         slotsSnapshot: slotsMapping, 
         whatsappBtnText: whatsappBtnTextInput.value.trim() || "💬 WhatsApp 通知", 
         note: noteInput.value.trim(),
-        eventImageUrl: imageUrlInput.value.trim()
+        eventImageUrl: imageUrlInput.value.trim() // 支援外部網址與本地解碼 Base64
     };
 
     if (finalEndRaw && finalEndRaw !== finalStartRaw) {
