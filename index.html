@@ -134,7 +134,7 @@ header {
     display: block;
 }
 
-/* 💬 發送通知及刪除/修改按鍵靚化樣式 */
+/* 發送通知及刪除/修改按鍵靚化樣式 */
 button.pretty-whatsapp-btn {
     background: linear-gradient(135deg, #25D366, #20ba59);
     color: white;
@@ -206,7 +206,7 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
 .event-time { font-weight: bold; color: #333; }
 .event-desc { margin-top: 4px; color: #555; }
 
-/* ─── 📸 互助相簿牆高級排版樣式 ─── */
+/* 📸 互助相簿牆排版樣式 */
 .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 15px; }
 .album-item { background: white; border-radius: 10px; overflow: hidden; padding: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); text-align: center; position: relative; border: 1px solid #eee; }
 .album-item img { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; }
@@ -257,7 +257,7 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
     </div>
 
     <div class="card">
-        <h3 style="margin-top:0; color:#f39c12;">🖼️ 麟李家庭互助相簿 / 短片牆</h3>
+        <h3 style="margin-top:0; color:#f39c12;">🖼️ <span id="albumDateLabel"></span> 麟李家庭互助相簿 / 短片牆</h3>
         <div id="mainAlbumGrid" class="album-grid"></div>
     </div>
 
@@ -320,7 +320,7 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
                 <button class="action-btn-block" style="background:#f39c12;" onclick="uploadMediaToAlbum()">確認上傳添加至相簿</button>
                 
                 <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
-                <label style="font-weight:bold; color:#555;">🗑️ 管理/刪除現有相簿內容：</label>
+                <label style="font-weight:bold; color:#555;">🗑️ 管理/刪除當日相簿內容：</label>
                 <div id="popupAlbumManageList" class="album-grid"></div>
             </div>
 
@@ -350,7 +350,7 @@ current.setMonth(5); // 預設 6 月
 let selectedDateStr = "2026-06-09"; 
 let currentPopupMode = "ADD";
 let currentGlobalMode = localStorage.getItem('family_日誌_view_mode') || "列表";
-let uploadedBase64Cache = ""; // 儲存拍照轉換後的編碼
+let uploadedBase64Cache = ""; 
 
 function changeGlobalViewMode(modeStr) {
     currentGlobalMode = modeStr;
@@ -360,6 +360,7 @@ function changeGlobalViewMode(modeStr) {
     closeEventPopup();
 }
 
+/* ─── 🛠️ 核心修復：修正密碼門控驗證，完美解鎖相簿管理面板 ─── */
 function verifyGatePassword() {
     if (document.getElementById('popupPassword').value === "8679") {
         document.getElementById('lockSection').style.display = 'none';
@@ -370,6 +371,7 @@ function verifyGatePassword() {
             document.getElementById('secureWhatsAppPanel').style.display = 'block';
             renderPopupWhatsApp_UI();
         } else if (currentPopupMode === "ALBUM") {
+            // 密碼驗證通過，正式啟動並顯示相簿管理面板
             document.getElementById('secureAlbumPanel').style.display = 'block';
             document.getElementById('albumBindDateLabel').innerText = selectedDateStr;
             resetPhotoUploadForm();
@@ -403,6 +405,7 @@ function openAddFormPopup(mode) {
     } else { document.getElementById('formTitle').innerText = "➕ 新增家庭活動"; }
     
     document.getElementById('addEventPopupOverlay').style.display = 'block';
+    setTimeout(() => { document.getElementById('popupPassword').focus(); }, 200);
 }
 
 function closeEventPopup() { document.getElementById('addEventPopupOverlay').style.display = 'none'; }
@@ -420,7 +423,7 @@ function handleNativeFileLoad(input, type) {
     
     let reader = new FileReader();
     reader.onload = function(e) {
-        uploadedBase64Cache = e.target.result; // 將檔案轉換為可儲存之 base64 碼
+        uploadedBase64Cache = e.target.result; 
         document.getElementById('mediaType').value = type;
         
         if (type === 'image') {
@@ -451,7 +454,6 @@ function uploadMediaToAlbum() {
     let url = document.getElementById('mediaURL').value.trim();
     let type = document.getElementById('mediaType').value;
 
-    // 優先使用拍下來的實體 Base64 資料，否則使用填寫的網址
     let finalMediaData = uploadedBase64Cache ? uploadedBase64Cache : url;
 
     if (!title || !finalMediaData) { alert("請輸入描述並拍照、錄影或輸入媒體網址！"); return; }
@@ -477,8 +479,11 @@ function renderMainAlbumUI() {
     let mainGrid = document.getElementById('mainAlbumGrid');
     let popGrid = document.getElementById('popupAlbumManageList');
     
-    if (albumItems.length === 0) {
-        let noDataHtml = `<p style="color:gray; font-size:14px; grid-column: 1/-1; text-align:center;">相簿目前空空如也，點擊上方「🏡 互助相簿」即可密碼登入拍照添加！</p>`;
+    document.getElementById('albumDateLabel').innerText = selectedDateStr;
+    let dayMediaItems = albumItems.filter(item => item.date === selectedDateStr);
+    
+    if (dayMediaItems.length === 0) {
+        let noDataHtml = `<p style="color:gray; font-size:14px; grid-column: 1/-1; text-align:center; padding: 15px 0;">本月份此日期（${selectedDateStr}）暫無隨附互助相片或短片。</p>`;
         mainGrid.innerHTML = noDataHtml;
         if(popGrid) popGrid.innerHTML = noDataHtml;
         return;
@@ -487,7 +492,7 @@ function renderMainAlbumUI() {
     let mainHtml = "";
     let popHtml = "";
 
-    albumItems.forEach(item => {
+    dayMediaItems.forEach(item => {
         let mediaTag = item.type === "video" ? `<video src="${item.url}" controls></video>` : `<img src="${item.url}" onerror="this.src='https://placehold.co/150x110?text=Image+Error'">`;
         
         mainHtml += `
@@ -510,7 +515,7 @@ function renderMainAlbumUI() {
     if(popGrid) popGrid.innerHTML = popHtml;
 }
 
-/* ─── ⚙️ 核心：雙鍵修改與刪除高質感平排 ─── */
+/* ─── ⚙️ 雙鍵修改與刪除高質感平排 ─── */
 function renderPopupManageListUI() {
     let container = document.getElementById('popupManageList');
     let filtered = activities.filter(a => a.date === selectedDateStr);
@@ -567,7 +572,7 @@ function deleteEventFromPopup(id) {
 
 function sendWhatsAppNotification(id) {
     let ev = activities.find(a => a.id === id); if (!ev) return;
-    let textMessage = `💡【麟李互助家庭日誌 - 最新日程通知】\n\n📅 日期：${ev.date}\n⏰ 時間：${ev.time}\n📌 項目地點：${ev.title}\n📝 備忘：${ev.note ? ev.note : "無"}\n\n請大家安排好時間，互相照顧扶持！❤️`;
+    let textMessage = `💡【麟李互助家庭日誌 - 最新日程通知】\n\n📅 日期：${ev.date}\n⏰ 時間：${ev.time}\n📌 項目地點：${ev.title}\n\n請大家安排好時間，互相照顧扶持！❤️`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textMessage)}`, '_blank');
 }
 
@@ -637,7 +642,7 @@ function fetchCloudData() {
     });
 }
 
-setInterval(fetchCloudData, 7000);
+setInterval(fetchCloudData, 6000);
 
 function autoCheckAndInjectJuneEvents() {
     let hasJuneData = activities.some(a => a.date && a.date.startsWith("2026-06")); if (hasJuneData) return; 
@@ -684,14 +689,11 @@ function renderCalendar(){
             return a.date === dStr;
         });
 
-        // 🖼️ 深度雙向綁定鎖定：找出該日期是否有任何家庭相片
         let dayMediaItems = albumItems.filter(item => item.date === dStr);
-
         let belongsToMultiDay = activities.some(act => act.isMultiDayEvent && act.multiDayRangeArray && act.multiDayRangeArray.includes(dStr));
         let eventsHtml = "";
         dayActivities.forEach(act => { eventsHtml += `<span class="day-event-badge" title="${act.title}">${act.time} ${act.title}</span>`; });
         
-        // 渲染亮起：如果有相片影像，在格子頂端優先亮起 🖼️ 標誌與標題
         dayMediaItems.forEach(media => {
             eventsHtml = `<span class="day-event-badge" style="background:#fff7e6; color:#d46b08; border-left: 3px solid #f39c12; font-weight:bold;">🖼️ 附圖: ${media.title}</span>` + eventsHtml;
         });
@@ -715,7 +717,10 @@ function renderCalendar(){
     calendar.innerHTML = html;
 }
 
-function selectDate(dateStr) { selectedDateStr = dateStr; renderCalendar(); renderDayEvents(); }
+function selectDate(dateStr) { selectedDateStr = dateStr; renderCalendar(); renderDayEvents(); renderMainAlbumUI(); }
+
+function handlePasswordKeydown(e) { if (e.key === 'Enter') verifyGatePassword(); }
+document.getElementById('popupPassword').addEventListener('keydown', handlePasswordKeydown);
 
 function renderDayEvents() {
     let container = document.getElementById('dayEvents');
@@ -738,7 +743,6 @@ function renderDayEvents() {
         </div>`;
     });
 
-    // 雙向綁定：在當日活動列表內也展示拍下的隨附照片
     dayMedia.forEach(m => {
         let tag = m.type === "video" ? `<video src="${m.url}" controls style="max-width:100%; max-height:160px; margin-top:8px; border-radius:8px;"></video>` : `<img src="${m.url}" style="max-width:100%; max-height:160px; margin-top:8px; border-radius:8px;">`;
         html += `
