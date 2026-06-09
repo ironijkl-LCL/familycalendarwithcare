@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>麟李互助家庭日誌</title>
+<title>📅 麟李互助家庭日誌</title>
 
 <style>
 body { font-family: Arial, sans-serif; margin:0; font-size:18px; background:#f5f5f5; }
@@ -19,7 +19,7 @@ header {
 
 .container { padding:10px; }
 
-/* ─── 🛠️ 核心樣式優化：頂部操作按鈕全面改為 5 鍵平排 ─── */
+/* ─── 🛠️ 頂部操作按鈕 5 鍵平排外觀 ─── */
 .top-action-card {
     background: white;
     padding: 10px;
@@ -33,24 +33,28 @@ header {
     box-sizing: border-box;
 }
 
-/* 讓 5 個按鈕在 row 佈局下公平等分寬度 */
 .top-action-card button.action-btn {
     flex: 1;
     margin: 0 !important; 
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 15px;
+    padding: 12px 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s;
 }
+.top-action-card button.action-btn:hover { opacity: 0.9; }
 
-/* 窄螢幕防禦 */
 @media (max-width: 650px) {
-    .top-action-card {
-        flex-wrap: wrap;
-        gap: 6px;
-    }
+    .top-action-card { flex-wrap: wrap; gap: 6px; }
     .top-action-card button.action-btn {
         flex: 1 1 calc(33.33% - 6px); 
-        font-size: 14px !important;
+        font-size: 13px !important;
         padding: 10px 4px !important;
     }
 }
@@ -81,32 +85,11 @@ header {
     cursor:pointer;
 }
 
-.month-title {
-    font-size:22px;
-    font-weight:bold;
-}
+.month-title { font-size:22px; font-weight:bold; }
+.weekdays-container { display: flex; width: 100%; margin-bottom: 5px; }
+.weekday { flex: 1; text-align:center; color:gray; font-weight:bold; font-size:16px; }
 
-.weekdays-container {
-    display: flex;
-    width: 100%;
-    margin-bottom: 5px;
-}
-
-.weekday {
-    flex: 1;
-    text-align:center;
-    color:gray;
-    font-weight:bold;
-    font-size:16px;
-}
-
-.calendar { 
-    font-size:0; 
-    display: flex;
-    flex-wrap: wrap;
-    width: 100%;
-}
-
+.calendar { display: flex; flex-wrap: wrap; width: 100%; }
 .calendar-day {
     display: inline-block;
     width: 14.2857%;
@@ -115,7 +98,7 @@ header {
     background:white;
     border-radius:10px;
     margin-bottom:6px;
-    min-height:110px;
+    min-height:115px;
     font-size:18px;
     vertical-align: top;
     box-sizing: border-box;
@@ -124,37 +107,17 @@ header {
     overflow: hidden;
     position: relative;
 }
-
-.calendar-day:hover {
-    background: #e8f9ed;
-}
-
-.empty { 
-    background:transparent; 
-    border: none;
-    cursor: default;
-}
+.calendar-day:hover { background: #e8f9ed; }
+.empty { background:transparent; border: none; cursor: default; }
 
 .today { border:3px solid orange; }
 .selected-day { background: #d0f5db !important; border: 2px solid #25D366; }
+.multiday-pass-range { background: rgba(37, 211, 102, 0.12) !important; }
+.hk-holiday-pass-range { background: rgba(255, 77, 79, 0.1) !important; }
+.hk-holiday-pass-range strong { color: #ff4d4f !important; }
 
-.multiday-pass-range {
-    background: rgba(37, 211, 102, 0.12) !important;
-}
-
-.lunar {
-    font-size:12px;
-    color:#666;
-    margin-top: 2px;
-}
-
-.holiday {
-    font-size:11px;
-    color:red;
-    font-weight:bold;
-    margin-top: 2px;
-    line-height: 1.2;
-}
+.lunar { font-size:12px; color:#666; margin-top: 2px; }
+.holiday { font-size:11px; color:#ff4d4f; font-weight:bold; margin-top: 2px; }
 
 .day-event-badge {
     font-size: 11px;
@@ -171,104 +134,91 @@ header {
     display: block;
 }
 
-button.action-btn {
-    width:100%;
-    padding:12px;
-    margin-top:8px;
-    background:#25D366;
-    color:white;
-    border:none;
-    border-radius:10px;
-    font-size:16px;
-    cursor:pointer;
-    font-weight:bold;
+/* 💬 發送通知及刪除/修改按鍵靚化樣式 */
+button.pretty-whatsapp-btn {
+    background: linear-gradient(135deg, #25D366, #20ba59);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(37,211,102,0.3);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.action-btn-group-row { display: flex; gap: 6px; }
+button.pretty-delete-btn {
+    background: linear-gradient(135deg, #ff4d4f, #ff7875);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+button.pretty-edit-btn {
+    background: linear-gradient(135deg, #1890ff, #40a9ff);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
 }
 
-button.action-btn:hover { background:#20ba59; }
-button.delete-btn { background:#ff4d4f; padding:6px 12px; color:white; border:none; border-radius:6px; font-size:14px; cursor:pointer; }
-button.edit-btn { background:#1890ff; padding:6px 12px; color:white; border:none; border-radius:6px; font-size:14px; cursor:pointer; margin-right: 5px; }
-button.whatsapp-btn { background:#25D366; padding:6px 12px; color:white; border:none; border-radius:6px; font-size:14px; cursor:pointer; font-weight: bold; }
-
-input, textarea {
-    width:100%;
-    padding:12px;
-    margin:6px 0;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    box-sizing: border-box;
-    font-size: 16px;
-}
-
-.event-item {
-    background: #f9f9f9;
+/* 📸 實體拍照上傳專用精緻按鈕樣式 */
+.camera-upload-row { display: flex; gap: 8px; margin: 8px 0; }
+.camera-btn {
+    flex: 1;
+    background: linear-gradient(135deg, #e67e22, #d35400);
+    color: white;
+    border: none;
     padding: 12px;
-    border-left: 4px solid #25D366;
-    margin-bottom: 8px;
-    border-radius: 0 8px 8px 0;
-    font-size: 16px;
-    overflow: hidden;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
 }
+.camera-btn.video-mode { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+.upload-preview-box { max-width: 100%; height: auto; max-height: 120px; border-radius: 8px; margin: 8px 0; display: none; object-fit: cover; border: 2px dashed #ccc; }
 
+/* 彈窗樣式 */
+.popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); z-index: 1000; overflow-y: auto; }
+.popup-content-card { position: relative; background: white; width: 90%; max-width: 550px; margin: 50px auto; padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+.popup-close-x { position: absolute; top: 15px; right: 18px; font-size: 24px; color: #8c8c8c; cursor: pointer; font-weight: bold; }
+.password-lock-section { background: #fffbe6; border: 1px solid #ffe58f; padding: 15px; border-radius: 10px; margin-top: 10px; text-align: center; }
+.secure-form-fields { display: none; margin-top: 15px; }
+
+button.action-btn-block { width:100%; padding:12px; margin-top:8px; background:#25D366; color:white; border:none; border-radius:10px; font-size:16px; font-weight:bold; cursor:pointer; }
+input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+
+.event-item { background: #f9f9f9; padding: 12px; border-left: 4px solid #25D366; margin-bottom: 8px; border-radius: 0 8px 8px 0; }
 .event-time { font-weight: bold; color: #333; }
 .event-desc { margin-top: 4px; color: #555; }
 
-.event-image-preview-box {
-    margin-top: 8px;
-    max-width: 100%;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid #e0e0e0;
-    display: inline-block;
-}
-.event-image-preview-box img { max-height: 140px; display: block; object-fit: contain; }
+/* ─── 📸 互助相簿牆高級排版樣式 ─── */
+.album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 15px; }
+.album-item { background: white; border-radius: 10px; overflow: hidden; padding: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); text-align: center; position: relative; border: 1px solid #eee; }
+.album-item img { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; }
+.album-item video { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; background: #000; }
+.album-title { font-size: 13px; font-weight: bold; margin-top: 6px; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.album-date-badge { font-size: 11px; color: #1890ff; background: #e6f7ff; padding: 1px 4px; border-radius: 4px; display: inline-block; margin-top: 2px; }
+.album-delete-tag { position: absolute; top: 4px; right: 4px; background: rgba(255,47,47,0.9); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 14px; font-weight: bold; cursor: pointer; z-index: 10; }
 
-.member-checkbox-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin: 8px 0 14px 0;
-    background: #f9f9f9;
-    padding: 12px;
-    border-radius: 10px;
-    border: 1px solid #e0e0e0;
-}
-.member-label {
-    font-size: 15px;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    background: white;
-    padding: 6px 14px;
-    border-radius: 20px;
-    border: 1px solid #ddd;
-}
-.member-label input[type="checkbox"] { width: auto; margin: 0 6px 0 0; transform: scale(1.3); }
-.btn-text-span { color: #333; font-weight: 500; display: inline-block; }
-.phone-indicator { font-size: 11px; color: #1890ff; margin-left: 3px; }
-
-.twin-input-wrapper { display: flex; align-items: center; position: relative; width: 100%; }
-.twin-input-wrapper input[type="text"] { flex: 1; cursor: pointer; }
-.wheel-trigger-box { position: absolute; right: 0; top: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: flex-end; pointer-events: none; }
-.wheel-btn { background: transparent !important; border: none !important; width: 100%; height: 100%; position: relative; pointer-events: auto; }
-.picker-overlay-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0 !important; cursor: pointer; z-index: 5; }
-
-.time-picker-label { font-size: 15px; color: #555; margin-top: 10px; display: block; font-weight: bold; }
-
-.popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); z-index: 1000; overflow-y: auto; }
-.popup-content-card { position: relative; background: white; width: 90%; max-width: 550px; margin: 50px auto; padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); animation: popupSlideIn 0.3s ease-out; }
-.popup-close-x { position: absolute; top: 15px; right: 18px; font-size: 24px; color: #8c8c8c; cursor: pointer; font-weight: bold; }
-
-@keyframes popupSlideIn { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-.password-lock-section { background: #fffbe6; border: 1px solid #ffe58f; padding: 15px; border-radius: 10px; margin-top: 10px; text-align: center; }
-.secure-form-fields { display: none; margin-top: 15px; }
-.manage-item-row { background: #f5f5f5; padding: 10px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-
-/* 視圖切換 */
+/* 視圖樣式 */
 .view-精簡 .day-event-badge { display: none !important; }
-.view-疊放 .day-event-badge { padding: 1px 2px !important; margin-top: 1px !important; font-size: 10px !important; line-height: 1.1 !important; }
 .view-詳細資料 .calendar-day { min-height: 140px !important; }
-.view-詳細資料 .day-event-badge { white-space: normal !important; word-break: break-all !important; overflow: visible !important; }
+.view-詳細資料 .day-event-badge { white-space: normal !important; word-break: break-all !important; }
 .view-option-group { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
 .view-radio-label { display: flex; align-items: center; background: #f5f5f5; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
 .view-radio-label input { width: auto; margin: 0 10px 0 0; transform: scale(1.3); }
@@ -281,13 +231,12 @@ input, textarea {
 
 <div class="container">
 
-    <!-- 頂部 5 鍵平排按鈕 -->
     <div class="top-action-card">
-        <button class="action-btn" style="background: #25D366; font-size: 15px; padding: 12px 6px;" onclick="openAddFormPopup('ADD')">➕ 活動</button>
-        <button class="action-btn" style="background: #1890ff; font-size: 15px; padding: 12px 6px;" onclick="openAddFormPopup('MANAGE')">⚙️ 管理</button>
-        <button class="action-btn" style="background: #f39c12; font-size: 15px; padding: 12px 6px;" onclick="fetchCloudData()">🏡 麟李</button>
-        <button class="action-btn" style="background: #00c642; font-size: 15px; padding: 12px 6px;" onclick="openAddFormPopup('WHATSAPP')">💬 WHATSAPP</button>
-        <button class="action-btn" style="background: #722ed1; font-size: 15px; padding: 12px 6px;" onclick="openAddFormPopup('SWITCH_VIEW')">👁️ 視覺</button>
+        <button class="action-btn" style="background: #25D366;" onclick="openAddFormPopup('ADD')">➕ 活動</button>
+        <button class="action-btn" style="background: #1890ff;" onclick="openAddFormPopup('MANAGE')">⚙️ 修改/刪除</button>
+        <button class="action-btn" style="background: #f39c12;" onclick="openAddFormPopup('ALBUM')">🏡 互助相簿</button>
+        <button class="action-btn" style="background: #00c642;" onclick="openAddFormPopup('WHATSAPP')">💬 WHATSAPP 通知</button>
+        <button class="action-btn" style="background: #722ed1;" onclick="openAddFormPopup('SWITCH_VIEW')">👁️ 視覺</button>
     </div>
 
     <div class="card">
@@ -296,17 +245,9 @@ input, textarea {
             <div id="monthLabel" class="month-title"></div>
             <button class="nav-btn" onclick="changeMonth(1)">下一月 ➡</button>
         </div>
-
         <div class="weekdays-container">
-            <div class="weekday">日</div>
-            <div class="weekday">一</div>
-            <div class="weekday">二</div>
-            <div class="weekday">三</div>
-            <div class="weekday">四</div>
-            <div class="weekday">五</div>
-            <div class="weekday">六</div>
+            <div class="weekday">日</div><div class="weekday">一</div><div class="weekday">二</div><div class="weekday">三</div><div class="weekday">四</div><div class="weekday">五</div><div class="weekday">六</div>
         </div>
-
         <div id="calendar" class="calendar"></div>
     </div>
 
@@ -315,64 +256,74 @@ input, textarea {
         <div id="dayEvents"></div>
     </div>
 
-    <!-- 核心功能彈窗 -->
+    <div class="card">
+        <h3 style="margin-top:0; color:#f39c12;">🖼️ 麟李家庭互助相簿 / 短片牆</h3>
+        <div id="mainAlbumGrid" class="album-grid"></div>
+    </div>
+
     <div class="popup-overlay" id="addEventPopupOverlay" onclick="closePopupOverlayOutside(event)">
-        <div class="popup-content-card" id="popupInnerCard">
+        <div class="popup-content-card">
             <span class="popup-close-x" onclick="closeEventPopup()">&times;</span>
-            <h3 id="formTitle" style="margin-top:0; color:#333;">➕ 新增家庭活動</h3>
+            <h3 id="formTitle">➕ 新增家庭活動</h3>
             <input type="hidden" id="editKey" value="">
 
             <div class="password-lock-section" id="lockSection">
                 <div style="display:flex; gap:8px;">
-                    <input type="password" id="popupPassword" placeholder="輸入密碼進入..." style="margin:0; flex:1; padding:10px;">
-                    <button type="button" class="action-btn" style="margin:0; width:auto; padding:10px 20px; background:#1890ff;" onclick="verifyGatePassword()">確認進入</button>
+                    <input type="password" id="popupPassword" placeholder="輸入密碼進入面板..." style="margin:0; flex:1; padding:10px;">
+                    <button type="button" class="action-btn" style="margin:0; width:auto; padding:10px 20px; background:#1890ff; border:none; border-radius:8px; color:white; font-weight:bold; cursor:pointer;" onclick="verifyGatePassword()">確認進入</button>
                 </div>
             </div>
 
             <div class="secure-form-fields" id="secureFormPanel">
-                <label for="eventTitle" style="font-size:15px; color:#666; display: block;">活動名稱 / 地點：</label>
-                <input type="text" id="eventTitle" placeholder="例如：陪爺爺飲茶、家族聚餐">
-
-                <label class="time-picker-label" for="eventTime">📅 開始時間與日期：</label>
-                <div class="twin-input-wrapper">
-                    <input type="text" id="eventTime" value="" placeholder="點擊選取開始日期時間" onclick="document.getElementById('startPickerNode').showPicker()">
-                    <div class="wheel-trigger-box"><div class="wheel-btn"><input type="datetime-local" id="startPickerNode" class="picker-overlay-input" onchange="syncComboPicker(this, 'eventTime', 'START')"></div></div>
-                </div>
-
-                <label class="time-picker-label" for="eventEndTime">📆 結束時間與日期：</label>
-                <div class="twin-input-wrapper">
-                    <input type="text" id="eventEndTime" placeholder="點擊選取結束日期時間 (選填)" onclick="document.getElementById('endPickerNode').showPicker()">
-                    <div class="wheel-trigger-box"><div class="wheel-btn"><input type="datetime-local" id="endPickerNode" class="picker-overlay-input" onchange="syncComboPicker(this, 'eventEndTime', 'END')"></div></div>
-                </div>
-
-                <label class="time-picker-label" for="notifyTime">🔔 WhatsApp 提醒時間：</label>
-                <div class="twin-input-wrapper">
-                    <input type="text" id="notifyTime" value="" placeholder="點擊選取提醒時間" onclick="document.getElementById('notifyPickerNode').showPicker()">
-                    <div class="wheel-trigger-box"><div class="wheel-btn"><input type="datetime-local" id="notifyPickerNode" class="picker-overlay-input" onchange="syncComboPicker(this, 'notifyTime', 'NOTIFY')"></div></div>
-                </div>
-
-                <label for="eventImageUrl" style="font-size:15px; color:#1890ff; display: block; margin-top:12px; font-weight: bold;">🖼️ 附圖網址：</label>
-                <input type="text" id="eventImageUrl" placeholder="請貼上圖片網址">
-
-                <label style="font-size:15px; color:#666; display: block; margin-top: 12px;">活動參與者：</label>
-                <div class="member-checkbox-group" id="memberCheckboxContainer">
-                    <label class="member-label" id="slot_label_1"><input type="checkbox" name="members" id="slot_cb_1" value="阿鐵" onclick="syncTargetPhone(1)"> <span class="btn-text-span" onclick="modifyMemberPrompt(1, event)">阿鐵</span></label>
-                    <label class="member-label" id="slot_label_2"><input type="checkbox" name="members" id="slot_cb_2" value="Jolie" onclick="syncTargetPhone(2)"> <span class="btn-text-span" onclick="modifyMemberPrompt(2, event)">Jolie</span></label>
-                    <label class="member-label" id="slot_label_3"><input type="checkbox" name="members" id="slot_cb_3" value="Daddy" onclick="syncTargetPhone(3)"> <span class="btn-text-span" onclick="modifyMemberPrompt(3, event)">Daddy</span></label>
-                    <label class="member-label" id="slot_label_4"><input type="checkbox" name="members" id="slot_cb_4" value="Mummy" onclick="syncTargetPhone(4)"> <span class="btn-text-span" onclick="modifyMemberPrompt(4, event)">Mummy</span></label>
-                </div>
-
-                <label for="targetPhone" style="font-size:15px; color:#666; display: block;">接收者電話：</label>
-                <input type="tel" id="targetPhone" placeholder="留空則發送到大群組">
-
-                <label for="eventNote" style="font-size:15px; color:#666; display: block;">備註：</label>
-                <textarea id="eventNote" rows="2" placeholder="詳細備忘..."></textarea>
-                
-                <button id="submitBtn" class="action-btn" style="background:#25D366; margin-top: 15px;" onclick="addFamilyEvent()">儲存至此日期</button>
+                <label for="eventTitle">活動名稱 / 地點：</label>
+                <input type="text" id="eventTitle" placeholder="例如：蓓 8:30 放學、二胡課">
+                <label>📅 開始日期時間：</label>
+                <input type="text" id="eventTime">
+                <label>📆 結束日期時間：</label>
+                <input type="text" id="eventEndTime" placeholder="選填">
+                <button id="formSubmitBtn" class="action-btn-block" style="background:#25D366;" onclick="addFamilyEvent()">儲存至此日期</button>
             </div>
 
-            <div class="secure-form-fields" id="secureManagePanel"><div id="popupManageList"></div></div>
-            <div class="secure-form-fields" id="secureWhatsAppPanel"><div id="popupWhatsAppList"></div></div>
+            <div class="secure-form-fields" id="secureManagePanel">
+                <label style="font-weight:bold; color:#1890ff; display:block; margin-bottom:12px;">🛠️ 當日可操作的行程：</label>
+                <div id="popupManageList"></div>
+            </div>
+
+            <div class="secure-form-fields" id="secureWhatsAppPanel">
+                <label style="font-weight:bold; color:#00c642; display:block; margin-bottom:12px;">💬 請選取欲發送 WhatsApp 通知的行程：</label>
+                <div id="popupWhatsAppList"></div>
+            </div>
+
+            <div class="secure-form-fields" id="secureAlbumPanel">
+                <label style="font-weight:bold; color:#f39c12;">➕ 添加新相片或短片至家庭相簿</label>
+                <input type="text" id="mediaTitle" placeholder="輸入相片描述或活動名稱 (例如：午餐、二胡演奏)">
+                
+                <div class="camera-upload-row">
+                    <button type="button" class="camera-btn" onclick="triggerFileInput('image')">📷 拍照 / 選擇相片</button>
+                    <button type="button" class="camera-btn video-mode" onclick="triggerFileInput('video')">🎥 錄影 / 選擇短片</button>
+                </div>
+                
+                <input type="file" id="nativeImageInput" accept="image/*" capture="environment" style="display:none;" onchange="handleNativeFileLoad(this, 'image')">
+                <input type="file" id="nativeVideoInput" accept="video/*" capture="environment" style="display:none;" onchange="handleNativeFileLoad(this, 'video')">
+                
+                <img id="imageUploadPreview" class="upload-preview-box">
+                <video id="videoUploadPreview" class="upload-preview-box" controls></video>
+
+                <div style="text-align: center; margin: 5px 0; color: #8c8c8c; font-size: 14px;">─ 或手動輸入網路 URL ─</div>
+                <input type="text" id="mediaURL" placeholder="請貼上現有的相片或影片網址 (選填)">
+                
+                <select id="mediaType">
+                    <option value="image">🖼️ 圖片/相片模式</option>
+                    <option value="video">🎥 短片模式 (.mp4)</option>
+                </select>
+                <p style="font-size:14px; color:#666; margin: 4px 0;">* 系統會自動將相片綁定在您當前選取的日期 (<span id="albumBindDateLabel" style="color:#1890ff; font-weight:bold;"></span>)！</p>
+                <button class="action-btn-block" style="background:#f39c12;" onclick="uploadMediaToAlbum()">確認上傳添加至相簿</button>
+                
+                <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+                <label style="font-weight:bold; color:#555;">🗑️ 管理/刪除現有相簿內容：</label>
+                <div id="popupAlbumManageList" class="album-grid"></div>
+            </div>
+
             <div class="secure-form-fields" id="secureViewSwitchPanel">
                 <div class="view-option-group">
                     <label class="view-radio-label"><input type="radio" name="viewMode" value="精簡" onclick="changeGlobalViewMode('精簡')"> ▤ 精簡</label>
@@ -381,56 +332,25 @@ input, textarea {
                     <label class="view-radio-label"><input type="radio" name="viewMode" value="列表" onclick="changeGlobalViewMode('列表')"> ✓ ☰ 列表</label>
                 </div>
             </div>
-            <button id="cancelBtn" class="action-btn" style="background:#8c8c8c; margin-top:15px;" onclick="closeEventPopup()">關閉面板</button>
-        </div>
-    </div>
-
-    <!-- 成員修改彈窗 -->
-    <div class="popup-overlay" id="memberEditPopupOverlay" onclick="closeMemberPopupOverlayOutside(event)">
-        <div class="popup-content-card" style="max-width: 450px; margin: 100px auto;">
-            <span class="popup-close-x" onclick="closeMemberEditPopup()">&times;</span>
-            <h3 id="memberFormTitle">✏️ 修改成員資料</h3>
-            <div class="password-lock-section" id="memberLockSection">
-                <div style="display:flex; gap:8px;">
-                    <input type="password" id="memberPopupPassword" placeholder="輸入密碼..." style="margin:0; flex:1; padding:10px;">
-                    <button type="button" class="action-btn" style="margin:0; width:auto; background:#1890ff;" onclick="verifyMemberGatePassword()">確認</button>
-                </div>
-            </div>
-            <div class="secure-form-fields" id="secureMemberPanel">
-                <input type="hidden" id="currentEditSlotId" value="">
-                <label>參與者顯示名稱：</label><input type="text" id="editMemberName">
-                <label>WhatsApp 電話：</label><input type="tel" id="editMemberPhone">
-                <button class="action-btn" style="background:#25D366; margin-top: 20px;" onclick="saveMemberSettings()">儲存更新</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 提示框 -->
-    <div class="popup-overlay" id="whatsappAlertPopupOverlay">
-        <div class="popup-content-card" style="max-width: 460px; margin: 120px auto; border: 3px solid #25D366; text-align: center;">
-            <h3 style="color:#25D366;">⏰ WhatsApp 提醒時間到了！</h3>
-            <div id="whatsappAlertMessage" style="text-align: left; background: #f9f9f9; padding: 15px; border-radius: 8px;"></div>
-            <input type="hidden" id="currentAlertEventId" value="">
-            <button class="action-btn" style="background:#25D366;" onclick="triggerAlertWhatsAppSend()">💬 立即傳送</button>
-            <button class="action-btn" style="background:#8c8c8c;" onclick="dismissAlertPopup()">稍後處理</button>
+            
+            <button class="action-btn-block" style="background:#8c8c8c; margin-top:15px;" onclick="closeEventPopup()">關閉面板</button>
         </div>
     </div>
 
 </div>
 
 <script>
-// 精確對接全新真實 Firebase 專案路徑
 const dbURL = "https://familycalender-a62ae-default-rtdb.firebaseio.com/family_calendar_activities";
+const albumURL = "https://familycalender-a62ae-default-rtdb.firebaseio.com/family_mutual_album";
 
 let activities = [];
+let albumItems = [];
 let current = new Date();
-current.setMonth(5); // 預設直接切換至 6 月份，方便立刻看見行程！
-let selectedDateStr = "2026-06-01"; 
-
+current.setMonth(5); // 預設 6 月
+let selectedDateStr = "2026-06-09"; 
+let currentPopupMode = "ADD";
 let currentGlobalMode = localStorage.getItem('family_日誌_view_mode') || "列表";
-let slotsMapping = JSON.parse(localStorage.getItem('member_slots_extended_config')) || {
-    1: { name: "阿鐵", phone: "" }, 2: { name: "Jolie", phone: "" }, 3: { name: "Daddy", phone: "" }, 4: { name: "Mummy", phone: "" }
-};
+let uploadedBase64Cache = ""; // 儲存拍照轉換後的編碼
 
 function changeGlobalViewMode(modeStr) {
     currentGlobalMode = modeStr;
@@ -440,138 +360,309 @@ function changeGlobalViewMode(modeStr) {
     closeEventPopup();
 }
 
-function syncComboPicker(inputElement, txtInputId, flag) {
-    let txtInput = document.getElementById(txtInputId);
-    if (!inputElement || !inputElement.value || !txtInput) return;
-    let parts = inputElement.value.split('T');
-    let d = new Date(parts[0]);
-    if (!isNaN(d.getTime())) {
-        txtInput.value = `${d.getMonth() + 1}月${d.getDate()}日 ${parts[1]}`;
-        txtInput.setAttribute('data-raw-date', parts[0]);
-        txtInput.setAttribute('data-raw-time', parts[1]);
-    }
-}
-
 function verifyGatePassword() {
     if (document.getElementById('popupPassword').value === "8679") {
         document.getElementById('lockSection').style.display = 'none';
-        if (currentPopupMode === "MANAGE") { document.getElementById('secureManagePanel').style.display = 'block'; renderPopupManageListUI(); }
-        else if (currentPopupMode === "WHATSAPP") { document.getElementById('secureWhatsAppPanel').style.display = 'block'; renderPopupWhatsApp_UI(); }
-        else { document.getElementById('secureFormPanel').style.display = 'block'; }
-    } else { alert("❌ 密碼錯誤！"); }
-}
-
-function verifyMemberGatePassword() {
-    if (document.getElementById('memberPopupPassword').value === "8679") {
-        document.getElementById('memberLockSection').style.display = 'none';
-        document.getElementById('secureMemberPanel').style.display = 'block';
-    } else { alert("❌ 密碼錯誤！"); }
+        if (currentPopupMode === "MANAGE") {
+            document.getElementById('secureManagePanel').style.display = 'block';
+            renderPopupManageListUI();
+        } else if (currentPopupMode === "WHATSAPP") {
+            document.getElementById('secureWhatsAppPanel').style.display = 'block';
+            renderPopupWhatsApp_UI();
+        } else if (currentPopupMode === "ALBUM") {
+            document.getElementById('secureAlbumPanel').style.display = 'block';
+            document.getElementById('albumBindDateLabel').innerText = selectedDateStr;
+            resetPhotoUploadForm();
+            renderPopupAlbumManageUI();
+        } else {
+            document.getElementById('secureFormPanel').style.display = 'block';
+        }
+    } else { alert("❌ 密碼錯誤，拒絕進入核心面板！"); }
 }
 
 function openAddFormPopup(mode) {
     currentPopupMode = mode || "ADD";
     document.getElementById('lockSection').style.display = 'block';
+    document.getElementById('popupPassword').value = "";
     document.getElementById('secureFormPanel').style.display = 'none';
     document.getElementById('secureManagePanel').style.display = 'none';
     document.getElementById('secureWhatsAppPanel').style.display = 'none';
+    document.getElementById('secureAlbumPanel').style.display = 'none';
     document.getElementById('secureViewSwitchPanel').style.display = 'none';
 
-    if (currentPopupMode === "SWITCH_VIEW") {
+    document.getElementById('formSubmitBtn').innerText = "儲存至此日期";
+    document.getElementById('editKey').value = "";
+
+    if (currentPopupMode === "MANAGE") { document.getElementById('formTitle').innerText = "⚙️ 修改/刪除舊行程"; }
+    else if (currentPopupMode === "WHATSAPP") { document.getElementById('formTitle').innerText = "💬 WHATSAPP 通知發送控制"; }
+    else if (currentPopupMode === "ALBUM") { document.getElementById('formTitle').innerText = "🏡 麟李互助相簿管理面版"; }
+    else if (currentPopupMode === "SWITCH_VIEW") {
+        document.getElementById('formTitle').innerText = "👁️ 視覺切換模式";
         document.getElementById('lockSection').style.display = 'none';
         document.getElementById('secureViewSwitchPanel').style.display = 'block';
-    }
+    } else { document.getElementById('formTitle').innerText = "➕ 新增家庭活動"; }
+    
     document.getElementById('addEventPopupOverlay').style.display = 'block';
 }
 
 function closeEventPopup() { document.getElementById('addEventPopupOverlay').style.display = 'none'; }
 function closePopupOverlayOutside(e) { if (e.target === document.getElementById('addEventPopupOverlay')) closeEventPopup(); }
 
-/* ─── 📦 智慧型自動大批量行程初始化導入引擎 ─── */
-function autoCheckAndInjectJuneEvents() {
-    // 比對是否有 6 月份的核心數據，防止重疊寫入
-    let hasJuneData = activities.some(a => a.date && a.date.startsWith("2026-06"));
-    if (hasJuneData) return; 
+/* ─── 📸 實體拍照與上傳控制引擎 ─── */
+function triggerFileInput(type) {
+    if (type === 'image') { document.getElementById('nativeImageInput').click(); }
+    else { document.getElementById('nativeVideoInput').click(); }
+}
 
-    console.log("偵測到新資料庫完全空白，啟動 6 月份全行程自動雲端同步機制...");
+function handleNativeFileLoad(input, type) {
+    let file = input.files[0];
+    if (!file) return;
+    
+    let reader = new FileReader();
+    reader.onload = function(e) {
+        uploadedBase64Cache = e.target.result; // 將檔案轉換為可儲存之 base64 碼
+        document.getElementById('mediaType').value = type;
+        
+        if (type === 'image') {
+            let imgPrev = document.getElementById('imageUploadPreview');
+            imgPrev.src = uploadedBase64Cache;
+            imgPrev.style.display = 'block';
+            document.getElementById('videoUploadPreview').style.display = 'none';
+        } else {
+            let vidPrev = document.getElementById('videoUploadPreview');
+            vidPrev.src = uploadedBase64Cache;
+            vidPrev.style.display = 'block';
+            document.getElementById('imageUploadPreview').style.display = 'none';
+        }
+    };
+    reader.readAsDataURL(file);
+}
 
-    const junePayloads = [
-        // 第一週
-        { date: "2026-06-01", time: "08:30", title: "蓓 8:30 放學", isMultiDayEvent: true, multiDayRangeArray: ["2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04"], note: "劃橫線特別安排週" },
-        { date: "2026-06-02", time: "19:15 / 21:45", title: "蓓 7:15pm 放學 / 熹 9:45pm 放學", note: "" },
-        { date: "2026-06-03", time: "11:15", title: "蓓 11:15 放學 / 熹 放假", note: "" },
-        { date: "2026-06-04", time: "09:25", title: "蓓 放假 / 熹 9:25 放學", note: "當日圈字：Cynthia / Comfort" },
-        { date: "2026-06-05", time: "11:15 / 21:45", title: "蓓 11:15 放學 / 熹 9:45 放學", note: "" },
-        
-        // 第二週
-        { date: "2026-06-07", time: "全日安排", title: "圈字行程 (好似係 Ada)", note: "Ada 相關標記" },
-        { date: "2026-06-08", time: "12:00 / 21:45", title: "蓓 12:00 放學 / 熹 9:45 放學", note: "" },
-        { date: "2026-06-09", time: "10:00 / 20:15", title: "蓓 10:00 放學 / 熹 8:15 放學", note: "" },
-        { date: "2026-06-10", time: "11:15 / 20:15", title: "蓓 11:15 放學 / 熹 8:15 放學", note: "" },
-        { date: "2026-06-11", time: "10:00", title: "蓓 10:00 放學 / 熹 放假", note: "" },
-        { date: "2026-06-12", time: "11:10 / 21:15", title: "蓓 11:10 放學 / 熹 9:15 放學", note: "下方藍圈標記：全日 二胡" },
-        
-        // 第三週
-        { date: "2026-06-15", time: "10:00 / 15:00", title: "蓓 10:00 放學 / 熹 3點(15:00) 放學", note: "" },
-        { date: "2026-06-16", time: "10:20 / 11:15", title: "蓓 10:20 放學 / 熹 11:15 放學", note: "" },
-        { date: "2026-06-17", time: "11:30", title: "蓓 11:30 放學 / 熹 放假", note: "" },
-        { date: "2026-06-18", time: "10:15", title: "蓓 放假 / 熹 10:15 放學", note: "" },
-        { date: "2026-06-19", time: "端午節公眾假期", title: "🔴 端午節紅日放假", note: "藍筆大圈特別標記" },
-        
-        // 第四週
-        { date: "2026-06-22", time: "13:20 / 16:00", title: "蓓 4:00pm 有 Bball 籃球 / 熹 1:20 放學", note: "蓓 Bball" },
-        { date: "2026-06-23", time: "13:20 / 14:30", title: "圈住 Pin / 熹 1:20 放學 (2:30 有 Sing/STNG 唱歌)", note: "Pin & Sing" },
-        { date: "2026-06-24", time: "13:20", title: "熹 1:20 放學", note: "" },
-        { date: "2026-06-25", time: "13:50 / 16:00", title: "熹 1:50 放學 / 4:00pm 有活動", note: "" },
-        { date: "2026-06-26", time: "13:00", title: "熹 1:00pm 放學", note: "" },
-        { date: "2026-06-27", time: "全日活動", title: "蓓 有 Bball (籃球) / 另寫有 SPN", note: "Bball + SPN" },
-        
-        // 第五週
-        { date: "2026-06-29", time: "16:00", title: "蓓 4:00pm 有安排 / 熹 放假", note: "" },
-        { date: "2026-06-30", time: "08:50 / 11:00", title: "熹 8:50 放學 / 藍字寫 11點放學", note: "" }
-    ];
+function resetPhotoUploadForm() {
+    uploadedBase64Cache = "";
+    document.getElementById('mediaTitle').value = "";
+    document.getElementById('mediaURL').value = "";
+    document.getElementById('imageUploadPreview').style.display = 'none';
+    document.getElementById('videoUploadPreview').style.display = 'none';
+}
 
-    // 使用非同步 POST 批次打入全新資料庫
-    Promise.all(junePayloads.map(payload => {
-        return fetch(`${dbURL}.json`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(Object.assign({
-                notifyTime: "17:00", members: ["全體"], targetPhone: "", note: ""
-            }, payload))
-        });
-    })).then(() => {
-        console.log("✅ 6 月自備全行程數據集已成功同步寫入新 Firebase 後台！");
-        fetchCloudData(); // 重刷畫面
+function uploadMediaToAlbum() {
+    let title = document.getElementById('mediaTitle').value.trim();
+    let url = document.getElementById('mediaURL').value.trim();
+    let type = document.getElementById('mediaType').value;
+
+    // 優先使用拍下來的實體 Base64 資料，否則使用填寫的網址
+    let finalMediaData = uploadedBase64Cache ? uploadedBase64Cache : url;
+
+    if (!title || !finalMediaData) { alert("請輸入描述並拍照、錄影或輸入媒體網址！"); return; }
+
+    fetch(`${albumURL}.json`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: title, url: finalMediaData, type: type, date: selectedDateStr })
+    }).then(() => {
+        resetPhotoUploadForm();
+        alert("🎉 成功上傳添加至麟李家庭相簿，日曆格子已雙向鎖定同步！");
+        fetchCloudData();
     });
 }
 
+function deleteMediaFromAlbum(id) {
+    if (confirm("確定要刪除這張家庭相片/短片嗎？")) {
+        fetch(`${albumURL}/${id}.json`, { method: "DELETE" }).then(() => { fetchCloudData(); });
+    }
+}
+
+function renderMainAlbumUI() {
+    let mainGrid = document.getElementById('mainAlbumGrid');
+    let popGrid = document.getElementById('popupAlbumManageList');
+    
+    if (albumItems.length === 0) {
+        let noDataHtml = `<p style="color:gray; font-size:14px; grid-column: 1/-1; text-align:center;">相簿目前空空如也，點擊上方「🏡 互助相簿」即可密碼登入拍照添加！</p>`;
+        mainGrid.innerHTML = noDataHtml;
+        if(popGrid) popGrid.innerHTML = noDataHtml;
+        return;
+    }
+
+    let mainHtml = "";
+    let popHtml = "";
+
+    albumItems.forEach(item => {
+        let mediaTag = item.type === "video" ? `<video src="${item.url}" controls></video>` : `<img src="${item.url}" onerror="this.src='https://placehold.co/150x110?text=Image+Error'">`;
+        
+        mainHtml += `
+            <div class="album-item">
+                ${mediaTag}
+                <div class="album-title">${item.title}</div>
+                <div class="album-date-badge">📅 ${item.date}</div>
+            </div>`;
+            
+        popHtml += `
+            <div class="album-item">
+                <button class="album-delete-tag" onclick="deleteMediaFromAlbum('${item.id}')">×</button>
+                ${mediaTag}
+                <div class="album-title">${item.title}</div>
+                <div class="album-date-badge">${item.date}</div>
+            </div>`;
+    });
+
+    mainGrid.innerHTML = mainHtml;
+    if(popGrid) popGrid.innerHTML = popHtml;
+}
+
+/* ─── ⚙️ 核心：雙鍵修改與刪除高質感平排 ─── */
+function renderPopupManageListUI() {
+    let container = document.getElementById('popupManageList');
+    let filtered = activities.filter(a => a.date === selectedDateStr);
+    if (filtered.length === 0) { container.innerHTML = `<p style="color:gray; text-align:center;">今日暫無可以修改的舊行程。</p>`; return; }
+    let html = "";
+    filtered.forEach(ev => {
+        html += `
+        <div class="manage-item-row" style="padding: 12px; margin-bottom: 10px; background: #fafafa; border-radius: 8px; border: 1px solid #eee;">
+            <div style="font-size:16px; margin-bottom: 8px; color:#262626;">⏰ <strong>${ev.time}</strong> - ${ev.title}</div>
+            <div class="action-btn-group-row">
+                <button class="pretty-delete-btn" onclick="deleteEventFromPopup('${ev.id}')">1. ❌ 刪除</button>
+                <button class="pretty-edit-btn" onclick="openModifyEventForm('${ev.id}')">2. ✏️ 修改</button>
+            </div>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+function openModifyEventForm(id) {
+    let ev = activities.find(a => a.id === id);
+    if (!ev) return;
+    document.getElementById('secureManagePanel').style.display = 'none';
+    document.getElementById('secureFormPanel').style.display = 'block';
+    document.getElementById('formTitle').innerText = "✏️ 修改行程內容";
+    document.getElementById('eventTitle').value = ev.title;
+    document.getElementById('eventTime').value = ev.time;
+    document.getElementById('editKey').value = ev.id;
+    document.getElementById('formSubmitBtn').innerText = "確認修改更新至雲端";
+}
+
+/* ─── 💬 發送通知按鍵微調靚化 ─── */
+function renderPopupWhatsApp_UI() {
+    let container = document.getElementById('popupWhatsAppList');
+    let filtered = activities.filter(a => a.date === selectedDateStr);
+    if (filtered.length === 0) { container.innerHTML = `<p style="color:gray; text-align:center;">今日暫無可發送通知的項目。</p>`; return; }
+    let html = "";
+    filtered.forEach(ev => {
+        html += `
+        <div class="manage-item-row" style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee;">
+            <div style="flex:1; font-size:15px; padding-right:10px;"><strong>${ev.time}</strong> - ${ev.title}</div>
+            <div><button class="pretty-whatsapp-btn" onclick="sendWhatsAppNotification('${ev.id}')">💬 發送通知</button></div>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+function renderPopupAlbumManageUI() { renderMainAlbumUI(); }
+
+function deleteEventFromPopup(id) {
+    if (confirm("確定要刪除這項活動嗎？")) {
+        fetch(`${dbURL}/${id}.json`, { method: "DELETE" }).then(() => { fetchCloudData(); });
+    }
+}
+
+function sendWhatsAppNotification(id) {
+    let ev = activities.find(a => a.id === id); if (!ev) return;
+    let textMessage = `💡【麟李互助家庭日誌 - 最新日程通知】\n\n📅 日期：${ev.date}\n⏰ 時間：${ev.time}\n📌 項目地點：${ev.title}\n📝 備忘：${ev.note ? ev.note : "無"}\n\n請大家安排好時間，互相照顧扶持！❤️`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textMessage)}`, '_blank');
+}
+
+/* ─── 📅 香港公眾假期（2026年規格） ─── */
+const holidays2026 = {
+    "01-01":"元旦", "02-17":"年初一", "02-18":"年初二", "02-19":"年初三", "04-03":"受難節", "04-04":"清明節", "05-01":"勞動節", "05-25":"佛誕", "06-19":"端午節", "07-01":"七一回歸", "10-01":"國慶日", "12-25":"聖誕節", "12-26":"節禮日"
+};
+function getHKHoliday(m, d) { return holidays2026[`${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`] || ""; }
+
+/* ─── ☯️ 傳統黃曆日期引擎 ─── */
+function getLunarDayText(dateStr) {
+    try {
+        let d = new Date(dateStr); if (isNaN(d.getTime())) return "";
+        let parts = new Intl.DateTimeFormat("zh-Hant-u-ca-chinese", {month:"numeric", day:"numeric"}).formatToParts(d);
+        let month = parts.find(p => p.type === 'month').value; 
+        let day = Number(parts.find(p => p.type === 'day').value);
+        const CN = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+        if (day === 1) return ["", "正月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "冬月", "臘月"][Number(month)];
+        if (day <= 10) return "初" + CN[day];
+        if (day < 20) return "十" + CN[day - 10];
+        if (day === 20) return "二十";
+        if (day < 30) return "廿" + CN[day - 20];
+        return "三十";
+    } catch(e) { return ""; }
+}
+
+/* ─── 📥 雲端雙節點聯網抓取 ─── */
 function fetchCloudData() {
-    fetch(`${dbURL}.json`, { method: "GET", mode: "cors" })
-        .then(res => res.json())
-        .then(data => {
-            activities = [];
-            if (data) {
-                for (let key in data) {
-                    if (data[key]) {
-                        activities.push({
+    fetch(`${dbURL}.json`, { method: "GET" }).then(res => res.json()).then(data => {
+        activities = [];
+        if (data) {
+            for (let key in data) {
+                if (data[key]) {
+                    activities.push({
+                        id: key,
+                        date: data[key].date ? data[key].date.trim() : "",
+                        time: data[key].time || "18:00",
+                        title: data[key].title || "行程",
+                        note: data[key].note || "",
+                        isMultiDayEvent: data[key].isMultiDayEvent || false,
+                        multiDayRangeArray: data[key].multiDayRangeArray || []
+                    });
+                }
+            }
+        }
+        
+        fetch(`${albumURL}.json`, { method: "GET" }).then(res => res.json()).then(albumData => {
+            albumItems = [];
+            if (albumData) {
+                for (let key in albumData) {
+                    if (albumData[key]) {
+                        albumItems.push({
                             id: key,
-                            date: data[key].date ? data[key].date.trim() : "",
-                            time: data[key].time || "18:00",
-                            title: data[key].title || "行程",
-                            note: data[key].note || "",
-                            isMultiDayEvent: data[key].isMultiDayEvent || false,
-                            multiDayRangeArray: data[key].multiDayRangeArray || []
+                            title: albumData[key].title,
+                            url: albumData[key].url,
+                            type: albumData[key].type || "image",
+                            date: albumData[key].date || "未知日期"
                         });
                     }
                 }
             }
             renderCalendar();
             renderDayEvents();
-            autoCheckAndInjectJuneEvents(); // 智慧安全檢查
+            renderMainAlbumUI();
+            autoCheckAndInjectJuneEvents();
         });
+    });
 }
 
-setInterval(fetchCloudData, 5000);
+setInterval(fetchCloudData, 7000);
+
+function autoCheckAndInjectJuneEvents() {
+    let hasJuneData = activities.some(a => a.date && a.date.startsWith("2026-06")); if (hasJuneData) return; 
+    const junePayloads = [
+        { date: "2026-06-01", time: "08:30", title: "蓓 8:30 放學", isMultiDayEvent: true, multiDayRangeArray: ["2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04"], note: "劃橫線特別安排週" },
+        { date: "2026-06-02", time: "19:15 / 21:45", title: "蓓 7:15pm 放學 / 熹 9:45pm 放學" },
+        { date: "2026-06-03", time: "11:15", title: "蓓 11:15 放學 / 熹 放假" },
+        { date: "2026-06-04", time: "09:25", title: "蓓 放假 / 熹 9:25 放學" },
+        { date: "2026-06-05", time: "11:15 / 21:45", title: "蓓 11:15 放學 / 熹 9:45 放學" },
+        { date: "2026-06-09", time: "10:00 / 20:15", title: "蓓 10:00 放學 / 熹 8:15 放學" },
+        { date: "2026-06-19", time: "端午節公眾假期", title: "🔴 端午節紅日放假" }
+    ];
+    Promise.all(junePayloads.map(p => fetch(`${dbURL}.json`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.assign({ notifyTime: "17:00", members: ["全體"] }, p)) }))).then(() => fetchCloudData());
+}
+
+function addFamilyEvent() {
+    let title = document.getElementById('eventTitle').value.trim();
+    let timeVal = document.getElementById('eventTime').value.trim();
+    let editKey = document.getElementById('editKey').value;
+    if (!title) { alert("請輸入活動名稱！"); return; }
+    let payload = { date: selectedDateStr, time: timeVal ? timeVal : "18:00", title: title, notifyTime: "17:00", members: ["全體"], isMultiDayEvent: false, note: "" };
+    let targetURL = editKey ? `${dbURL}/${editKey}.json` : `${dbURL}.json`;
+    let reqMethod = editKey ? "PUT" : "POST";
+    fetch(targetURL, { method: reqMethod, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then(() => { document.getElementById('eventTitle').value = ""; closeEventPopup(); fetchCloudData(); });
+}
 
 function renderCalendar(){
     let y = current.getFullYear(); let m = current.getMonth();
@@ -579,47 +670,52 @@ function renderCalendar(){
     let first = new Date(y, m, 1).getDay();
     let days = new Date(y, m + 1, 0).getDate();
     let html = "", total = 0;
-    
     for(let i=0; i<first; i++){ html += `<div class="calendar-day empty"></div>`; total++; }
 
     for(let i=1; i<=days; i++){
         let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
         let isToday = new Date().toISOString().slice(0,10) === dStr;
         let isSelected = selectedDateStr === dStr;
+        let lunarText = getLunarDayText(dStr);
+        let holidayText = getHKHoliday(m+1, i);
         
         let dayActivities = activities.filter(a => {
             if (a.isMultiDayEvent && a.multiDayRangeArray) { return a.multiDayRangeArray.includes(dStr); }
             return a.date === dStr;
         });
 
+        // 🖼️ 深度雙向綁定鎖定：找出該日期是否有任何家庭相片
+        let dayMediaItems = albumItems.filter(item => item.date === dStr);
+
         let belongsToMultiDay = activities.some(act => act.isMultiDayEvent && act.multiDayRangeArray && act.multiDayRangeArray.includes(dStr));
         let eventsHtml = "";
-        dayActivities.forEach(act => {
-            eventsHtml += `<span class="day-event-badge" title="${act.title}">${act.time} ${act.title}</span>`;
-        });
+        dayActivities.forEach(act => { eventsHtml += `<span class="day-event-badge" title="${act.title}">${act.time} ${act.title}</span>`; });
         
+        // 渲染亮起：如果有相片影像，在格子頂端優先亮起 🖼️ 標誌與標題
+        dayMediaItems.forEach(media => {
+            eventsHtml = `<span class="day-event-badge" style="background:#fff7e6; color:#d46b08; border-left: 3px solid #f39c12; font-weight:bold;">🖼️ 附圖: ${media.title}</span>` + eventsHtml;
+        });
+
         let dayClass = "calendar-day";
         if (isToday) dayClass += " today";
         if (isSelected) dayClass += " selected-day";
         if (belongsToMultiDay) dayClass += " multiday-pass-range";
+        if (holidayText) dayClass += " hk-holiday-pass-range";
 
         html += `
         <div class="${dayClass}" data-date="${dStr}" onclick="selectDate('${dStr}')">
             <strong>${i}</strong>
+            <div class="lunar">${lunarText}</div>
+            ${holidayText ? `<div class="holiday">🔴 ${holidayText}</div>` : ""}
             <div class="day-events-container">${eventsHtml}</div>
-        </div>
-        `;
+        </div>`;
         total++;
     }
     while(total % 7 !== 0){ html += `<div class="calendar-day empty"></div>`; total++; }
     calendar.innerHTML = html;
 }
 
-function selectDate(dateStr) {
-    selectedDateStr = dateStr;
-    renderCalendar();
-    renderDayEvents();
-}
+function selectDate(dateStr) { selectedDateStr = dateStr; renderCalendar(); renderDayEvents(); }
 
 function renderDayEvents() {
     let container = document.getElementById('dayEvents');
@@ -627,12 +723,10 @@ function renderDayEvents() {
         if (a.isMultiDayEvent && a.multiDayRangeArray) { return a.multiDayRangeArray.includes(selectedDateStr); }
         return a.date === selectedDateStr;
     });
-    
     document.getElementById('selectedDateLabel').innerText = selectedDateStr;
-    if (filtered.length === 0) {
-        container.innerHTML = `<p style="color:gray; text-align:center; padding:20px 0;">今日無 any 排定活動，大家可以輕鬆享受樂活時光！</p>`;
-        return;
-    }
+    
+    let dayMedia = albumItems.filter(item => item.date === selectedDateStr);
+    if (filtered.length === 0 && dayMedia.length === 0) { container.innerHTML = `<p style="color:gray; text-align:center; padding:20px 0;">今日無 any 排定活動。</p>`; return; }
     
     let html = "";
     filtered.forEach(ev => {
@@ -640,17 +734,24 @@ function renderDayEvents() {
         <div class="event-item">
             <div class="event-time">⏰ 時間：${ev.time}</div>
             <div class="event-desc">📌 項目：<strong>${ev.title}</strong></div>
-            ${ev.note ? `<div class="event-desc" style="color:gray;">📝 備忘筆記：${ev.note}</div>` : ""}
+            ${ev.note ? `<div class="event-desc" style="color:gray;">📝 備忘：${ev.note}</div>` : ""}
         </div>`;
     });
+
+    // 雙向綁定：在當日活動列表內也展示拍下的隨附照片
+    dayMedia.forEach(m => {
+        let tag = m.type === "video" ? `<video src="${m.url}" controls style="max-width:100%; max-height:160px; margin-top:8px; border-radius:8px;"></video>` : `<img src="${m.url}" style="max-width:100%; max-height:160px; margin-top:8px; border-radius:8px;">`;
+        html += `
+        <div class="event-item" style="border-left-color: #f39c12; background: #fffdf6;">
+            <div class="event-time" style="color:#d46b08;">🖼️ 當日隨附影像：${m.title}</div>
+            <div>${tag}</div>
+        </div>`;
+    });
+
     container.innerHTML = html;
 }
 
-function changeMonth(dir) {
-    current.setMonth(current.getMonth() + dir);
-    renderCalendar();
-}
-
+function changeMonth(dir) { current.setMonth(current.getMonth() + dir); renderCalendar(); }
 document.getElementById('bodyNode').className = `view-${currentGlobalMode}`;
 fetchCloudData();
 </script>
