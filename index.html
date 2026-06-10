@@ -171,7 +171,7 @@ button.pretty-edit-btn {
     cursor: pointer;
 }
 
-/* 📸 實體拍照上傳專用精緻按鈕樣式 */
+/* 📸 實體拍照上傳專用按鈕樣式 */
 .camera-upload-row { display: flex; gap: 8px; margin: 8px 0; }
 .camera-btn {
     flex: 1;
@@ -345,9 +345,8 @@ const albumURL = "https://familycalender-a62ae-default-rtdb.firebaseio.com/famil
 
 let activities = [];
 let albumItems = [];
-let current = new Date();
-current.setMonth(5); // 預設 6 月
-let selectedDateStr = "2026-06-09"; 
+let current = new Date(); // 初始化至 2026年6月當前真實月份
+let selectedDateStr = new Date().toISOString().slice(0, 10); 
 let currentPopupMode = "ADD";
 let currentGlobalMode = localStorage.getItem('family_日誌_view_mode') || "列表";
 let uploadedBase64Cache = ""; 
@@ -360,7 +359,6 @@ function changeGlobalViewMode(modeStr) {
     closeEventPopup();
 }
 
-/* ─── 🛠️ 核心修復：修正密碼門控驗證，完美解鎖相簿管理面板 ─── */
 function verifyGatePassword() {
     if (document.getElementById('popupPassword').value === "8679") {
         document.getElementById('lockSection').style.display = 'none';
@@ -371,7 +369,6 @@ function verifyGatePassword() {
             document.getElementById('secureWhatsAppPanel').style.display = 'block';
             renderPopupWhatsApp_UI();
         } else if (currentPopupMode === "ALBUM") {
-            // 密碼驗證通過，正式啟動並顯示相簿管理面板
             document.getElementById('secureAlbumPanel').style.display = 'block';
             document.getElementById('albumBindDateLabel').innerText = selectedDateStr;
             resetPhotoUploadForm();
@@ -453,7 +450,6 @@ function uploadMediaToAlbum() {
     let title = document.getElementById('mediaTitle').value.trim();
     let url = document.getElementById('mediaURL').value.trim();
     let type = document.getElementById('mediaType').value;
-
     let finalMediaData = uploadedBase64Cache ? uploadedBase64Cache : url;
 
     if (!title || !finalMediaData) { alert("請輸入描述並拍照、錄影或輸入媒體網址！"); return; }
@@ -515,7 +511,7 @@ function renderMainAlbumUI() {
     if(popGrid) popGrid.innerHTML = popHtml;
 }
 
-/* ─── ⚙️ 雙鍵修改與刪除高質感平排 ─── */
+/* ─── ⚙️ 雙鍵修改與刪除 ─── */
 function renderPopupManageListUI() {
     let container = document.getElementById('popupManageList');
     let filtered = activities.filter(a => a.date === selectedDateStr);
@@ -546,7 +542,7 @@ function openModifyEventForm(id) {
     document.getElementById('formSubmitBtn').innerText = "確認修改更新至雲端";
 }
 
-/* ─── 💬 發送通知按鍵微調靚化 ─── */
+/* ─── 💬 發送通知按鍵 ─── */
 function renderPopupWhatsApp_UI() {
     let container = document.getElementById('popupWhatsAppList');
     let filtered = activities.filter(a => a.date === selectedDateStr);
@@ -572,17 +568,17 @@ function deleteEventFromPopup(id) {
 
 function sendWhatsAppNotification(id) {
     let ev = activities.find(a => a.id === id); if (!ev) return;
-    let textMessage = `💡【麟李互助家庭日誌 - 最新日程通知】\n\n📅 日期：${ev.date}\n⏰ 時間：${ev.time}\n📌 項目地點：${ev.title}\n\n請大家安排好時間，互相照顧扶持！❤️`;
+    let textMessage = `💡【麟李互助家庭日誌 - 行程通知】\n\n📅 日期：${ev.date}\n⏰ 時間：${ev.time}\n📌 項目地點：${ev.title}\n\n請大家安排好時間，互相照顧扶持！❤️`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textMessage)}`, '_blank');
 }
 
-/* ─── 📅 香港公眾假期（2026年規格） ─── */
+/* ─── 📅 香港公眾假期 ─── */
 const holidays2026 = {
-    "01-01":"元旦", "02-17":"年初一", "02-18":"年初二", "02-19":"年初三", "04-03":"受難節", "04-04":"清明節", "05-01":"勞動節", "05-25":"佛誕", "06-19":"端午節", "07-01":"七一回歸", "10-01":"國慶日", "12-25":"聖誕節", "12-26":"節禮日"
+    "01-01":"元旦", "02-17":"年初一", "02-18":"年初二", "02-19":"年初三", "04-03":"受難節", "04-04":"清明節", "05-01":"勞動節", "05-25":"佛誕", "06-19":"端午節", "07-01":"七一回歸日", "10-01":"國慶日", "12-25":"聖誕節", "12-26":"節禮日"
 };
 function getHKHoliday(m, d) { return holidays2026[`${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`] || ""; }
 
-/* ─── ☯️ 傳統黃曆日期引擎 ─── */
+/* ─── ☯️ 傳統黃曆日期 ─── */
 function getLunarDayText(dateStr) {
     try {
         let d = new Date(dateStr); if (isNaN(d.getTime())) return "";
@@ -599,7 +595,7 @@ function getLunarDayText(dateStr) {
     } catch(e) { return ""; }
 }
 
-/* ─── 📥 雲端雙節點聯網抓取 ─── */
+/* ─── 📥 雲端聯網與雙月份全行程智慧初始化大引擎 ─── */
 function fetchCloudData() {
     fetch(`${dbURL}.json`, { method: "GET" }).then(res => res.json()).then(data => {
         activities = [];
@@ -637,36 +633,100 @@ function fetchCloudData() {
             renderCalendar();
             renderDayEvents();
             renderMainAlbumUI();
-            autoCheckAndInjectJuneEvents();
+            autoCheckAndInjectAllMonthsEvents(); 
         });
     });
 }
 
 setInterval(fetchCloudData, 6000);
 
-function autoCheckAndInjectJuneEvents() {
-    let hasJuneData = activities.some(a => a.date && a.date.startsWith("2026-06")); if (hasJuneData) return; 
-    const junePayloads = [
-        { date: "2026-06-01", time: "08:30", title: "蓓 8:30 放學", isMultiDayEvent: true, multiDayRangeArray: ["2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04"], note: "劃橫線特別安排週" },
-        { date: "2026-06-02", time: "19:15 / 21:45", title: "蓓 7:15pm 放學 / 熹 9:45pm 放學" },
-        { date: "2026-06-03", time: "11:15", title: "蓓 11:15 放學 / 熹 放假" },
-        { date: "2026-06-04", time: "09:25", title: "蓓 放假 / 熹 9:25 放學" },
-        { date: "2026-06-05", time: "11:15 / 21:45", title: "蓓 11:15 放學 / 熹 9:45 放學" },
-        { date: "2026-06-09", time: "10:00 / 20:15", title: "蓓 10:00 放學 / 熹 8:15 放學" },
-        { date: "2026-06-19", time: "端午節公眾假期", title: "🔴 端午節紅日放假" }
-    ];
-    Promise.all(junePayloads.map(p => fetch(`${dbURL}.json`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.assign({ notifyTime: "17:00", members: ["全體"] }, p)) }))).then(() => fetchCloudData());
-}
+function autoCheckAndInjectAllMonthsEvents() {
+    let hasJuneData = activities.some(a => a.date && a.date.startsWith("2026-06"));
+    let hasJulyData = activities.some(a => a.date && a.date.startsWith("2026-07"));
+    
+    if (hasJuneData && hasJulyData) return; 
 
-function addFamilyEvent() {
-    let title = document.getElementById('eventTitle').value.trim();
-    let timeVal = document.getElementById('eventTime').value.trim();
-    let editKey = document.getElementById('editKey').value;
-    if (!title) { alert("請輸入活動名稱！"); return; }
-    let payload = { date: selectedDateStr, time: timeVal ? timeVal : "18:00", title: title, notifyTime: "17:00", members: ["全體"], isMultiDayEvent: false, note: "" };
-    let targetURL = editKey ? `${dbURL}/${editKey}.json` : `${dbURL}.json`;
-    let reqMethod = editKey ? "PUT" : "POST";
-    fetch(targetURL, { method: reqMethod, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then(() => { document.getElementById('eventTitle').value = ""; closeEventPopup(); fetchCloudData(); });
+    let batchPayloads = [];
+
+    if (!hasJuneData) {
+        batchPayloads = batchPayloads.concat([
+            { date: "2026-06-01", time: "08:30", title: "蓓 8:30 放學", isMultiDayEvent: true, multiDayRangeArray: ["2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04"], note: "劃橫線特別安排週" },
+            { date: "2026-06-02", time: "19:15 / 21:45", title: "蓓 7:15pm 放學 / 熹 9:45pm 放學" },
+            { date: "2026-06-03", time: "11:15", title: "蓓 11:15 放學 / 熹 放假" },
+            { date: "2026-06-04", time: "09:25", title: "蓓 放假 / 熹 9:25 放學", note: "當日圈字：Cynthia / Comfort" },
+            { date: "2026-06-05", time: "11:15 / 21:45", title: "蓓 11:15 放學 / 熹 9:45 放學" },
+            { date: "2026-06-07", time: "全日安排", title: "圈字行程 (Ada)", note: "Ada 相關標記" },
+            { date: "2026-06-08", time: "12:00 / 21:45", title: "蓓 12:00 放學 / 熹 9:45 放學" },
+            { date: "2026-06-09", time: "10:00 / 20:15", title: "蓓 10:00 放學 / 熹 8:15 放學" },
+            { date: "2026-06-10", time: "11:15 / 20:15", title: "蓓 11:15 放學 / 熹 8:15 放學" },
+            { date: "2026-06-11", time: "10:00", title: "蓓 10:00 放學 / 熹 放假" },
+            { date: "2026-06-12", time: "11:10 / 21:15", title: "蓓 11:10 放學 / 熹 9:15 放學", note: "下方藍圈標記：全日 二胡" },
+            { date: "2026-06-15", time: "10:00 / 15:00", title: "蓓 10:00 放學 / 熹 3點 放學" },
+            { date: "2026-06-16", time: "10:20 / 11:15", title: "蓓 10:20 放學 / 熹 11:15 放學" },
+            { date: "2026-06-17", time: "11:30", title: "蓓 11:30 放學 / 熹 放假" },
+            { date: "2026-06-18", time: "10:15", title: "蓓 放假 / 熹 10:15 放學" },
+            { date: "2026-06-19", time: "端午節公眾假期", title: "🔴 端午節紅日放假", note: "藍筆大圈特別標記" },
+            { date: "2026-06-22", time: "16:00 / 13:20", title: "蓓 4:00pm 有 Bball 籃球 / 熹 1:20 放學" },
+            { date: "2026-06-23", time: "13:20 / 14:30", title: "圈住 Pin / 熹 1:20 放學 (2:30 有 Sing/唱歌)" },
+            { date: "2026-06-24", time: "13:20", title: "熹 1:20 放學" },
+            { date: "2026-06-25", time: "13:50", title: "熹 1:50 放學 / 4:00pm 有活動" },
+            { date: "2026-06-26", time: "13:00", title: "熹 1:00pm 放學" },
+            { date: "2026-06-27", time: "全日活動", title: "蓓 有 Bball (籃球) / 另寫有 SPN" },
+            { date: "2026-06-29", time: "16:00", title: "蓓 4:00pm 有安排 / 熹 放假" },
+            { date: "2026-06-30", time: "08:50", title: "熹 8:50 放學 / 藍字寫 11點放學" }
+        ]);
+    }
+
+    if (!hasJulyData) {
+        batchPayloads = batchPayloads.concat([
+            // 7月 第一週
+            { date: "2026-07-01", time: "全日紅日", title: "🔴 香港特區成立紀念日 (放假)" },
+            { date: "2026-07-02", time: "08:50 / 12:00", title: "熹 8:50 放學 / 12:00 排球🏐" },
+            { date: "2026-07-03", time: "全日", title: "熹 放假" },
+            { date: "2026-07-04", time: "16:00", title: "蓓 4:00pm 有 Bball 排球 / 熹 二胡班 🎼", note: "右邊加筆備忘：8/12 P-30" },
+            // 7月 第二週
+            { date: "2026-07-05", time: "16:00 - 18:00", title: "熹 4:00-6:00pm 練排球 🏐" },
+            { date: "2026-07-06", time: "08:50 / 11:00 / 16:00", title: "蓓 4:00pm 有活動 / 熹 8:50 放學，11:00 排球 🏐" },
+            { date: "2026-07-07", time: "09:50 / 12:30", title: "熹 9:50 放學 / 12:30 排球 🏐" },
+            { date: "2026-07-08", time: "全日", title: "熹 放假" },
+            { date: "2026-07-09", time: "08:50 / 11:00", title: "熹 8:50 放學 / 11:00 排球 🏐" },
+            { date: "2026-07-10", time: "08:50 / 10:30", title: "熹 8:50 放學 / 10:30 排球 🏐", note: "下面寫住 Openg (學校開放日)" },
+            { date: "2026-07-11", time: "全日活動", title: "蓓 放假 / 熹 上二胡班 + 排球活動 🏐" },
+            // 7月 第三週
+            { date: "2026-07-12", time: "全日", title: "熹 練排球 🏐" },
+            { date: "2026-07-13", time: "全日", title: "熹 有活動安排" },
+            { date: "2026-07-14", time: "全日放假", title: "熹 放假 (跨日橫跨中)", isMultiDayEvent: true, multiDayRangeArray: ["2026-07-14", "2026-07-15", "2026-07-16"], note: "藍色橫線由14號橫跨到16號" },
+            { date: "2026-07-15", time: "10:00 - 12:00", title: "熹 10:00 - 12:00 練排球 🏐" },
+            { date: "2026-07-16", time: "11:45 / 13:30", title: "熹 11:45 放學 / 1:30 上二胡班 🎼" },
+            { date: "2026-07-17", time: "11:45 / 13:30", title: "熹 11:45 放學 / 1:30 排球 🏐" },
+            { date: "2026-07-18", time: "全日", title: "標記 SPN", note: "右邊加筆備忘 8/12 P-30" },
+            // 7月 第四週
+            { date: "2026-07-19", time: "全日", title: "熹 練排球 🏐", note: "左邊寫住 Book Fast (提醒訂書)" },
+            { date: "2026-07-20", time: "12:15 / 13:10 / 16:00", title: "蓓 4:00pm 練 Sing 唱歌 / 熹 12:15 放學，1:10 排球 🏐" },
+            { date: "2026-07-21", time: "09:00 - 17:00", title: "熹 (H) 朝九晚五 音樂營 🎵" },
+            { date: "2026-07-22", time: "09:00 - 17:00", title: "熹 (H) 朝九晚五 音營 🎵" },
+            { date: "2026-07-23", time: "09:00 - 17:00", title: "熹 (H) 朝九晚五 音樂營 🎵" },
+            { date: "2026-07-24", time: "09:00 - 17:00", title: "熹 (H) 朝九晚五 音樂營 🎵" },
+            { date: "2026-07-25", time: "09:00 - 17:00", title: "熹 (H) 朝九晚五 音樂營 🎵 + 上二胡班 🎼", note: "右下角有加筆 8/12" },
+            // 7月 第五週
+            { date: "2026-07-26", time: "15:00", title: "熹 3:00pm 練排球 🏐", note: "下面圈住 8:11 備忘" },
+            { date: "2026-07-27", time: "全日", title: "熹 練排球 🏐" },
+            { date: "2026-07-28", time: "全日訓練", title: "藍筆大圈標記：【大排】🏐 (熹 大排球訓練/比賽)" },
+            { date: "2026-07-29", time: "全日", title: "熹 練排球 🏐" }
+        ]);
+    }
+
+    console.log("正在批量加載 6、7 月份雙月家庭活動資料表...");
+    Promise.all(batchPayloads.map(p => {
+        return fetch(`${dbURL}.json`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(Object.assign({ notifyTime: "17:00", members: ["全體"] }, p))
+        });
+    })).then(() => {
+        console.log("🎉 雙月份大批量數據集 100% 雲端同步完成！");
+        fetchCloudData();
+    });
 }
 
 function renderCalendar(){
@@ -722,6 +782,10 @@ function selectDate(dateStr) { selectedDateStr = dateStr; renderCalendar(); rend
 function handlePasswordKeydown(e) { if (e.key === 'Enter') verifyGatePassword(); }
 document.getElementById('popupPassword').addEventListener('keydown', handlePasswordKeydown);
 
+if (document.getElementById('memberPopupPassword')) {
+    document.getElementById('memberPopupPassword').addEventListener('keydown', function(e) { if (e.key === 'Enter') verifyMemberGatePassword(); });
+}
+
 function renderDayEvents() {
     let container = document.getElementById('dayEvents');
     let filtered = activities.filter(a => {
@@ -739,7 +803,7 @@ function renderDayEvents() {
         <div class="event-item">
             <div class="event-time">⏰ 時間：${ev.time}</div>
             <div class="event-desc">📌 項目：<strong>${ev.title}</strong></div>
-            ${ev.note ? `<div class="event-desc" style="color:gray;">📝 備忘：${ev.note}</div>` : ""}
+            ${ev.note ? `<div class="event-desc" style="color:#e67e22; font-weight:bold;">📝 備忘：${ev.note}</div>` : ""}
         </div>`;
     });
 
