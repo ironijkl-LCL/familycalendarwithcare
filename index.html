@@ -192,6 +192,13 @@ button.pretty-edit-btn {
 .camera-btn.video-mode { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
 .upload-preview-box { max-width: 100%; height: auto; max-height: 120px; border-radius: 8px; margin: 8px 0; display: none; object-fit: cover; border: 2px dashed #ccc; }
 
+/* 智慧型雙向輸入列排版樣式（解鎖滾輪核心） */
+.twin-input-wrapper { display: flex; align-items: center; position: relative; width: 100%; }
+.twin-input-wrapper input[type="text"] { flex: 1; cursor: pointer; background: #fff; }
+.wheel-trigger-box { position: absolute; right: 0; top: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: flex-end; pointer-events: none; }
+.wheel-btn { background: transparent !important; border: none !important; width: 44px; height: 100%; position: relative; pointer-events: auto; }
+.picker-overlay-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0 !important; cursor: pointer; z-index: 5; }
+
 /* 彈窗樣式 */
 .popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); z-index: 1000; overflow-y: auto; }
 .popup-content-card { position: relative; background: white; width: 90%; max-width: 550px; margin: 50px auto; padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
@@ -277,10 +284,26 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
             <div class="secure-form-fields" id="secureFormPanel">
                 <label for="eventTitle">活動名稱 / 地點：</label>
                 <input type="text" id="eventTitle" placeholder="例如：蓓 8:30 放學、二胡課">
-                <label>📅 開始日期時間：</label>
-                <input type="text" id="eventTime">
-                <label>📆 結束日期時間：</label>
-                <input type="text" id="eventEndTime" placeholder="選填">
+                
+                <label for="eventTime">📅 開始日期時間：</label>
+                <div class="twin-input-wrapper">
+                    <input type="text" id="eventTime" placeholder="點擊選取開始日期與時間" readOnly onclick="document.getElementById('nativeStartPicker').showPicker()">
+                    <div class="wheel-trigger-box">
+                        <div class="wheel-btn">
+                            <input type="datetime-local" id="nativeStartPicker" class="picker-overlay-input" onchange="syncFormComboPicker(this, 'eventTime')">
+                        </div>
+                    </div>
+                </div>
+
+                <label for="eventEndTime">📆 結束日期時間：</label>
+                <div class="twin-input-wrapper">
+                    <input type="text" id="eventEndTime" placeholder="點擊選取結束日期與時間 (選填)" readOnly onclick="document.getElementById('nativeEndPicker').showPicker()">
+                    <div class="wheel-trigger-box">
+                        <div class="wheel-btn">
+                            <input type="datetime-local" id="nativeEndPicker" class="picker-overlay-input" onchange="syncFormComboPicker(this, 'eventEndTime')">
+                        </div>
+                    </div>
+                </div>
                 
                 <div style="background: #fffdf6; border: 1px dashed #f39c12; padding: 12px; border-radius: 8px; margin: 12px 0;">
                     <label style="font-weight:bold; color:#e67e22; display:block; margin-bottom:4px;">🖼️ 隨附相片或短片 (選填)：</label>
@@ -380,6 +403,14 @@ function changeGlobalViewMode(modeStr) {
     closeEventPopup();
 }
 
+/* ─── 🚀 核心優化：滾輪數值提取與華語標準化回填 ─── */
+function syncFormComboPicker(inputElement, targetInputId) {
+    if (!inputElement.value) return;
+    // 將 HTML5 datetime-local 的 T 分隔符轉換為舒服的空白可視化文字
+    let formattedTime = inputElement.value.replace('T', ' ');
+    document.getElementById(targetInputId).value = formattedTime;
+}
+
 function verifyGatePassword() {
     if (document.getElementById('popupPassword').value === "8679") {
         document.getElementById('lockSection').style.display = 'none';
@@ -396,7 +427,12 @@ function verifyGatePassword() {
             renderPopupAlbumManageUI();
         } else {
             document.getElementById('secureFormPanel').style.display = 'block';
-            document.getElementById('eventTime').value = selectedDateStr;
+            
+            // 預設將當前選定的日期帶入滾輪與輸入框
+            document.getElementById('eventTime').value = selectedDateStr + " 08:30";
+            document.getElementById('nativeStartPicker').value = selectedDateStr + "T08:30";
+            document.getElementById('eventEndTime').value = "";
+            document.getElementById('nativeEndPicker').value = "";
             resetFormPhotoUpload();
         }
     } else { alert("❌ 密碼錯誤，拒絕進入核心面板！"); }
@@ -487,19 +523,27 @@ function resetFormPhotoUpload() {
     document.getElementById('formImagePreview').style.display = 'none'; document.getElementById('formVideoPreview').style.display = 'none';
 }
 
-/* ─── ➕ 新增活動主程序（支援同時儲存附圖） ─── */
+/* ─── ➕ 新增活動主程序 ─── */
 function addFamilyEvent() {
     let title = document.getElementById('eventTitle').value.trim();
-    let dateStr = document.getElementById('eventTime').value.trim();
-    let endTimeStr = document.getElementById('eventEndTime').value.trim();
+    let startVal = document.getElementById('eventTime').value.trim();
+    let endVal = document.getElementById('eventEndTime').value.trim();
     let editKey = document.getElementById('editKey').value;
 
-    if (!title || !dateStr) { alert("請填寫活動名稱與日期！"); return; }
+    if (!title || !startVal) { alert("請填寫活動名稱與開始時間！"); return; }
+
+    // 從輸入的文字中智慧提取 YYYY-MM-DD 作為主要繫結日期
+    let detectedDate = startVal.split(' ')[0] || selectedDateStr;
+    let timeLabel = startVal.split(' ')[1] || "08:30";
+    if (endVal) {
+        let endTimeLabel = endVal.split(' ')[1] || endVal;
+        timeLabel = `${timeLabel} ~ ${endTimeLabel}`;
+    }
 
     let payload = {
         title: title,
-        date: dateStr,
-        time: endTimeStr ? `${dateStr} ~ ${endTimeStr}` : "全日安排",
+        date: detectedDate,
+        time: timeLabel,
         note: ""
     };
 
@@ -511,7 +555,6 @@ function addFamilyEvent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
     }).then(() => {
-        // 如果表單內有隨附相片/短片，立即啟動聯鎖上傳
         let formMediaData = formUploadedBase64Cache ? formUploadedBase64Cache : document.getElementById('formMediaURL').value.trim();
         let formMediaType = document.getElementById('formMediaType').value;
         
@@ -519,10 +562,8 @@ function addFamilyEvent() {
             fetch(`${albumURL}.json`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title: `隨附活動: ${title}`, url: formMediaData, type: formMediaType, date: dateStr })
-            }).then(() => {
-                completeAction();
-            });
+                body: JSON.stringify({ title: `隨附活動: ${title}`, url: formMediaData, type: formMediaType, date: detectedDate })
+            }).then(() => { completeAction(); });
         } else {
             completeAction();
         }
@@ -532,7 +573,7 @@ function addFamilyEvent() {
         document.getElementById('eventTitle').value = "";
         resetFormPhotoUpload();
         closeEventPopup();
-        alert("🎉 家庭活動與附圖內容已成功儲存並同步至雲端！");
+        alert("🎉 家庭活動與時間已成功儲存並同步至雲端！");
         fetchCloudData();
     }
 }
@@ -611,7 +652,7 @@ function openModifyEventForm(id) {
     document.getElementById('secureFormPanel').style.display = 'block';
     document.getElementById('formTitle').innerText = "✏️ 修改行程內容";
     document.getElementById('eventTitle').value = ev.title;
-    document.getElementById('eventTime').value = ev.date;
+    document.getElementById('eventTime').value = ev.date + " " + (ev.time.split(' ~ ')[0] || "08:30");
     document.getElementById('editKey').value = ev.id;
     document.getElementById('formSubmitBtn').innerText = "確認修改更新至雲端";
 }
@@ -640,7 +681,7 @@ function renderPopupWhatsApp_UI() {
 
 function sendWhatsAppNotification(id) {
     let ev = activities.find(a => a.id === id); if (!ev) return;
-    let textMessage = `💡【麟李互助家庭日誌 - 行程通知】\n\n📅 日期：${ev.date}\n⏰ 時間：${ev.time}\n📌 項目：${ev.title}\n\n請大家留意時間，互相扶持！❤️`;
+    let textMessage = `💡【麟李互助家庭日誌 - 行程通知】\n\n📅 日期：${ev.date}\n⏰ 時間：${ev.time}\n📌 項目：${ev.title}\n\n請大家安排好時間，互相照顧扶持！❤️`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textMessage)}`, '_blank');
 }
 
@@ -720,7 +761,32 @@ function autoCheckAndInjectAllMonthsEvents() {
         batchPayloads = batchPayloads.concat([
             { date: "2026-07-01", time: "全日紅日", title: "🔴 香港特區成立紀念日 (放假)" },
             { date: "2026-07-02", time: "08:50 / 12:00", title: "熹 8:50 放學 / 12:00 排球🏐" },
-            { date: "2026-07-16", time: "11:45 / 13:30", title: "熹 11:45 放學 / 1:30 上二胡班 🎼" }
+            { date: "2026-07-04", time: "16:00", title: "蓓 4:00pm 有 Bball 排球 / 熹 二胡班 🎼", note: "右邊加筆備忘：8/12 P-30" },
+            { date: "2026-07-05", time: "16:00 - 18:00", title: "熹 4:00-6:00pm 練排球 🏐" },
+            { date: "2026-07-06", time: "08:50 / 11:00 / 16:00", title: "蓓 4:00pm 有活動 / 熹 8:50 放學，11:00 排球 🏐" },
+            { date: "2026-07-07", time: "09:50 / 12:30", title: "熹 9:50 放學 / 12:30 排球 🏐" },
+            { date: "2026-07-08", time: "全日", title: "熹 放假" },
+            { date: "2026-07-09", time: "08:50 / 11:00", title: "熹 8:50 放學 / 11:00 排球 🏐" },
+            { date: "2026-07-10", time: "08:50 / 10:30", title: "熹 8:50 放學 / 10:30 排球 🏐", note: "下面寫住 Openg (學校開放日)" },
+            { date: "2026-07-11", time: "全日活動", title: "蓓 放假 / 熹 上二胡班 + 排球活動 🏐" },
+            { date: "2026-07-12", time: "全日", title: "熹 練排球 🏐" },
+            { date: "2026-07-13", time: "全日", title: "熹 有活動安排" },
+            { date: "2026-07-14", time: "全日放假", title: "熹 放假 (跨日橫跨中)", isMultiDayEvent: true, multiDayRangeArray: ["2026-07-14", "2026-07-15", "2026-07-16"], note: "藍色橫線由14號橫跨到16號" },
+            { date: "2026-07-15", time: "10:00 - 12:00", title: "熹 10:00 - 12:00 練排球 🏐" },
+            { date: "2026-07-16", time: "11:45 / 13:30", title: "熹 11:45 放學 / 1:30 上二胡班 🎼" },
+            { date: "2026-07-17", time: "11:45 / 13:30", title: "熹 11:45 放學 / 1:30 排球 🏐" },
+            { date: "2026-07-18", time: "全日", title: "標記 SPN", note: "右邊加筆備忘 8/12 P-30" },
+            { date: "2026-07-19", time: "全日", title: "熹 練排球 🏐", note: "左邊寫住 Book Fast (提醒訂書)" },
+            { date: "2026-07-20", time: "12:15 / 13:10 / 16:00", title: "蓓 4:00pm 練 Sing 唱歌 / 熹 12:15 放學，1:10 排球 🏐" },
+            { date: "2026-07-21", time: "09:00 - 17:00", title: "熹 (H) 朝九晚五 音樂營 🎵" },
+            { date: "2026-07-22", time: "09:00 - 17:00", title: "熹 (H) 朝九晚五 音樂營 🎵" },
+            { date: "2026-07-23", time: "09:00 - 17:00", title: "熹 (H) 朝九晚五 音樂營 🎵" },
+            { date: "2026-07-24", time: "09:00 - 17:00", title: "熹 (H) 朝九晚五 音樂營 🎵" },
+            { date: "2026-07-25", time: "09:00 - 17:00", title: "熹 (H) 朝九晚五 音樂營 🎵 + 上二胡班 🎼", note: "右下角有加筆 8/12" },
+            { date: "2026-07-26", time: "15:00", title: "熹 3:00pm 練排球 🏐", note: "下面圈住 8:11 備忘" },
+            { date: "2026-07-27", time: "全日", title: "熹 練排球 🏐" },
+            { date: "2026-07-28", time: "全日訓練", title: "藍筆大圈標記：【大排】🏐 (熹 大排球訓練/比賽)" },
+            { date: "2026-07-29", time: "全日", title: "熹 練排球 🏐" }
         ]);
     }
 
