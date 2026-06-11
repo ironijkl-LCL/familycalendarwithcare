@@ -192,14 +192,14 @@ button.pretty-edit-btn {
 .camera-btn.video-mode { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
 .upload-preview-box { max-width: 100%; height: auto; max-height: 120px; border-radius: 8px; margin: 8px 0; display: none; object-fit: cover; border: 2px dashed #ccc; }
 
-/* 智慧型雙向輸入列排版樣式（解鎖滾輪核心） */
+/* 智慧型雙向輸入列排版樣式 */
 .twin-input-wrapper { display: flex; align-items: center; position: relative; width: 100%; }
 .twin-input-wrapper input[type="text"] { flex: 1; cursor: pointer; background: #fff; }
 .wheel-trigger-box { position: absolute; right: 0; top: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: flex-end; pointer-events: none; }
 .wheel-btn { background: transparent !important; border: none !important; width: 44px; height: 100%; position: relative; pointer-events: auto; }
 .picker-overlay-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0 !important; cursor: pointer; z-index: 5; }
 
-/* 彈窗樣式 */
+/* 彈窗基本樣式 */
 .popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); z-index: 1000; overflow-y: auto; }
 .popup-content-card { position: relative; background: white; width: 90%; max-width: 550px; margin: 50px auto; padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
 .popup-close-x { position: absolute; top: 15px; right: 18px; font-size: 24px; color: #8c8c8c; cursor: pointer; font-weight: bold; }
@@ -213,14 +213,23 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
 .event-time { font-weight: bold; color: #333; }
 .event-desc { margin-top: 4px; color: #555; }
 
-/* 📸 互助相簿牆排版樣式 */
-.album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 15px; }
-.album-item { background: white; border-radius: 10px; overflow: hidden; padding: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); text-align: center; position: relative; border: 1px solid #eee; }
-.album-item img { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; }
-.album-item video { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; background: #000; }
+/* ─── 📸 互助相簿牆排版樣式 ─── */
+.album-header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+button.inline-upload-trigger-btn { background: linear-gradient(135deg, #e67e22, #d35400); color: white; border: none; border-radius: 20px; padding: 6px 14px; font-size: 14px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(230,126,34,0.3); }
+
+.album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 10px; }
+.album-item { background: white; border-radius: 10px; overflow: hidden; padding: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); text-align: center; position: relative; border: 1px solid #eee; transition: transform 0.2s; }
+.album-item:hover { transform: scale(1.02); }
+.album-item img, .event-item img { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; cursor: zoom-in; }
+.album-item video, .event-item video { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; background: #000; cursor: zoom-in; }
 .album-title { font-size: 13px; font-weight: bold; margin-top: 6px; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .album-date-badge { font-size: 11px; color: #1890ff; background: #e6f7ff; padding: 1px 4px; border-radius: 4px; display: inline-block; margin-top: 2px; }
 .album-delete-tag { position: absolute; top: 4px; right: 4px; background: rgba(255,47,47,0.9); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 14px; font-weight: bold; cursor: pointer; z-index: 10; }
+
+/* ─── 🔍 全螢幕高質感大圖大影片燈箱樣式 ─── */
+.lightbox-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 2000; align-items: center; justify-content: center; cursor: zoom-out; }
+.lightbox-content { max-width: 95%; max-height: 85%; border-radius: 12px; box-shadow: 0 4px 25px rgba(255,255,255,0.1); cursor: default; animation: zoomInEffect 0.25s ease-out; }
+@keyframes zoomInEffect { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
 /* 視圖樣式 */
 .view-精簡 .day-event-badge { display: none !important; }
@@ -264,7 +273,10 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
     </div>
 
     <div class="card">
-        <h3 style="margin-top:0; color:#f39c12;">🖼️ <span id="albumDateLabel"></span> 麟李家庭互助相簿 / 短片牆</h3>
+        <div class="album-header-container">
+            <h3 style="margin:0; color:#f39c12;">🖼️ 本月麟李家庭互助相簿 / 短片分享牆</h3>
+            <button class="inline-upload-trigger-btn" onclick="openAddFormPopup('ALBUM')">➕ 上傳相片/短片</button>
+        </div>
         <div id="mainAlbumGrid" class="album-grid"></div>
     </div>
 
@@ -363,7 +375,7 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
                 <button class="action-btn-block" style="background:#f39c12;" onclick="uploadMediaToAlbum()">確認上傳添加至相簿</button>
                 
                 <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
-                <label style="font-weight:bold; color:#555;">🗑️ 管理/刪除當日相簿內容：</label>
+                <label style="font-weight:bold; color:#555;">🗑️ 管理/刪除當月相簿內容：</label>
                 <div id="popupAlbumManageList" class="album-grid"></div>
             </div>
 
@@ -378,6 +390,10 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
             
             <button class="action-btn-block" style="background:#8c8c8c; margin-top:15px;" onclick="closeEventPopup()">關閉面板</button>
         </div>
+    </div>
+
+    <div id="globalLightboxOverlay" class="lightbox-overlay" onclick="closeLightboxWindow()">
+        <div id="lightboxMediaContainer" style="display:flex; justify-content:center; align-items:center; width:100%; height:100%;"></div>
     </div>
 
 </div>
@@ -403,10 +419,8 @@ function changeGlobalViewMode(modeStr) {
     closeEventPopup();
 }
 
-/* ─── 🚀 核心優化：滾輪數值提取與華語標準化回填 ─── */
 function syncFormComboPicker(inputElement, targetInputId) {
     if (!inputElement.value) return;
-    // 將 HTML5 datetime-local 的 T 分隔符轉換為舒服的空白可視化文字
     let formattedTime = inputElement.value.replace('T', ' ');
     document.getElementById(targetInputId).value = formattedTime;
 }
@@ -427,8 +441,6 @@ function verifyGatePassword() {
             renderPopupAlbumManageUI();
         } else {
             document.getElementById('secureFormPanel').style.display = 'block';
-            
-            // 預設將當前選定的日期帶入滾輪與輸入框
             document.getElementById('eventTime').value = selectedDateStr + " 08:30";
             document.getElementById('nativeStartPicker').value = selectedDateStr + "T08:30";
             document.getElementById('eventEndTime').value = "";
@@ -475,6 +487,24 @@ function triggerFileInput(type) {
     if (type === 'FormVideo') document.getElementById('formVideoInput').click();
 }
 
+function launchLightboxView(srcUrl, mediaType) {
+    let overlay = document.getElementById('globalLightboxOverlay');
+    let container = document.getElementById('lightboxMediaContainer');
+    if (mediaType === 'video') {
+        container.innerHTML = `<video src="${srcUrl}" class="lightbox-content" controls autoplay onclick="event.stopPropagation()"></video>`;
+    } else {
+        container.innerHTML = `<img src="${srcUrl}" class="lightbox-content" onclick="event.stopPropagation()">`;
+    }
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLightboxWindow() {
+    document.getElementById('globalLightboxOverlay').style.display = 'none';
+    document.getElementById('lightboxMediaContainer').innerHTML = ""; 
+    document.body.style.overflow = 'auto';
+}
+
 function handleNativeFileLoad(input, type) {
     let file = input.files[0]; if (!file) return;
     let reader = new FileReader();
@@ -518,12 +548,46 @@ function resetPhotoUploadForm() {
     document.getElementById('imageUploadPreview').style.display = 'none'; document.getElementById('videoUploadPreview').style.display = 'none';
 }
 
+/* ─── 🛠️ 核心修改：精準過濾「當前選擇月份」的全域分享牆機制 ─── */
+function renderMainAlbumUI() {
+    let mainGrid = document.getElementById('mainAlbumGrid');
+    let popGrid = document.getElementById('popupAlbumManageList');
+    
+    // 獲取當前月曆頂部顯示的年份與月份（格式為：YYYY-MM）
+    let currentY = current.getFullYear();
+    let currentM = String(current.getMonth() + 1).padStart(2, '0');
+    let currentMonthPrefix = `${currentY}-${currentM}`;
+
+    // 核心過濾：只篩選出屬於本月的所有媒體檔案
+    let currentMonthMediaItems = albumItems.filter(item => item.date && item.date.startsWith(currentMonthPrefix));
+    
+    if (currentMonthMediaItems.length === 0) {
+        let noDataHtml = `<p style="color:gray; font-size:14px; grid-column: 1/-1; text-align:center; padding: 25px 0;">本月份（${currentY}年${currentM}月）暫無互助分享相片或短片。</p>`;
+        mainGrid.innerHTML = noDataHtml;
+        if(popGrid) popGrid.innerHTML = noDataHtml;
+        return;
+    }
+
+    let mainHtml = ""; let popHtml = "";
+    currentMonthMediaItems.forEach(item => {
+        let mediaTag = item.type === "video" ? 
+            `<video src="${item.url}" onclick="launchLightboxView('${item.url}', 'video')"></video>` : 
+            `<img src="${item.url}" onclick="launchLightboxView('${item.url}', 'image')" onerror="this.src='https://placehold.co/150x110?text=Error'">`;
+            
+        let popMediaTag = item.type === "video" ? `<video src="${item.url}" controls></video>` : `<img src="${item.url}">`;
+
+        mainHtml += `<div class="album-item">${mediaTag}<div class="album-title">${item.title}</div><div class="album-date-badge">📅 ${item.date}</div></div>`;
+        popHtml += `<div class="album-item"><button class="album-delete-tag" onclick="deleteMediaFromAlbum('${item.id}')">×</button>${popMediaTag}<div class="album-title">${item.title}</div><div class="album-date-badge">${item.date}</div></div>`;
+    });
+    mainGrid.innerHTML = mainHtml;
+    if(popGrid) popGrid.innerHTML = popHtml;
+}
+
 function resetFormPhotoUpload() {
     formUploadedBase64Cache = ""; document.getElementById('formMediaURL').value = "";
     document.getElementById('formImagePreview').style.display = 'none'; document.getElementById('formVideoPreview').style.display = 'none';
 }
 
-/* ─── ➕ 新增活動主程序 ─── */
 function addFamilyEvent() {
     let title = document.getElementById('eventTitle').value.trim();
     let startVal = document.getElementById('eventTime').value.trim();
@@ -532,7 +596,6 @@ function addFamilyEvent() {
 
     if (!title || !startVal) { alert("請填寫活動名稱與開始時間！"); return; }
 
-    // 從輸入的文字中智慧提取 YYYY-MM-DD 作為主要繫結日期
     let detectedDate = startVal.split(' ')[0] || selectedDateStr;
     let timeLabel = startVal.split(' ')[1] || "08:30";
     if (endVal) {
@@ -540,13 +603,7 @@ function addFamilyEvent() {
         timeLabel = `${timeLabel} ~ ${endTimeLabel}`;
     }
 
-    let payload = {
-        title: title,
-        date: detectedDate,
-        time: timeLabel,
-        note: ""
-    };
-
+    let payload = { title: title, date: detectedDate, time: timeLabel, note: "" };
     let method = editKey ? "PUT" : "POST";
     let targetURL = editKey ? `${dbURL}/${editKey}.json` : `${dbURL}.json`;
 
@@ -603,30 +660,6 @@ function deleteMediaFromAlbum(id) {
     }
 }
 
-function renderMainAlbumUI() {
-    let mainGrid = document.getElementById('mainAlbumGrid');
-    let popGrid = document.getElementById('popupAlbumManageList');
-    
-    document.getElementById('albumDateLabel').innerText = selectedDateStr;
-    let dayMediaItems = albumItems.filter(item => item.date === selectedDateStr);
-    
-    if (dayMediaItems.length === 0) {
-        let noDataHtml = `<p style="color:gray; font-size:14px; grid-column: 1/-1; text-align:center; padding: 15px 0;">該日期暫無附圖或互助媒體。</p>`;
-        mainGrid.innerHTML = noDataHtml;
-        if(popGrid) popGrid.innerHTML = noDataHtml;
-        return;
-    }
-
-    let mainHtml = ""; let popHtml = "";
-    dayMediaItems.forEach(item => {
-        let mediaTag = item.type === "video" ? `<video src="${item.url}" controls></video>` : `<img src="${item.url}" onerror="this.src='https://placehold.co/150x110?text=Error'">`;
-        mainHtml += `<div class="album-item">${mediaTag}<div class="album-title">${item.title}</div><div class="album-date-badge">📅 ${item.date}</div></div>`;
-        popHtml += `<div class="album-item"><button class="album-delete-tag" onclick="deleteMediaFromAlbum('${item.id}')">×</button>${mediaTag}<div class="album-title">${item.title}</div><div class="album-date-badge">${item.date}</div></div>`;
-    });
-    mainGrid.innerHTML = mainHtml;
-    if(popGrid) popGrid.innerHTML = popHtml;
-}
-
 /* ─── ⚙️ 修改與刪除 ─── */
 function renderPopupManageListUI() {
     let container = document.getElementById('popupManageList');
@@ -638,8 +671,8 @@ function renderPopupManageListUI() {
         <div class="manage-item-row" style="padding: 12px; margin-bottom: 10px; background: #fafafa; border-radius: 8px; border: 1px solid #eee;">
             <div style="font-size:16px; margin-bottom: 8px; color:#262626;">⏰ <strong>${ev.time}</strong> - ${ev.title}</div>
             <div class="action-btn-group-row">
-                <button class="pretty-delete-btn" onclick="deleteEventFromPopup('${ev.id}')">❌ 刪除活動</button>
-                <button class="pretty-edit-btn" onclick="openModifyEventForm('${ev.id}')">✏️ 修改內容</button>
+                <button class="pretty-delete-btn" onclick="deleteEventFromPopup('${ev.id}')">1. ❌ 刪除</button>
+                <button class="pretty-edit-btn" onclick="openModifyEventForm('${ev.id}')">2. ✏️ 修改</button>
             </div>
         </div>`;
     });
@@ -753,6 +786,7 @@ function autoCheckAndInjectAllMonthsEvents() {
             { date: "2026-06-03", time: "11:15", title: "蓓 11:15 放學 / 熹 放假" },
             { date: "2026-06-04", time: "09:25", title: "蓓 放假 / 熹 9:25 放學" },
             { date: "2026-06-05", time: "11:15 / 21:45", title: "蓓 11:15 放學 / 熹 9:45 放學" },
+            { date: "2026-06-09", time: "10:00 / 20:15", title: "蓓 10:00 放學 / 熹 8:15 放學" },
             { date: "2026-06-12", time: "11:10", title: "蓓 11:10 放學 / 全日 二胡課 🎼" },
             { date: "2026-06-19", time: "端午節公眾假期", title: "🔴 端午節紅日放假" }
         ]);
@@ -865,18 +899,22 @@ function renderDayEvents() {
             <div class="event-desc">📌 項目：<strong>${ev.title}</strong></div>
         </div>`;
     });
+    
     dayMedia.forEach(m => {
-        let tag = m.type === "video" ? `<video src="${m.url}" controls style="max-width:100%; max-height:160px; margin-top:8px; border-radius:8px;"></video>` : `<img src="${m.url}" style="max-width:100%; max-height:160px; margin-top:8px; border-radius:8px;">`;
+        let tag = m.type === "video" ? 
+            `<video src="${m.url}" onclick="launchLightboxView('${m.url}', 'video')"></video>` : 
+            `<img src="${m.url}" onclick="launchLightboxView('${m.url}', 'image')">`;
+            
         html += `
         <div class="event-item" style="border-left-color: #f39c12; background: #fffdf6;">
             <div class="event-time" style="color:#d46b08;">🖼️ 隨附影像：${m.title}</div>
-            <div>${tag}</div>
+            <div style="margin-top: 6px; width: 140px;">${tag}</div>
         </div>`;
     });
     container.innerHTML = html;
 }
 
-function changeMonth(dir) { current.setMonth(current.getMonth() + dir); renderCalendar(); }
+function changeMonth(dir) { current.setMonth(current.getMonth() + dir); renderCalendar(); renderMainAlbumUI(); }
 document.getElementById('bodyNode').className = `view-${currentGlobalMode}`;
 fetchCloudData();
 </script>
