@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📅 麟李互助家庭日誌 (智慧功能升級版)</title>
+<title>📅 麟李互助家庭日誌 (Notion OS 升級版)</title>
 
 <style>
-body { font-family: Arial, sans-serif; margin:0; font-size:18px; background:#f5f5f5; }
+/* ─── 🎨 Notion 高質感核心美學 ─── */
+body { font-family: Arial, sans-serif; margin:0; font-size:18px; background:#fbfbfa; color:#37352f; }
 
 header {
     background:#25D366;
@@ -15,6 +16,7 @@ header {
     text-align:center;
     font-size:22px;
     font-weight:bold;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .container { padding:10px; }
@@ -59,13 +61,49 @@ header {
     }
 }
 
+/* ─── 🗂️ Notion 多維度資料庫導航條 ─── */
+.notion-view-selector {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid #edece9;
+    margin-bottom: 16px;
+    overflow-x: auto;
+}
+.view-tag-btn {
+    background: transparent;
+    border: none;
+    padding: 10px 16px;
+    font-size: 15px;
+    font-weight: bold;
+    color: #787774;
+    cursor: pointer;
+    border-radius: 6px 6px 0 0;
+    white-space: nowrap;
+}
+.view-tag-btn:hover { background: #efeee8; color: #37352f; }
+.view-tag-btn.active { border-bottom: 2px solid #37352f; color: #37352f; }
+
 .card {
     background:white;
     padding:15px;
     margin-bottom:12px;
     border-radius:12px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    border: 1px solid #edece9;
 }
+
+/* ─── 📐 雙欄佈局結構 ─── */
+.notion-grid-layout {
+    display: grid;
+    grid-template-columns: 7fr 5fr;
+    gap: 16px;
+}
+@media (max-width: 900px) {
+    .notion-grid-layout { grid-template-columns: 1fr; }
+}
+
+.view-panel { display: none; }
+.view-panel.active { display: block; }
 
 .calendar-header {
     display: flex;
@@ -210,7 +248,8 @@ button.action-btn-block { width:100%; padding:12px; margin-top:8px; background:#
 input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
 
 /* 🆕 智慧型活動列表與微型晶片樣式 */
-.event-item { background: #f9f9f9; padding: 12px; border-left: 4px solid #25D366; margin-bottom: 8px; border-radius: 0 8px 8px 0; }
+.event-item { padding: 12px; border-left: 4px solid #25D366; margin-bottom: 8px; border-radius: 0 8px 8px 0; cursor: pointer; transition: transform 0.1s; }
+.event-item:hover { transform: scale(1.01); }
 .event-time { font-weight: bold; color: #333; }
 .event-desc { margin-top: 4px; color: #555; }
 .event-meta-tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
@@ -219,6 +258,13 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
 .chip-repeat { background: #e1f5fe; color: #0288d1; }
 .chip-reminder { background: #fff3e0; color: #ef6c00; }
 .chip-ai { background: #f3e5f5; color: #7b1fa2; border: 1px dashed #ab47bc; }
+
+/* ─── 📋 真正狀態拖曳看板視圖樣式 ─── */
+.kanban-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media (max-width: 750px) { .kanban-board { grid-template-columns: 1fr; } }
+.kanban-column { background: #f7f6f3; padding: 12px; border-radius: 10px; border: 1px solid #edece9; min-height: 400px; }
+.kanban-col-title { font-weight: bold; padding-bottom: 8px; margin-bottom: 10px; border-bottom: 2px solid #edece9; display: flex; justify-content: space-between; align-items: center; }
+.kanban-card-item { background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #edece9; cursor: grab; }
 
 /* ─── 📸 互助相簿牆排版樣式 ─── */
 .album-header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -250,43 +296,101 @@ button.inline-upload-trigger-btn { background: linear-gradient(135deg, #e67e22, 
 
 <body class="view-列表" id="bodyNode">
 
-<header>📅 麟李互助家庭日誌 (智慧功能升級版)</header>
+<header>📅 麟李互助家庭日誌 (Notion OS 核心整合版)</header>
 
 <div class="container">
 
+    <!-- 🛠️ 頂部快捷動作列 -->
     <div class="top-action-card">
         <button class="action-btn" style="background: #25D366;" onclick="openAddFormPopup('ADD')">➕ 活動</button>
         <button class="action-btn" style="background: #1890ff;" onclick="openAddFormPopup('MANAGE')">⚙️ 修改/刪除</button>
         <button class="action-btn" style="background: #f39c12;" onclick="openAddFormPopup('ALBUM')">🏡 互助相簿</button>
-        <button class="action-btn" style="background: #00c642;" onclick="openAddFormPopup('WHATSAPP')">💬 WHATSAPP 通知</button>
-        <button class="action-btn" style="background: #722ed1;" onclick="openAddFormPopup('SWITCH_VIEW')">👁️ 視覺</button>
+        <button class="action-btn" style="background: #00c642;" onclick="openAddFormPopup('WHATSAPP')">💬 WHATSAPP</button>
     </div>
 
-    <div class="card">
-        <div class="calendar-header">
-            <button class="nav-btn" onclick="changeMonth(-1)">⬅ 上一月</button>
-            <div id="monthLabel" class="month-title"></div>
-            <button class="nav-btn" onclick="changeMonth(1)">下一月 ➡</button>
+    <!-- 🗂️ Notion 多維度資料庫導航切換列 -->
+    <div class="notion-view-selector">
+        <button id="btn-view-dashboard" class="view-tag-btn active" onclick="switchNotionView('dashboard')">🏠 Dashboard 總覽</button>
+        <button id="btn-view-calendar" class="view-tag-btn" onclick="switchNotionView('calendar')">🗓️ 月曆資料庫</button>
+        <button id="btn-view-kanban" class="view-tag-btn" onclick="switchNotionView('kanban')">📋 狀態看板牆</button>
+    </div>
+
+    <!-- 📐 Notion 雙欄主架構排版 -->
+    <div class="notion-grid-layout">
+        
+        <!-- 左側：主資料庫面板切換 -->
+        <div class="layout-main-column">
+            
+            <!-- 【視圖 1：Dashboard 總覽面版】 -->
+            <div id="panel-dashboard" class="view-panel active">
+                <div class="card" style="background: linear-gradient(135deg, #fffcf6, #fff);">
+                    <h3 style="margin-top:0; color:#37352f;">📅 今日行程</h3>
+                    <div id="dashTodayEvents"></div>
+                </div>
+                <div class="card">
+                    <h3 style="margin-top:0; color:#ef6c00;">⏳ 未完成任務</h3>
+                    <div id="dashUnfinishedTasks"></div>
+                </div>
+                <div class="card">
+                    <h3 style="margin-top:0; color:#f39c12;">🖼️ 最新相片回憶</h3>
+                    <div id="dashLatestMedia" class="album-grid"></div>
+                </div>
+            </div>
+
+            <!-- 【視圖 2：傳統日曆資料庫面版】 -->
+            <div id="panel-calendar" class="view-panel card">
+                <div class="calendar-header">
+                    <button class="nav-btn" onclick="changeMonth(-1)">⬅ 上一月</button>
+                    <div id="monthLabel" class="month-title"></div>
+                    <button class="nav-btn" onclick="changeMonth(1)">下一月 ➡</button>
+                </div>
+                <div class="weekdays-container">
+                    <div class="weekday">日</div><div class="weekday">一</div><div class="weekday">二</div><div class="weekday">三</div><div class="weekday">四</div><div class="weekday">五</div><div class="weekday">六</div>
+                </div>
+                <div id="calendar" class="calendar"></div>
+            </div>
+
+            <!-- 【視圖 3：Notion 拖拉狀態看板牆】 -->
+            <div id="panel-kanban" class="view-panel">
+                <div class="kanban-board">
+                    <div class="kanban-column" ondragover="allowDrop(event)" ondrop="handleDropBlock(event, '待處理')">
+                        <div class="kanban-col-title" style="color:#ef6c00;">⏳ 待處理</div>
+                        <div id="kanban-todo-list"></div>
+                    </div>
+                    <div class="kanban-column" ondragover="allowDrop(event)" ondrop="handleDropBlock(event, '進行中')">
+                        <div class="kanban-col-title" style="color:#1890ff;">⚡ 進行中</div>
+                        <div id="kanban-progress-list"></div>
+                    </div>
+                    <div class="kanban-column" ondragover="allowDrop(event)" ondrop="handleDropBlock(event, '已完成')">
+                        <div class="kanban-col-title" style="color:#25D366;">✅ 已完成</div>
+                        <div id="kanban-done-list"></div>
+                    </div>
+                </div>
+            </div>
+
         </div>
-        <div class="weekdays-container">
-            <div class="weekday">日</div><div class="weekday">一</div><div class="weekday">二</div><div class="weekday">三</div><div class="weekday">四</div><div class="weekday">五</div><div class="weekday">六</div>
+
+        <!-- 右側：固定的單日行程與本月相簿共享牆 -->
+        <div class="layout-side-column">
+            
+            <div class="card" style="border-top: 4px solid #25D366;">
+                <h3 style="margin-top:0; color:#333;">📋 <span id="selectedDateLabel"></span> 活動日程</h3>
+                <div id="dayEvents"></div>
+            </div>
+
+            <div class="card">
+                <div class="album-header-container">
+                    <h3 style="margin:0; color:#f39c12; font-size:16px;">🖼️ 本月互助共享牆</h3>
+                    <button class="inline-upload-trigger-btn" onclick="openAddFormPopup('ALBUM')">➕ 上傳</button>
+                </div>
+                <div id="mainAlbumGrid" class="album-grid"></div>
+            </div>
+
         </div>
-        <div id="calendar" class="calendar"></div>
+
     </div>
 
-    <div class="card">
-        <h3 style="margin-top:0; color:#333;">📋 <span id="selectedDateLabel"></span> 活動日程</h3>
-        <div id="dayEvents"></div>
-    </div>
-
-    <div class="card">
-        <div class="album-header-container">
-            <h3 style="margin:0; color:#f39c12;">🖼️ 本月麟李家庭互助相簿 / 短片分享牆</h3>
-            <button class="inline-upload-trigger-btn" onclick="openAddFormPopup('ALBUM')">➕ 上傳相片/短片</button>
-        </div>
-        <div id="mainAlbumGrid" class="album-grid"></div>
-    </div>
-
+    <!-- 🧱 萬能安全彈窗遮罩面板 -->
     <div class="popup-overlay" id="addEventPopupOverlay" onclick="closePopupOverlayOutside(event)">
         <div class="popup-content-card">
             <span class="popup-close-x" onclick="closeEventPopup()">&times;</span>
@@ -295,12 +399,27 @@ button.inline-upload-trigger-btn { background: linear-gradient(135deg, #e67e22, 
 
             <div class="password-lock-section" id="lockSection">
                  <div style="display:flex; gap:8px;">
-                    <input type="password" id="popupPassword" placeholder="輸入密碼進入面板..." style="margin:0; flex:1; padding:10px;">
-                    <button type="button" class="action-btn" style="margin:0; width:auto; padding:10px 20px; background:#1890ff; border:none; border-radius:8px; color:white; font-weight:bold; cursor:pointer;" onclick="verifyGatePassword()">確認進入</button>
+                    <input type="password" id="popupPassword" placeholder="輸入解鎖密碼 (8679)..." style="margin:0; flex:1; padding:10px;">
+                    <button type="button" class="action-btn" style="margin:0; width:auto; padding:10px 20px; background:#1890ff; border:none; border-radius:8px; color:white; font-weight:bold; cursor:pointer;" onclick="verifyGatePassword()">開鎖進入</button>
                 </div>
             </div>
 
             <div class="secure-form-fields" id="secureFormPanel">
+                <label for="eventCategory">🏷️ 屬性類型分類 (Tag)：</label>
+                <select id="eventCategory">
+                    <option value="家庭">👨‍👩‍👧 家庭</option>
+                    <option value="學校">🏫 學校</option>
+                    <option value="工作">💼 工作</option>
+                    <option value="重要">❤️ 重要</option>
+                </select>
+
+                <label for="eventStatus">⚙️ 任務看版進度狀態：</label>
+                <select id="eventStatus">
+                    <option value="待處理">⏳ 待處理</option>
+                    <option value="進行中">⚡ 進行中</option>
+                    <option value="已完成">✅ 已完成</option>
+                </select>
+
                 <label for="eventTitle">活動名稱 / 地點：</label>
                 <input type="text" id="eventTitle" placeholder="例如：蓓 8:30 放學、二胡課">
          
@@ -325,8 +444,6 @@ button.inline-upload-trigger-btn { background: linear-gradient(135deg, #e67e22, 
                 </div>
 
                 <div style="background: #eef9ff; border: 1px solid #bae7ff; padding: 12px; border-radius: 8px; margin: 12px 0;">
-                    <label style="font-weight:bold; color:#0050b3; display:block; margin-bottom:6px;">⚙️ 智慧日程排程設定（同步 Firebase）：</label>
-                    
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                         <div>
                             <label for="eventRepeat" style="font-size:14px; color:#444; font-weight:bold;">🔁 重複週期：</label>
@@ -413,17 +530,27 @@ button.inline-upload-trigger-btn { background: linear-gradient(135deg, #e67e22, 
                 <label style="font-weight:bold; color:#555;">🗑️ 管理/刪除當月相簿內容：</label>
                 <div id="popupAlbumManageList" class="album-grid"></div>
             </div>
-
-            <div class="secure-form-fields" id="secureViewSwitchPanel">
-                <div class="view-option-group">
-                    <label class="view-radio-label"><input type="radio" name="viewMode" value="精簡" onclick="changeGlobalViewMode('精簡')"> ▤ 精簡</label>
-                    <label class="view-radio-label"><input type="radio" name="viewMode" value="開展" onclick="changeGlobalViewMode('開展')"> ⪢ 疊放開展</label>
-                    <label class="view-radio-label"><input type="radio" name="viewMode" value="詳細資料" onclick="changeGlobalViewMode('詳細資料')"> 📋 詳細資料</label>
-                    <label class="view-radio-label"><input type="radio" name="viewMode" value="列表" onclick="changeGlobalViewMode('列表')"> ✓ ☰ 列表</label>
-                </div>
-            </div>
             
             <button class="action-btn-block" style="background:#8c8c8c; margin-top:15px;" onclick="closeEventPopup()">關閉面板</button>
+        </div>
+    </div>
+
+    <!-- 🧱 新增 Notion 靈魂：活動 Page Popup 詳情面版 -->
+    <div id="eventPageModal" class="popup-overlay" onclick="closeEventPageOverlayOutside(event)">
+        <div class="popup-content-card" style="max-width: 600px; border-top: 6px solid #1890ff;">
+            <span class="popup-close-x" onclick="closeEventPage()">&times;</span>
+            <h2 id="eventPageTitle" style="margin-top:5px; color:#37352f;"></h2>
+            
+            <div id="eventPageContent" style="background:#f7f6f3; padding:12px; border-radius:8px; margin:12px 0; font-size:15px;"></div>
+            
+            <h4 style="margin:15px 0 5px 0;">🖼️ 關聯影像 Relation</h4>
+            <div id="eventPageRelatedMedia" class="album-grid" style="background:#fafafa; padding:8px; border-radius:8px; min-height:50px;"></div>
+
+            <h4 style="margin:15px 0 5px 0;">📝 內嵌文字筆記 (Block Note)</h4>
+            <textarea placeholder="點擊在此寫下進階詳細筆記備忘，離開時會自動儲存同步..." id="eventNote" rows="4" style="background:#fffdf6; border:1px solid #eedbb2;" onchange="saveEventPageNote()"></textarea>
+            
+            <input type="hidden" id="eventPageCurrentId">
+            <button class="action-btn-block" style="background:#37352f; margin-top:15px;" onclick="closeEventPage()">完成並關閉 Page</button>
         </div>
     </div>
 
@@ -442,22 +569,45 @@ let albumItems = [];
 let current = new Date(); 
 let selectedDateStr = new Date().toISOString().slice(0, 10); 
 let currentPopupMode = "ADD";
-let currentGlobalMode = localStorage.getItem('family_日誌_view_mode') || "列表";
+let currentViewMode = "dashboard"; // 'dashboard', 'calendar', 'kanban'
 let uploadedBase64Cache = ""; 
 let formUploadedBase64Cache = "";
 
-function changeGlobalViewMode(modeStr) {
-    currentGlobalMode = modeStr;
-    localStorage.setItem('family_日誌_view_mode', modeStr);
-    document.getElementById('bodyNode').className = `view-${modeStr}`;
-    renderCalendar();
-    closeEventPopup();
+// ⚡ Quick Add (Notion 神級體驗)：按 N 鍵直接喚醒新增視窗
+document.addEventListener("keydown", e => {
+    if (e.key === "n" || e.key === "N") {
+        if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'SELECT') {
+            e.preventDefault();
+            openAddFormPopup("ADD");
+        }
+    }
+});
+
+function switchNotionView(modeStr) {
+    currentViewMode = modeStr;
+    document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.view-tag-btn').forEach(b => b.classList.remove('active'));
+    
+    document.getElementById(`panel-${modeStr}`).classList.add('active');
+    document.getElementById(`btn-view-${modeStr}`).classList.add('active');
+    
+    if (modeStr === 'kanban') renderKanbanBoard();
+    if (modeStr === 'dashboard') renderDashboardBlocks();
 }
 
 function syncFormComboPicker(inputElement, targetInputId) {
     if (!inputElement.value) return;
     let formattedTime = inputElement.value.replace('T', ' ');
     document.getElementById(targetInputId).value = formattedTime;
+}
+
+// 🎨 Notion 風標籤色彩分配
+function getCategoryColor(cat){
+    if(cat==="家庭") return "#e6f7ff";
+    if(cat==="學校") return "#f6ffed";
+    if(cat==="工作") return "#fff7e6";
+    if(cat==="重要") return "#fff1f0";
+    return "#f5f5f5";
 }
 
 function verifyGatePassword() {
@@ -481,12 +631,11 @@ function verifyGatePassword() {
             document.getElementById('nativeStartPicker').value = selectedDateStr + "T08:30";
             document.getElementById('eventEndTime').value = "";
             document.getElementById('nativeEndPicker').value = "";
-            
-            // 🆕 初始化智慧型擴充欄位
             document.getElementById('eventRepeat').value = "不重複";
             document.getElementById('eventReminder').value = "無";
             document.getElementById('eventAssignee').value = "";
-            
+            document.getElementById('eventCategory').value = "家庭";
+            document.getElementById('eventStatus').value = "待處理";
             resetFormPhotoUpload();
         }
     } else { alert("❌ 密碼錯誤，拒絕進入核心面板！"); }
@@ -500,7 +649,6 @@ function openAddFormPopup(mode) {
     document.getElementById('secureManagePanel').style.display = 'none';
     document.getElementById('secureWhatsAppPanel').style.display = 'none';
     document.getElementById('secureAlbumPanel').style.display = 'none';
-    document.getElementById('secureViewSwitchPanel').style.display = 'none';
 
     document.getElementById('formSubmitBtn').innerText = "儲存至此日期";
     document.getElementById('editKey').value = "";
@@ -508,11 +656,7 @@ function openAddFormPopup(mode) {
     if (currentPopupMode === "MANAGE") { document.getElementById('formTitle').innerText = "⚙️ 修改/刪除舊行程"; }
     else if (currentPopupMode === "WHATSAPP") { document.getElementById('formTitle').innerText = "💬 WHATSAPP 通知發送控制"; }
     else if (currentPopupMode === "ALBUM") { document.getElementById('formTitle').innerText = "🏡 麟李互助相簿管理面版"; }
-    else if (currentPopupMode === "SWITCH_VIEW") {
-        document.getElementById('formTitle').innerText = "👁️ 視覺切換模式";
-        document.getElementById('lockSection').style.display = 'none';
-        document.getElementById('secureViewSwitchPanel').style.display = 'block';
-    } else { document.getElementById('formTitle').innerText = "➕ 新增家庭活動"; }
+    else { document.getElementById('formTitle').innerText = "➕ 新增家庭活動"; }
     
     document.getElementById('addEventPopupOverlay').style.display = 'block';
     setTimeout(() => { document.getElementById('popupPassword').focus(); }, 200);
@@ -521,7 +665,52 @@ function openAddFormPopup(mode) {
 function closeEventPopup() { document.getElementById('addEventPopupOverlay').style.display = 'none'; }
 function closePopupOverlayOutside(e) { if (e.target === document.getElementById('addEventPopupOverlay')) closeEventPopup(); }
 
-/* ─── 📸 拍照與檔案載入控制引擎 ─── */
+/* ─── 🧱 核心升級：「點開 → Page（Notion 頁面靈魂）」與 Relation 連動 ─── */
+function openEventPage(id){
+    let ev = activities.find(a=>a.id===id);
+    if(!ev) return;
+    
+    document.getElementById('eventPageCurrentId').value = id;
+    document.getElementById('eventPageTitle').innerText = ev.title;
+    document.getElementById('eventNote').value = ev.note || "";
+    
+    document.getElementById('eventPageContent').innerHTML = `
+        <div style="margin-bottom:6px;">📅 <b>日期：</b>${ev.date}</div>
+        <div style="margin-bottom:6px;">⏰ <b>時間：</b>${ev.time}</div>
+        <div style="margin-bottom:6px;">👥 <b>負責人：</b>${ev.assignee || '未分配'}</div>
+        <div style="margin-bottom:6px;">🏷️ <b>分類標籤：</b><span style="background:${getCategoryColor(ev.category)}; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:13px;">${ev.category || '家庭'}</span></div>
+        <div>⚙️ <b>進度狀態：</b>${ev.status || '待處理'}</div>
+    `;
+
+    // 🔗 建立「相簿關聯關係」過濾器：點活動頁，自動橫向過濾出所有eventId匹配的隨附相片！
+    let relatedMedia = albumItems.filter(m => m.eventId === id);
+    let mediaHtml = "";
+    relatedMedia.forEach(m => {
+        mediaHtml += `
+            <div class="album-item">
+                <img src="${m.url}" onclick="launchLightboxView('${m.url}', 'image')">
+                <div class="album-title">${m.title}</div>
+            </div>`;
+    });
+    document.getElementById('eventPageRelatedMedia').innerHTML = mediaHtml || "<p style='color:gray; font-size:12px; margin:8px 0;'>此頁面目前暫無綁定關聯相片快照。</p>";
+
+    document.getElementById('eventPageModal').style.display = 'block';
+}
+
+function closeEventPage() { document.getElementById('eventPageModal').style.display = 'none'; }
+function closeEventPageOverlayOutside(e) { if (e.target === document.getElementById('eventPageModal')) closeEventPage(); }
+
+function saveEventPageNote() {
+    let id = document.getElementById('eventPageCurrentId').value;
+    let noteText = document.getElementById('eventNote').value;
+    fetch(`${dbURL}/${id}.json`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note: noteText })
+    }).then(() => { fetchCloudData(); });
+}
+
+/* ─── 📸 拍照與檔案載入控制 ─── */
 function triggerFileInput(type) {
     if (type === 'image') document.getElementById('nativeImageInput').click();
     if (type === 'video') document.getElementById('nativeVideoInput').click();
@@ -557,10 +746,6 @@ function handleNativeFileLoad(input, type) {
             document.getElementById('imageUploadPreview').src = uploadedBase64Cache;
             document.getElementById('imageUploadPreview').style.display = 'block';
             document.getElementById('videoUploadPreview').style.display = 'none';
-        } else {
-            document.getElementById('videoUploadPreview').src = uploadedBase64Cache;
-            document.getElementById('videoUploadPreview').style.display = 'block';
-            document.getElementById('imageUploadPreview').style.display = 'none';
         }
     };
     reader.readAsDataURL(file);
@@ -576,10 +761,6 @@ function handleFormFileLoad(input, type) {
             document.getElementById('formImagePreview').src = formUploadedBase64Cache;
             document.getElementById('formImagePreview').style.display = 'block';
             document.getElementById('formVideoPreview').style.display = 'none';
-        } else {
-            document.getElementById('formVideoPreview').src = formUploadedBase64Cache;
-            document.getElementById('formVideoPreview').style.display = 'block';
-            document.getElementById('formImagePreview').style.display = 'none';
         }
     };
     reader.readAsDataURL(file);
@@ -591,7 +772,13 @@ function resetPhotoUploadForm() {
     document.getElementById('videoUploadPreview').style.display = 'none';
 }
 
-/* ─── 📸 互助相簿牆排版樣式（含 AI 自動標籤功能） ─── */
+function resetFormPhotoUpload() {
+    formUploadedBase64Cache = ""; document.getElementById('formMediaURL').value = "";
+    document.getElementById('formImagePreview').style.display = 'none';
+    document.getElementById('formVideoPreview').style.display = 'none';
+}
+
+/* ─── 📸 相簿牆排版（前端智能模擬分群標籤演算） ─── */
 function renderMainAlbumUI() {
     let mainGrid = document.getElementById('mainAlbumGrid');
     let popGrid = document.getElementById('popupAlbumManageList');
@@ -602,7 +789,7 @@ function renderMainAlbumUI() {
 
     let currentMonthMediaItems = albumItems.filter(item => item.date && item.date.startsWith(currentMonthPrefix));
     if (currentMonthMediaItems.length === 0) {
-        let noDataHtml = `<p style="color:gray; font-size:14px; grid-column: 1/-1; text-align:center; padding: 25px 0;">本月份（${currentY}年${currentM}月）暫無互助分享相片或短片。</p>`;
+        let noDataHtml = `<p style="color:gray; font-size:14px; grid-column: 1/-1; text-align:center; padding: 25px 0;">本月份暫無快照或短片。</p>`;
         mainGrid.innerHTML = noDataHtml;
         if(popGrid) popGrid.innerHTML = noDataHtml;
         return;
@@ -615,8 +802,6 @@ function renderMainAlbumUI() {
             `<img src="${item.url}" onclick="launchLightboxView('${item.url}', 'image')" onerror="this.src='https://placehold.co/150x110?text=Error'">`;
             
         let popMediaTag = item.type === "video" ? `<video src="${item.url}" controls></video>` : `<img src="${item.url}">`;
-
-        // 🤖 整合提案：前端智能模擬分群標籤演算法
         let aiLabel = "🤖 AI標籤: 家庭 / 聚會";
         if (item.title.includes("排球") || item.title.includes("大排") || item.title.includes("練")) {
             aiLabel = "🤖 AI標籤: 體育 / 運動訓練";
@@ -638,23 +823,18 @@ function renderMainAlbumUI() {
     if(popGrid) popGrid.innerHTML = popHtml;
 }
 
-function resetFormPhotoUpload() {
-    formUploadedBase64Cache = ""; document.getElementById('formMediaURL').value = "";
-    document.getElementById('formImagePreview').style.display = 'none';
-    document.getElementById('formVideoPreview').style.display = 'none';
-}
-
-/* ─── 🌐 核心功能：完美融合三大新欄位投遞 Firebase ─── */
+/* ─── 🌐 核心對接投遞 Firebase 資料庫 ─── */
 function addFamilyEvent() {
     let title = document.getElementById('eventTitle').value.trim();
     let startVal = document.getElementById('eventTime').value.trim();
     let endVal = document.getElementById('eventEndTime').value.trim();
     let editKey = document.getElementById('editKey').value;
 
-    // 🆕 取得升級的擴充欄位數值
     let repeat = document.getElementById('eventRepeat').value;
     let reminder = document.getElementById('eventReminder').value;
     let assignee = document.getElementById('eventAssignee').value.trim();
+    let category = document.getElementById('eventCategory').value; // NEW
+    let status = document.getElementById('eventStatus').value; // NEW
 
     if (!title || !startVal) { alert("請填寫活動名稱與開始時間！"); return; }
 
@@ -665,7 +845,6 @@ function addFamilyEvent() {
         timeLabel = `${timeLabel} ~ ${endTimeLabel}`;
     }
 
-    // 🆕 將新功能完美對接打包進入 payload 物件
     let payload = { 
         title: title, 
         date: detectedDate, 
@@ -673,7 +852,9 @@ function addFamilyEvent() {
         note: "",
         repeat: repeat,
         reminder: reminder,
-        assignee: assignee
+        assignee: assignee,
+        category: category, // NEW
+        status: status // NEW
     };
     
     let method = editKey ? "PUT" : "POST";
@@ -683,15 +864,16 @@ function addFamilyEvent() {
         method: method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
-    }).then(() => {
+    }).then(res => res.json()).then(data => {
+        let currentEventId = editKey ? editKey : (data ? data.name : null);
         let formMediaData = formUploadedBase64Cache ? formUploadedBase64Cache : document.getElementById('formMediaURL').value.trim();
         let formMediaType = document.getElementById('formMediaType').value;
         
-        if (formMediaData) {
+        if (formMediaData && currentEventId) {
             fetch(`${albumURL}.json`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title: `隨附活動: ${title}`, url: formMediaData, type: formMediaType, date: detectedDate })
+                body: JSON.stringify({ title: `隨附活動: ${title}`, url: formMediaData, type: formMediaType, date: detectedDate, eventId: currentEventId })
             }).then(() => { completeAction(); });
         } else {
             completeAction();
@@ -702,7 +884,7 @@ function addFamilyEvent() {
         document.getElementById('eventTitle').value = "";
         resetFormPhotoUpload();
         closeEventPopup();
-        alert("🎉 家庭活動與時間已成功儲存並同步至雲端！");
+        alert("🎉 資料庫已成功同步儲存！");
         fetchCloudData();
     }
 }
@@ -713,15 +895,19 @@ function uploadMediaToAlbum() {
     let type = document.getElementById('mediaType').value;
     let finalMediaData = uploadedBase64Cache ? uploadedBase64Cache : url;
 
-    if (!title || !finalMediaData) { alert("請輸入描述並拍照、錄影或輸入媒體網址！"); return; }
+    if (!title || !finalMediaData) { alert("請輸入描述並上傳媒體！"); return; }
+    
+    // 智慧關聯：自動尋找今日的第一個日程將相片與其綁定，若無則標記為無關聯
+    let matchedTodayEvent = activities.find(a => a.date === selectedDateStr);
+    let boundEventId = matchedTodayEvent ? matchedTodayEvent.id : "無特異活動關聯";
 
     fetch(`${albumURL}.json`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: title, url: finalMediaData, type: type, date: selectedDateStr })
+        body: JSON.stringify({ title: title, url: finalMediaData, type: type, date: selectedDateStr, eventId: boundEventId })
     }).then(() => {
         resetPhotoUploadForm();
-        alert("🎉 成功上傳添加至麟李家庭相簿！");
+        alert("🎉 成功發布並關聯！");
         fetchCloudData();
     });
 }
@@ -732,7 +918,81 @@ function deleteMediaFromAlbum(id) {
     }
 }
 
-/* ─── ⚙️ 修改與刪除管理 ─── */
+/* ─── 📋 渲染看版視圖 (Kanban Board) + Drag & Drop 實體拖曳 ─── */
+function allowDrop(ev) { ev.preventDefault(); }
+function drag(ev, id) { ev.dataTransfer.setData("text", id); }
+
+function handleDropBlock(ev, targetStatus) {
+    ev.preventDefault();
+    let id = ev.dataTransfer.getData("text");
+    if(!id) return;
+    
+    fetch(`${dbURL}/${id}.json`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: targetStatus })
+    }).then(() => { fetchCloudData(); });
+}
+
+function renderKanbanBoard() {
+    const cols = ["待處理", "進行中", "已完成"];
+    cols.forEach(col => {
+        let matched = activities.filter(a => (a.status || '待處理') === col);
+        let html = "";
+        matched.forEach(c => {
+            html += `
+                <div class="kanban-card-item" draggable="true" ondragstart="drag(event, '${c.id}')" onclick="openEventPage('${c.id}')">
+                    <div style="font-weight:bold; font-size:15px; margin-bottom:4px;">${c.title}</div>
+                    <div style="font-size:12px; color:gray;">⏰ ${c.time}</div>
+                    <div style="margin-top:6px; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="background:${getCategoryColor(c.category)}; font-size:11px; padding:2px 6px; border-radius:4px; font-weight:bold;">${c.category || '家庭'}</span>
+                        <span style="font-size:12px; color:#2e7d32; font-weight:bold;">👤 ${c.assignee || '全員'}</span>
+                    </div>
+                </div>`;
+        });
+        let colDivId = col === "待處理" ? "todo" : (col === "進行中" ? "progress" : "done");
+        document.getElementById(`kanban-${colDivId}-list`).innerHTML = html || `<p style="color:#ccc; font-size:13px; text-align:center; padding:15px 0;">拖曳卡片至此區塊</p>`;
+    });
+}
+
+/* ─── 🎯 智慧型 Dashboard 首頁渲染引擎 ─── */
+function renderDashboardBlocks() {
+    let todayStr = new Date().toISOString().slice(0, 10);
+    
+    // 1. 今日活動
+    let todayActs = activities.filter(a => a.date === todayStr);
+    let todayHtml = "";
+    todayActs.forEach(a => {
+        todayHtml += `
+            <div style="padding:10px; margin-bottom:6px; background:${getCategoryColor(a.category)}; border-radius:6px; font-size:14px; cursor:pointer;" onclick="openEventPage('${a.id}')">
+                <b>${a.time}</b> | ${a.title} <span style="float:right; font-weight:bold; color:#2e7d32;">👤${a.assignee || '全員'}</span>
+            </div>`;
+    });
+    document.getElementById('dashTodayEvents').innerHTML = todayHtml || "<p style='color:gray; font-size:14px;'>今日無排定活動行程。</p>";
+
+    // 2. 未完成工作任務
+    let unfinished = activities.filter(a => (a.status || '待處理') !== '已完成');
+    let unfinishedHtml = "";
+    unfinished.slice(0, 5).forEach(a => {
+        unfinishedHtml += `
+            <div style="padding:8px; border-bottom:1px solid #eee; font-size:14px; cursor:pointer;" onclick="openEventPage('${a.id}')">
+                📌 <span style="color:#ef6c00; font-weight:bold;">[${a.status || '待處理'}]</span> <b>${a.title}</b> <small style="color:gray;">(${a.date})</small>
+            </div>`;
+    });
+    document.getElementById('dashUnfinishedTasks').innerHTML = unfinishedHtml || "<p style='color:gray; font-size:14px;'>所有資料庫工作已全部完成！</p>";
+
+    // 3. 最新隨附影像回憶
+    let latestMediaContainer = document.getElementById('dashLatestMedia');
+    latestMediaContainer.innerHTML = "";
+    albumItems.slice(-4).forEach(m => {
+        let box = document.createElement('div');
+        box.className = "album-item";
+        box.innerHTML = `<img src="${m.url}" onclick="launchLightboxView('${m.url}', 'image')"><div class="album-title">${m.title}</div>`;
+        latestMediaContainer.appendChild(box);
+    });
+}
+
+/* ─── ⚙️ 修改與刪除面版 ─── */
 function renderPopupManageListUI() {
     let container = document.getElementById('popupManageList');
     let filtered = activities.filter(a => a.date === selectedDateStr);
@@ -761,21 +1021,22 @@ function openModifyEventForm(id) {
     document.getElementById('eventTime').value = ev.date + " " + (ev.time.split(' ~ ')[0] || "08:30");
     document.getElementById('editKey').value = ev.id;
     
-    // 🆕 點擊修改時自動回顯舊有設定值
     document.getElementById('eventRepeat').value = ev.repeat || "不重複";
     document.getElementById('eventReminder').value = ev.reminder || "無";
     document.getElementById('eventAssignee').value = ev.assignee || "";
+    document.getElementById('eventCategory').value = ev.category || "家庭";
+    document.getElementById('eventStatus').value = ev.status || "待處理";
 
     document.getElementById('formSubmitBtn').innerText = "確認修改更新至雲端";
 }
 
 function deleteEventFromPopup(id) {
     if (confirm("確定要刪除這項活動嗎？")) {
-        fetch(`${dbURL}/${id}.json`, { method: "DELETE" }).then(() => { fetchCloudData(); });
+        fetch(`${dbURL}/${id}.json`, { method: "DELETE" }).then(() => { fetchCloudData(); closeEventPopup(); });
     }
 }
 
-/* ─── 💬 WHATSAPP 通知（完美整合智慧欄位推播） ─── */
+/* ─── 💬 WHATSAPP 推播通知 ─── */
 function renderPopupWhatsApp_UI() {
     let container = document.getElementById('popupWhatsAppList');
     let filtered = activities.filter(a => a.date === selectedDateStr);
@@ -793,14 +1054,7 @@ function renderPopupWhatsApp_UI() {
 
 function sendWhatsAppNotification(id) {
     let ev = activities.find(a => a.id === id); if (!ev) return;
-    
-    // 🆕 生成 WhatsApp 文字時自動夾帶負責人與提醒設定
-    let智慧特徵 = "";
-    if (ev.assignee) 智慧特徵 += `\n👥 負責分工：${ev.assignee}`;
-    if (ev.repeat && ev.repeat !== "不重複") 智慧特徵 += `\n🔁 重複週期：${ev.repeat}`;
-    if (ev.reminder && ev.reminder !== "無") 智慧特徵 += `\n⏰ 提醒設定：${ev.reminder}`;
-
-    let textMessage = `💡【麟李互助家庭日誌 - 行程通知】\n\n📅 日期：${ev.date}\n⏰ 時間：${ev.time}\n📌 項目：${ev.title}${智慧特徵}\n\n請大家安排好時間，互相照顧扶持！❤️`;
+    let textMessage = `💡【麟李互助家庭日誌 - 行程通知】\n\n📅 日期：${ev.date}\n⏰ 時間：${ev.time}\n📌 項目：${ev.title}\n🏷️ 類型：${ev.category}\n👥 分工負責：${ev.assignee || '全員'}\n\n請大家安排好時間，互相照顧扶持！❤️`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textMessage)}`, '_blank');
 }
 
@@ -814,8 +1068,7 @@ function getHKHoliday(m, d) { return holidays2026[`${String(m).padStart(2,'0')}-
 
 function getLunarDayText(dateStr) {
     try {
-        let d = new Date(dateStr);
-        if (isNaN(d.getTime())) return "";
+        let d = new Date(dateStr); if (isNaN(d.getTime())) return "";
         let parts = new Intl.DateTimeFormat("zh-Hant-u-ca-chinese", {month:"numeric", day:"numeric"}).formatToParts(d);
         let month = parts.find(p => p.type === 'month').value;
         let day = Number(parts.find(p => p.type === 'day').value);
@@ -826,7 +1079,7 @@ function getLunarDayText(dateStr) {
     } catch(e) { return ""; }
 }
 
-/* ─── 📥 數據加載與聯網同步 ─── */
+/* ─── 📥 雲端聯網加載與同步 ─── */
 function fetchCloudData() {
     fetch(`${dbURL}.json`, { method: "GET" }).then(res => res.json()).then(data => {
         activities = [];
@@ -838,10 +1091,11 @@ function fetchCloudData() {
                         time: data[key].time || "全日安排", title: data[key].title || "行程",
                         note: data[key].note || "", isMultiDayEvent: data[key].isMultiDayEvent || false,
                         multiDayRangeArray: data[key].multiDayRangeArray || [],
-                        // 🆕 解析並還原雲端下載的欄位
                         repeat: data[key].repeat || "不重複",
                         reminder: data[key].reminder || "無",
-                        assignee: data[key].assignee || ""
+                        assignee: data[key].assignee || "",
+                        category: data[key].category || "家庭",
+                        status: data[key].status || "待處理"
                     });
                 }
             }
@@ -853,78 +1107,22 @@ function fetchCloudData() {
                     if (albumData[key]) {
                         albumItems.push({
                             id: key, title: albumData[key].title, url: albumData[key].url,
-                            type: albumData[key].type || "image", date: albumData[key].date || "未知日期"
+                            type: albumData[key].type || "image", date: albumData[key].date || "未知日期",
+                            eventId: albumData[key].eventId || ""
                         });
                     }
                 }
             }
             renderCalendar();
-            renderDayEvents(); renderMainAlbumUI();
-            autoCheckAndInjectAllMonthsEvents(); 
+            renderDayEvents(); 
+            renderMainAlbumUI();
+            renderDashboardBlocks();
+            if (currentViewMode === 'kanban') renderKanbanBoard();
         });
     });
 }
 
-setInterval(fetchCloudData, 8000);
-
-function autoCheckAndInjectAllMonthsEvents() {
-    let hasJuneData = activities.some(a => a.date && a.date.startsWith("2026-06"));
-    let hasJulyData = activities.some(a => a.date && a.date.startsWith("2026-07"));
-    if (hasJuneData && hasJulyData) return; 
-
-    let batchPayloads = [];
-    if (!hasJuneData) {
-        batchPayloads = batchPayloads.concat([
-            { date: "2026-06-01", time: "08:30", title: "蓓 8:30 放學", isMultiDayEvent: true, multiDayRangeArray: ["2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04"] },
-            { date: "2026-06-02", time: "19:15 / 21:45", title: "蓓 7:15pm 放學 / 熹 9:45pm 放學" },
-            { date: "2026-06-03", time: "11:15", title: "蓓 11:15 放學 / 熹 放假" },
-            { date: "2026-06-04", time: "09:25", title: "蓓 放假 / 熹 9:25 放學" },
-            { date: "2026-06-05", time: "11:15 / 21:45", title: "蓓 11:15 放學 / 熹 9:45 放學" },
-            { date: "2026-06-09", time: "10:00 / 20:15", title: "蓓 10:00 放學 / 熹 8:15 放學" },
-            { date: "2026-06-12", time: "11:10", title: "蓓 11:10 放學 / 全日 二胡課 🎼", assignee: "熹", repeat: "每週" },
-            { date: "2026-06-19", time: "端午節公眾假期", title: "🔴 端午節紅日放假" }
-        ]);
-    }
-    if (!hasJulyData) {
-        batchPayloads = batchPayloads.concat([
-            { date: "2026-07-01", time: "全日紅日", title: "🔴 香港特區成立紀念日 (放假)" },
-            { date: "2026-07-02", time: "08:50 / 12:00", title: "熹 8:50 放學 / 12:00 排球🏐", assignee: "熹" },
-            { date: "2026-07-04", time: "16:00", title: "蓓 4:00pm 有 Bball 排球 / 熹 二胡班 🎼", note: "右邊加筆備忘：8/12 P-30" },
-            { date: "2026-07-05", time: "16:00 - 18:00", title: "熹 4:00-6:00pm 練排球 🏐", assignee: "熹" },
-            { date: "2026-07-06", time: "08:50 / 11:00 / 16:00", title: "蓓 4:00pm 有活動 / 熹 8:50 放學，11:00 排球 🏐" },
-            { date: "2026-07-07", time: "09:50 / 12:30", title: "熹 9:50 放學 / 12:30 排球 🏐", assignee: "熹" },
-            { date: "2026-07-08", time: "全日", title: "熹 放假" },
-            { date: "2026-07-09", time: "08:50 / 11:00", title: "熹 8:50 放學 / 11:00 排球 🏐", assignee: "熹" },
-            { date: "2026-07-10", time: "08:50 / 10:30", title: "熹 8:50 放學 / 10:30 排球 🏐", note: "下面寫住 Openg (學校開放日)" },
-            { date: "2026-07-11", time: "全日活動", title: "蓓 放假 / 熹 上二胡班 + 排球活動 🏐" },
-            { date: "2026-07-12", time: "全日", title: "熹 練排球 🏐", assignee: "熹" },
-            { date: "2026-07-13", time: "全日", title: "熹 有活動安排" },
-            { date: "2026-07-14", time: "全日放假", title: "熹 放假 (跨日橫跨中)", isMultiDayEvent: true, multiDayRangeArray: ["2026-07-14", "2026-07-15", "2026-07-16"], note: "藍色橫線由14號橫跨到16號" },
-            { date: "2026-07-15", time: "10:00 - 12:00", title: "熹 10:00 - 12:00 練排球 🏐", assignee: "熹" },
-            { date: "2026-07-16", time: "11:45 / 13:30", title: "熹 11:45 放學 / 1:30 上二胡班 🎼", assignee: "熹" },
-            { date: "2026-07-17", time: "11:45 / 13:30", title: "熹 11:45 放學 / 1:30 排球 🏐", assignee: "熹" },
-            { date: "2026-07-18", time: "全日", title: "標記 SPN", note: "右邊加筆備忘 8/12 P-30" },
-            { date: "2026-07-19", time: "全日", title: "熹 練排球 🏐", note: "左邊寫住 Book Fast (提醒訂書)" },
-            { date: "2026-07-20", time: "12:15 / 13:10 / 16:00", title: "蓓 4:00pm 練 Sing 唱歌 / 熹 12:15 放學，1:10 排球 🏐" },
-            { date: "2026-07-21", time: "09:00 - 17:00", title: "熹 (H) 朝九晚五 音樂營 🎵", repeat: "每日", assignee: "熹" },
-            { date: "2026-07-22", time: "09:00 - 17:00", title: "熹 (H) 朝九晚五 音樂營 🎵", repeat: "每日", assignee: "熹" },
-            { date: "2026-07-23", time: "09:00 - 17:00", title: "熹 (H) 朝九晚五 音樂營 🎵", repeat: "每日", assignee: "熹" },
-            { date: "2026-07-24", time: "09:00 - 17:00", title: "熹 (H) 朝九晚五 音樂營 🎵", repeat: "每日", assignee: "熹" },
-            { date: "2026-07-25", time: "09:00 - 17:00", title: "熹 (H) 朝九晚五 音樂營 🎵 + 上二胡班 🎼", note: "右下角有加筆 8/12", assignee: "熹" },
-            { date: "2026-07-26", time: "15:00", title: "熹 3:00pm 練排球 🏐", note: "下面圈住 8:11 備忘" },
-            { date: "2026-07-27", time: "全日", title: "熹 練排球 🏐" },
-            { date: "2026-07-28", time: "全日訓練", title: "藍筆大圈標記：【大排】🏐 (熹 大排球訓練/比賽)", assignee: "熹" },
-            { date: "2026-07-29", time: "全日", title: "熹 練排球 🏐" }
-        ]);
-    }
-
-    Promise.all(batchPayloads.map(p => {
-        return fetch(`${dbURL}.json`, {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(p)
-        });
-    })).then(() => { fetchCloudData(); });
-}
+setInterval(fetchCloudData, 10000);
 
 function renderCalendar(){
     let y = current.getFullYear(); let m = current.getMonth();
@@ -941,21 +1139,12 @@ function renderCalendar(){
         let lunarText = getLunarDayText(dStr);
         let holidayText = getHKHoliday(m+1, i);
         
-        let dayActivities = activities.filter(a => {
-            if (a.isMultiDayEvent && a.multiDayRangeArray) { return a.multiDayRangeArray.includes(dStr); }
-            return a.date === dStr;
-        });
+        let dayActivities = activities.filter(a => a.date === dStr);
         let dayMediaItems = albumItems.filter(item => item.date === dStr);
-        let belongsToMultiDay = activities.some(act => act.isMultiDayEvent && act.multiDayRangeArray && act.multiDayRangeArray.includes(dStr));
         let eventsHtml = "";
         
         dayActivities.forEach(act => { 
-            // 🆕 當切換至「詳細資料」或「開展」視圖時，月曆格子內自動附加顯示負責人
-            let inlineMeta = "";
-            if ((currentGlobalMode === "詳細資料" || currentGlobalMode === "開展") && act.assignee) {
-                inlineMeta = ` (👤${act.assignee})`;
-            }
-            eventsHtml += `<span class="day-event-badge" title="${act.title}">${act.time} ${act.title}${inlineMeta}</span>`; 
+            eventsHtml += `<span class="day-event-badge" style="background:${getCategoryColor(act.category)}; color:#37352f; border-left:3px solid #666;" title="${act.title}">${act.title}</span>`; 
         });
         
         dayMediaItems.forEach(media => {
@@ -964,10 +1153,9 @@ function renderCalendar(){
         let dayClass = "calendar-day";
         if (isToday) dayClass += " today";
         if (isSelected) dayClass += " selected-day";
-        if (belongsToMultiDay) dayClass += " multiday-pass-range";
         if (holidayText) dayClass += " hk-holiday-pass-range";
         html += `
-        <div class="${dayClass}" data-date="${dStr}" onclick="selectDate('${dStr}')">
+        <div class="${dayClass}" onclick="selectDate('${dStr}')">
             <strong>${i}</strong><div class="lunar">${lunarText}</div>
             ${holidayText ? `<div class="holiday">🔴 ${holidayText}</div>` : ""}
             <div class="day-events-container">${eventsHtml}</div>
@@ -978,61 +1166,34 @@ function renderCalendar(){
     calendar.innerHTML = html;
 }
 
-function selectDate(dateStr) { selectedDateStr = dateStr; renderCalendar(); renderDayEvents(); renderMainAlbumUI(); }
+function selectDate(dateStr) { selectedDateStr = dateStr; renderCalendar(); renderDayEvents(); }
 
 document.getElementById('popupPassword').addEventListener('keydown', function(e) { if (e.key === 'Enter') verifyGatePassword(); });
 
-/* ─── 📋 渲染當日活動日程（新功能：微型智慧晶片標籤排版） ─── */
 function renderDayEvents() {
     let container = document.getElementById('dayEvents');
-    let filtered = activities.filter(a => {
-        if (a.isMultiDayEvent && a.multiDayRangeArray) return a.multiDayRangeArray.includes(selectedDateStr);
-        return a.date === selectedDateStr;
-    });
-    
+    let filtered = activities.filter(a => a.date === selectedDateStr);
     document.getElementById('selectedDateLabel').innerText = selectedDateStr;
-    
-    let dayMedia = albumItems.filter(item => item.date === selectedDateStr);
-    if (filtered.length === 0 && dayMedia.length === 0) { container.innerHTML = `<p style="color:gray; text-align:center; padding:20px 0;">今日無 any 排定活動。</p>`; return; }
     
     let html = "";
     filtered.forEach(ev => {
-        // 🆕 下方行程卡片動態渲染出多色高質感的元數據晶片 (Meta Chips)
-        let chipsHtml = "";
-        if (ev.assignee) chipsHtml += `<span class="meta-chip chip-member">👤 負責人: ${ev.assignee}</span>`;
-        if (ev.repeat && ev.repeat !== "不重複") chipsHtml += `<span class="meta-chip chip-repeat">🔁 週期: ${ev.repeat}</span>`;
-        if (ev.reminder && ev.reminder !== "無") chipsHtml += `<span class="meta-chip chip-reminder">⏰ 提醒: ${ev.reminder}</span>`;
+        let chipsHtml = `<span class="meta-chip" style="background:${getCategoryColor(ev.category)};">${ev.category || '家庭'}</span>`;
+        if (ev.assignee) chipsHtml += `<span class="meta-chip chip-member">👤 ${ev.assignee}</span>`;
+        if (ev.status) chipsHtml += `<span class="meta-chip chip-reminder">${ev.status}</span>`;
 
         html += `
-        <div class="event-item">
+        <div class="event-item" style="border-left-color:#333; background:#fff;" onclick="openEventPage('${ev.id}')">
             <div class="event-time">⏰ 時間：${ev.time}</div>
             <div class="event-desc">📌 項目：<strong>${ev.title}</strong></div>
-            ${chipsHtml ? `<div class="event-meta-tags">${chipsHtml}</div>` : ""}
+            <div class="event-meta-tags">${chipsHtml}</div>
         </div>`;
     });
-    
-    dayMedia.forEach(m => {
-        let tag = m.type === "video" ? 
-            `<video src="${m.url}" onclick="launchLightboxView('${m.url}', 'video')"></video>` : 
-            `<img src="${m.url}" onclick="launchLightboxView('${m.url}', 'image')">`;
-            
-        // 相簿上傳隨附影像的模擬 AI 標籤
-        let mediaAiTag = "🤖 AI標籤: 影像 / 隨附快照";
-        if (m.title.includes("二胡") || m.title.includes("課")) mediaAiTag = "🤖 AI標籤: 藝術培訓 / 學習";
-        if (m.title.includes("排球")) mediaAiTag = "🤖 AI標籤: 運動 / 比賽紀錄";
-
-        html += `
-        <div class="event-item" style="border-left-color: #f39c12; background: #fffdf6;">
-            <div class="event-time" style="color:#d46b08;">🖼️ 隨附影像：${m.title}</div>
-            <div class="event-meta-tags" style="margin-bottom:6px;"><span class="meta-chip chip-ai">${mediaAiTag}</span></div>
-            <div style="margin-top: 6px; width: 140px;">${tag}</div>
-        </div>`;
-    });
-    container.innerHTML = html;
+    container.innerHTML = html || `<p style="color:gray; text-align:center; padding:15px 0;">今日無任何安排行程。</p>`;
 }
 
-function changeMonth(dir) { current.setMonth(current.getMonth() + dir); renderCalendar(); renderMainAlbumUI(); }
-document.getElementById('bodyNode').className = `view-${currentGlobalMode}`;
+function changeMonth(dir) { current.setMonth(current.getMonth() + dir); fetchCloudData(); }
+
+// ─── 🏁 初始化啟動 ───
 fetchCloudData();
 </script>
 
