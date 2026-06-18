@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🏠 Family OS - 麟李家庭智慧管理系統 v5.5 </title>
+<title>🏠 Family OS - 麟李家庭智慧管理系統 v5.8</title>
 
 <style>
 /* ─── 🎨 Notion 高質感核心美學 ─── */
@@ -181,7 +181,7 @@ header {
     display: block;
 }
 
-/* ─── 🚀 Block 系統與拖拉排序樣式 ─── */
+/* 🚀 Block 系統與拖拉排序樣式 ─── */
 .block-wrapper { display: flex; align-items: center; gap: 8px; margin: 8px 0; padding: 6px; border-radius: 6px; background: #ffffff; border: 1px solid #edece9; cursor: move; }
 .block-wrapper.dragging { opacity: 0.4; background: #efeee8; }
 .block-handle { color: #ccc; font-size: 18px; cursor: move; padding: 0 4px; }
@@ -189,7 +189,14 @@ header {
 .block-input-text { width: 100%; padding: 6px; border: 1px solid #edece9; border-radius: 4px; font-size: 14px; box-sizing: border-box; background: transparent; }
 .block-input-heading { width: 100%; padding: 6px; border: 1px solid #edece9; border-radius: 4px; font-size: 18px; font-weight: bold; box-sizing: border-box; background: transparent; }
 
-/* 📱 Mobile 級右下角 Floating Button ─── */
+/* 📱 Kanban 高亮與 UX 升級 ─── */
+.kanban-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media (max-width: 750px) { .kanban-board { grid-template-columns: 1fr; } }
+.kanban-column { background: #f7f6f3; padding: 12px; border-radius: 10px; border: 1px solid #edece9; min-height: 400px; transition: background 0.2s ease, border 0.2s ease; }
+.kanban-column.drag-over { background: #e6f7ff !important; border: 2px dashed #1890ff !important; }
+.kanban-col-title { font-weight: bold; padding-bottom: 8px; margin-bottom: 10px; border-bottom: 2px solid #edece9; display: flex; justify-content: space-between; }
+.kanban-card-item { background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #edece9; cursor: grab; transition: all 0.2s ease; }
+
 .floating-add-btn { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: #25D366; color: white; border: none; border-radius: 50%; font-size: 28px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; z-index: 999; display: flex; align-items: center; justify-content: center; }
 
 button.pretty-whatsapp-btn { background: linear-gradient(135deg, #25D366, #20ba59); color: white; border: none; border-radius: 20px; padding: 8px 16px; font-size: 14px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
@@ -228,14 +235,6 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
 .chip-reminder { background: #fff3e0; color: #ef6c00; }
 .chip-ai { background: #f3e5f5; color: #7b1fa2; border: 1px dashed #ab47bc; }
 
-/* 📋 看板 UX 強化高亮樣式 */
-.kanban-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-@media (max-width: 750px) { .kanban-board { grid-template-columns: 1fr; } }
-.kanban-column { background: #f7f6f3; padding: 12px; border-radius: 10px; border: 1px solid #edece9; min-height: 400px; transition: background 0.2s ease, border 0.2s ease; }
-.kanban-column.drag-over { background: #e6f7ff !important; border: 2px dashed #1890ff !important; }
-.kanban-col-title { font-weight: bold; padding-bottom: 8px; margin-bottom: 10px; border-bottom: 2px solid #edece9; display: flex; justify-content: space-between; }
-.kanban-card-item { background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #edece9; cursor: grab; transition: all 0.2s ease; }
-
 .album-header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 button.inline-upload-trigger-btn { background: linear-gradient(135deg, #e67e22, #d35400); color: white; border: none; border-radius: 20px; padding: 6px 14px; font-size: 14px; font-weight: bold; cursor: pointer; }
 
@@ -262,36 +261,44 @@ button.inline-upload-trigger-btn { background: linear-gradient(135deg, #e67e22, 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getDatabase, ref, onValue, set, push, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+  import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
+  // 🔒 安全與配置綁定
   const firebaseConfig = {
-    databaseURL: "https://familycalender-a62ae-default-rtdb.firebaseio.com"
+    databaseURL: "https://familycalender-a62ae-default-rtdb.firebaseio.com",
+    storageBucket: "familycalender-a62ae.firebasestorage.app"
   };
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
+  const storage = getStorage(app);
 
-  // 掛載到 window 確保全域舊邏輯相容
+  // 映射至 window 空間供舊模組穿透調用
   window.fbDb = db;
+  window.fbStorage = storage;
   window.fbRef = ref;
+  window.fbSRef = sRef;
   window.fbOnValue = onValue;
   window.fbSet = set;
   window.fbPush = push;
   window.fbUpdate = update;
   window.fbRemove = remove;
+  window.fbUploadBytes = uploadBytes;
+  window.fbGetDownloadURL = getDownloadURL;
 </script>
 </head>
 
 <body class="view-列表" id="bodyNode">
 
 <header>
-    <div>🏠 Family OS - 麟李家庭智慧管理系統 v5.5</div>
+    <div>🏠 Family OS - 麟李家庭智慧管理系統 v5.8</div>
     <div id="roleBadge" style="font-size:14px; background:#f5f5f5; padding:4px 10px; border-radius:12px; font-weight:bold; color:#666;">🔒 訪客模式 (Viewer)</div>
 </header>
 
 <div class="container">
 
     <div class="search-filter-card">
-        <input type="text" id="searchBox" class="search-box" placeholder="🔍 全文檢索搜尋 (支援空格忽略、模糊匹配、跨關聯資料庫深度穿透)...">
+        <input type="text" id="searchBox" class="search-box" placeholder="🔍 全文檢索搜尋：支援空格忽略、模糊匹配、跨關聯資料庫深度穿透...">
     </div>
 
     <div class="top-action-card">
@@ -314,7 +321,7 @@ button.inline-upload-trigger-btn { background: linear-gradient(135deg, #e67e22, 
             
             <div id="panel-dashboard" class="view-panel active">
                 <div class="card" style="background: linear-gradient(135deg, #fff1f0, #fff); border-top: 4px solid #ff4d4f;">
-                    <h3 style="margin-top:0; color:#ff4d4f;">🔴 今日最重要（核心緊急未完成）</h3>
+                    <h3 style="margin-top:0; color:#ff4d4f;">🔴 今日最重要任務（特急未完成項目）</h3>
                     <div id="dashUrgentTasks"></div>
                 </div>
                 <div class="card" style="background: linear-gradient(135deg, #fffcf6, #fff); border-top: 4px solid #25D366;">
@@ -322,7 +329,7 @@ button.inline-upload-trigger-btn { background: linear-gradient(135deg, #e67e22, 
                     <div id="dashTodayEvents"></div>
                 </div>
                 <div class="card" style="border-top: 4px solid #ef6c00;">
-                    <h3 style="margin-top:0; color:#ef6c00;">⏳ 未完成任務歷史佇列 (最多5筆)</h3>
+                    <h3 style="margin-top:0; color:#ef6c00;">⏳ 未完成高優先任務佇列 (最多5筆)</h3>
                     <div id="dashUnfinishedTasks"></div>
                 </div>
                 <div class="card">
@@ -575,7 +582,6 @@ button.inline-upload-trigger-btn { background: linear-gradient(135deg, #e67e22, 
 </div>
 
 <script>
-// 🚀 注意：移除了以往底層的 REST URL String 拼接交互
 let activities = [];
 let albumItems = [];
 let current = new Date(); 
@@ -583,24 +589,21 @@ let selectedDateStr = new Date().toISOString().slice(0, 10);
 let currentPopupMode = "ADD";
 let currentGlobalMode = localStorage.getItem('family_日誌_view_mode') || "列表";
 let currentViewMode = "dashboard"; 
-let uploadedBase64Cache = ""; 
-let formUploadedBase64Cache = "";
-let userRole = "viewer";
 
-// 🚀 升級：全方位模糊與忽略空格搜尋規則
+// 🚀 升級：全域忽略空格中文全半形優化模糊搜尋引擎
 function normalize(text) {
     if (!text) return "";
     return String(text).toLowerCase().replace(/\s+/g, "");
 }
 
-// 🧩 初始化與全域監聽繫結
+// 🧩 啟動生命週期繫結
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('searchBox').addEventListener('input', filterDatabaseEvents);
     initKanbanUXListeners();
     initFirebaseRealtimeSubscription();
 });
 
-// 按「N」秒速喚醒新增視窗
+// 快捷鍵「N」喚醒
 document.addEventListener("keydown", e => {
     if (e.key === "n" || e.key === "N") {
         if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'SELECT') {
@@ -610,7 +613,7 @@ document.addEventListener("keydown", e => {
     }
 });
 
-// 行動端滑動切換月份
+// 手指左右滑動月份
 let touchStartX = 0; let touchEndX = 0;
 document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, false);
 document.addEventListener('touchend', e => {
@@ -621,13 +624,13 @@ document.addEventListener('touchend', e => {
     }
 }, false);
 
-// 🚀 核心升級：移除 setInterval 輪詢，改為 Firebase 原生訂閱監聽
+// 🚀 核心重構：改用 Firebase 原生 WebSocket Realtime 實時數據監聽訂閱
 function initFirebaseRealtimeSubscription() {
     let checkInterval = setInterval(() => {
         if (window.fbDb && window.fbRef && window.fbOnValue) {
             clearInterval(checkInterval);
             
-            // 監聽日誌主資料庫
+            // 訂閱活動主要節點
             const activitiesRef = window.fbRef(window.fbDb, "family_calendar_activities");
             window.fbOnValue(activitiesRef, (snapshot) => {
                 activities = [];
@@ -652,10 +655,10 @@ function initFirebaseRealtimeSubscription() {
                         });
                     }
                 }
-                triggerUIRenderPipeline();
+                triggerPipelineRefresh();
             });
 
-            // 監聽家庭相簿資料庫
+            // 訂閱共享互助相簿節點
             const albumRef = window.fbRef(window.fbDb, "family_mutual_album");
             window.fbOnValue(albumRef, (snapshot) => {
                 albumItems = [];
@@ -672,14 +675,13 @@ function initFirebaseRealtimeSubscription() {
                         });
                     }
                 }
-                triggerUIRenderPipeline();
+                triggerPipelineRefresh();
             });
         }
     }, 100);
 }
 
-// 🚀 核心優化：變更資料後直接由事件驅動更新畫面，無須重抓
-function triggerUIRenderPipeline() {
+function triggerPipelineRefresh() {
     renderCalendarWithData(activities);
     renderDashboardBlocks();
     if (currentViewMode === 'kanban') renderKanbanBoard();
@@ -788,7 +790,7 @@ function openAddFormPopup(mode) {
 function closeEventPopup() { document.getElementById('addEventPopupOverlay').style.display = 'none'; }
 function closePopupOverlayOutside(e) { if (e.target === document.getElementById('addEventPopupOverlay')) closeEventPopup(); }
 
-/* ─── 🚀 核心排序：HTML5 原生拖拉排序 Reorder 引擎 ─── */
+/* ─── 🚀 區塊拖拉：HTML5 原生拖拉排序 Reorder 引擎 ─── */
 let draggedBlockNode = null;
 
 function initBlockDragAndDropListeners() {
@@ -1037,38 +1039,34 @@ function closeLightboxWindow() {
     document.body.style.overflow = 'auto';
 }
 
+// 🚀 臨時緩存實體 File 對象（拒絕再轉化 Base64 字串存入 DB 造成癱瘓）
+let targetNativeFileObject = null;
+let targetFormFileObject = null;
+
 function handleNativeFileLoad(input, type) {
     let file = input.files[0]; if (!file) return;
-    let reader = new FileReader();
-    reader.onload = function(e) {
-        uploadedBase64Cache = e.target.result;
-        document.getElementById('mediaType').value = type;
-        if (type === 'image') {
-            document.getElementById('imageUploadPreview').src = uploadedBase64Cache;
-            document.getElementById('imageUploadPreview').style.display = 'block';
-            document.getElementById('videoUploadPreview').style.display = 'none';
-        }
-    };
-    reader.readAsDataURL(file);
+    targetNativeFileObject = file;
+    document.getElementById('mediaType').value = type;
+    if (type === 'image') {
+        document.getElementById('imageUploadPreview').src = URL.createObjectURL(file);
+        document.getElementById('imageUploadPreview').style.display = 'block';
+        document.getElementById('videoUploadPreview').style.display = 'none';
+    }
 }
 
 function handleFormFileLoad(input, type) {
     let file = input.files[0]; if (!file) return;
-    let reader = new FileReader();
-    reader.onload = function(e) {
-        formUploadedBase64Cache = e.target.result;
-        document.getElementById('formMediaType').value = type;
-        if (type === 'image') {
-            document.getElementById('formImagePreview').src = formUploadedBase64Cache;
-            document.getElementById('formImagePreview').style.display = 'block';
-            document.getElementById('formVideoPreview').style.display = 'none';
-        }
-    };
-    reader.readAsDataURL(file);
+    targetFormFileObject = file;
+    document.getElementById('formMediaType').value = type;
+    if (type === 'image') {
+        document.getElementById('formImagePreview').src = URL.createObjectURL(file);
+        document.getElementById('formImagePreview').style.display = 'block';
+        document.getElementById('formVideoPreview').style.display = 'none';
+    }
 }
 
 function resetPhotoUploadForm() {
-    uploadedBase64Cache = ""; document.getElementById('mediaTitle').value = ""; document.getElementById('mediaURL').value = "";
+    targetNativeFileObject = null; document.getElementById('mediaTitle').value = ""; document.getElementById('mediaURL').value = "";
     document.getElementById('imageUploadPreview').style.display = 'none';
     document.getElementById('videoUploadPreview').style.display = 'none';
 }
@@ -1119,7 +1117,7 @@ function renderMainAlbumUI() {
 }
 
 function resetFormPhotoUpload() {
-    formUploadedBase64Cache = ""; document.getElementById('formMediaURL').value = "";
+    targetFormFileObject = null; document.getElementById('formMediaURL').value = "";
     document.getElementById('formImagePreview').style.display = 'none';
     document.getElementById('formVideoPreview').style.display = 'none';
 }
@@ -1137,7 +1135,7 @@ function autoAssignAIProps(title) {
     return match;
 }
 
-/* ─── 🌐 核心功能：解決 Race Condition 的多向寫入異步鎖定 ─── */
+/* ─── 🌐 核心功能：完美整合 Storage 圖檔與安全異步佇列鎖定 ─── */
 function addFamilyEvent() {
     let title = document.getElementById('eventTitle').value.trim();
     let startVal = document.getElementById('eventTime').value.trim();
@@ -1187,22 +1185,21 @@ function addFamilyEvent() {
     let targetRef;
     if (editKey) {
         targetRef = window.fbRef(window.fbDb, `family_calendar_activities/${editKey}`);
-        window.fbSet(targetRef, payload).then(() => handleRelationsAndMedia(editKey));
+        window.fbSet(targetRef, payload).then(() => pipelineRelationsAndFiles(editKey));
     } else {
         const listRef = window.fbRef(window.fbDb, "family_calendar_activities");
         const newEventRef = window.fbPush(listRef);
-        window.fbSet(newEventRef, payload).then(() => handleRelationsAndMedia(newEventRef.key));
+        window.fbSet(newEventRef, payload).then(() => pipelineRelationsAndFiles(newEventRef.key));
     }
 
-    // 🚀 升級：藉由 Promise.all 徹底擊碎多個隨機並行產生的 Race Condition
-    function handleRelationsAndMedia(currentEventId) {
+    // 🚀 升級：藉由 Promise.all 與實時防污染，封鎖多點寫入的 Race Condition 覆蓋問題
+    async function pipelineRelationsAndFiles(currentEventId) {
         let asyncQueue = [];
 
         if (currentEventId && selectedRelations.length > 0) {
             selectedRelations.forEach(relId => {
                 let p = new Promise((resolve) => {
                     const relationRef = window.fbRef(window.fbDb, `family_calendar_activities/${relId}`);
-                    // 這裡改採獲取最新快照，阻斷髒讀與覆蓋
                     fetch(`https://familycalender-a62ae-default-rtdb.firebaseio.com/family_calendar_activities/${relId}.json`)
                     .then(r => r.json())
                     .then(targetData => {
@@ -1219,15 +1216,28 @@ function addFamilyEvent() {
             });
         }
 
-        let formMediaData = formUploadedBase64Cache ? formUploadedBase64Cache : document.getElementById('formMediaURL').value.trim();
+        // 🚀 核心升級：拒絕 Base64！有實體圖檔，直接推上 Firebase Storage 儲存桶
+        let formMediaURL = document.getElementById('formMediaURL').value.trim();
         let formMediaType = document.getElementById('formMediaType').value;
+
+        if (targetFormFileObject && window.fbStorage) {
+            let filePromise = new Promise(async (resolve) => {
+                const storageRef = window.fbSRef(window.fbStorage, `activities/${Date.now()}_${targetFormFileObject.name}`);
+                try {
+                    const snapshot = await window.fbUploadBytes(storageRef, targetFormFileObject);
+                    formMediaURL = await window.fbGetDownloadURL(snapshot.ref); // 拿到真實 HTTPS 連結
+                } catch(e) { console.error("Storage上傳故障", e); }
+                resolve();
+            });
+            await filePromise;
+        }
         
-        if (formMediaData && currentEventId) {
+        if (formMediaURL && currentEventId) {
             const albumListRef = window.fbRef(window.fbDb, "family_mutual_album");
             const newAlbumItemRef = window.fbPush(albumListRef);
             let albumP = window.fbSet(newAlbumItemRef, {
                 title: `隨附活動: ${title}`, 
-                url: formMediaData, 
+                url: formMediaURL, 
                 type: formMediaType, 
                 date: detectedDate, 
                 eventId: currentEventId
@@ -1239,18 +1249,30 @@ function addFamilyEvent() {
             document.getElementById('eventTitle').value = "";
             resetFormPhotoUpload();
             closeEventPopup();
-            alert("🎉 大數據庫雙向同步儲存成功！");
+            alert("🎉 大數據庫與 Storage 雙向同步儲存成功！");
         });
     }
 }
 
-function uploadMediaToAlbum() {
+// 🚀 核心優化二：互助共享牆實體檔案上傳函數
+async function uploadMediaToAlbum() {
     let title = document.getElementById('mediaTitle').value.trim();
-    let url = document.getElementById('mediaURL').value.trim();
+    let manualURL = document.getElementById('mediaURL').value.trim();
     let type = document.getElementById('mediaType').value;
-    let finalMediaData = uploadedBase64Cache ? uploadedBase64Cache : url;
 
-    if (!title || !finalMediaData) { alert("請輸入描述並上傳媒體網址！"); return; }
+    if (!title) { alert("請輸入描述！"); return; }
+    let finalURL = manualURL;
+
+    if (targetNativeFileObject && window.fbStorage) {
+        alert("正在將實體圖檔推往 Firebase Storage... 請稍候 ⚡");
+        const storageRef = window.fbSRef(window.fbStorage, `album/${Date.now()}_${targetNativeFileObject.name}`);
+        try {
+            const snapshot = await window.fbUploadBytes(storageRef, targetNativeFileObject);
+            finalURL = await window.fbGetDownloadURL(snapshot.ref);
+        } catch(e) { alert("儲存空間寫入失敗: " + e.message); return; }
+    }
+
+    if (!finalURL) { alert("請選取拍照檔案或填寫手動網路 URL！"); return; }
 
     let matchedTodayEvent = activities.find(a => a.date === selectedDateStr);
     let boundEventId = matchedTodayEvent ? matchedTodayEvent.id : "無特定活動關聯";
@@ -1259,13 +1281,13 @@ function uploadMediaToAlbum() {
     const newAlbumItemRef = window.fbPush(albumListRef);
     window.fbSet(newAlbumItemRef, {
         title: title, 
-        url: finalMediaData, 
+        url: finalURL, 
         type: type, 
         date: selectedDateStr, 
         eventId: boundEventId
     }).then(() => {
         resetPhotoUploadForm();
-        alert("🎉 成功上傳添加至麟李家庭相簿！");
+        alert("🎉 實體相片已推上雲端桶並同步到互助相簿牆！");
     });
 }
 
@@ -1276,7 +1298,7 @@ function deleteMediaFromAlbum(id) {
     }
 }
 
-/* ─── 🚀 核心升級：精準看板 UX 監聽與視覺提示反饋 ─── */
+/* ─── 📋 看板 UX 強化控制與狀態更新 ─── */
 function initKanbanUXListeners() {
     const columns = ["todo", "progress", "done"];
     columns.forEach(col => {
@@ -1340,7 +1362,7 @@ function renderKanbanBoard() {
     });
 }
 
-/* ─── 📊 全文搜尋進階過濾器 (導入優化模組) ─── */
+/* ─── 📊 全文搜尋進階過濾器 ─── */
 function filterDatabaseEvents() {
     let val = normalize(document.getElementById('searchBox').value);
     if(val === "") { renderCalendarWithData(activities); return; }
@@ -1361,7 +1383,7 @@ function filterDatabaseEvents() {
 function renderDashboardBlocks() {
     let todayStr = new Date().toISOString().slice(0, 10);
     
-    // 🚀 升級：Dashboard 緊急特急高優先任務置頂渲染
+    // 🚀 升級：今日最重要（核心緊急未完成）智能過濾置頂
     let urgentActs = activities.filter(a => a.category === "重要" && (a.status || "待處理") !== "已完成");
     let urgentHtml = "";
     urgentActs.forEach(a => {
@@ -1429,7 +1451,7 @@ function openModifyEventForm(id) {
     document.getElementById('formTitle').innerText = "✏️ 修改行程內容";
     document.getElementById('eventTitle').value = ev.title;
     
-    // 🚀 Bug修復：使用常規條件守護，防範時段未定義引發的分割崩潰
+    // 🚀 Bug修復：時段做健全性字串守護，杜絕 split 的 undefined 崩潰
     let safeTimeStr = ev.time || "";
     document.getElementById('eventTime').value = ev.date + " " + (safeTimeStr.split(' ~ ')[0] || "08:30");
     document.getElementById('editKey').value = ev.id;
@@ -1494,19 +1516,19 @@ function getLunarDayText(dateStr) {
 
 function renderCalendar(){ renderCalendarWithData(activities); }
 
-/* ─── 🚀 升級：使用 DocumentFragment 優化高性能月曆 DOM 渲染 ─── */
+/* ─── 🚀 效能優化：使用 DocumentFragment 進行流式 DOM 月曆重繪 ─── */
 function renderCalendarWithData(dataset) {
     let y = current.getFullYear(); let m = current.getMonth();
     monthLabel.innerText = y + "年 " + (m + 1) + "月";
     let first = new Date(y, m, 1).getDay();
     let days = new Date(y, m + 1, 0).getDate();
     
-    let fragmentWrapper = document.createDocumentFragment();
+    let fragment = document.createDocumentFragment();
     
     for(let i=0; i<first; i++){ 
-        let emptyCell = document.createElement('div');
-        emptyCell.className = "calendar-day empty";
-        fragmentWrapper.appendChild(emptyCell);
+        let cell = document.createElement('div');
+        cell.className = "calendar-day empty";
+        fragment.appendChild(cell);
     }
 
     for(let i=1; i<=days; i++){
@@ -1546,23 +1568,23 @@ function renderCalendarWithData(dataset) {
             ${getHKHoliday(m+1, i) ? `<div class="holiday">🔴 ${getHKHoliday(m+1, i)}</div>` : ""}
             <div class="day-events-container">${eventsHtml}</div>
         `;
-        fragmentWrapper.appendChild(dayCell);
+        fragment.appendChild(dayCell);
     }
     
     let totalCells = first + days;
     while(totalCells % 7 !== 0){ 
-        let emptyCell = document.createElement('div');
-        emptyCell.className = "calendar-day empty";
-        fragmentWrapper.appendChild(emptyCell);
+        let cell = document.createElement('div');
+        cell.className = "calendar-day empty";
+        fragment.appendChild(cell);
         totalCells++;
     }
     
     calendar.innerHTML = "";
-    calendar.appendChild(fragmentWrapper);
+    calendar.appendChild(fragment);
     renderDayEvents();
 }
 
-// 🚀 優化：切換月份僅觸發輕量視圖重繪，杜絕不必要的網路 fetch 重複請求
+// 🚀 優化三：切換月份僅觸發輕量渲染，終結無謂的 Cloud API 重複拉取
 function selectDate(dateStr) { 
     selectedDateStr = dateStr; 
     document.getElementById('selectedDateLabel').innerText = selectedDateStr; 
