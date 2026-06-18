@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🏠 Family OS - 麟李家庭智慧管理系統 v5.0</title>
+<title>🏠 Family OS - 麟李家庭智慧管理系統 v5.5 </title>
 
 <style>
 /* ─── 🎨 Notion 高質感核心美學 ─── */
@@ -228,9 +228,11 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
 .chip-reminder { background: #fff3e0; color: #ef6c00; }
 .chip-ai { background: #f3e5f5; color: #7b1fa2; border: 1px dashed #ab47bc; }
 
+/* 📋 看板 UX 強化高亮樣式 */
 .kanban-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 @media (max-width: 750px) { .kanban-board { grid-template-columns: 1fr; } }
-.kanban-column { background: #f7f6f3; padding: 12px; border-radius: 10px; border: 1px solid #edece9; min-height: 400px; }
+.kanban-column { background: #f7f6f3; padding: 12px; border-radius: 10px; border: 1px solid #edece9; min-height: 400px; transition: background 0.2s ease, border 0.2s ease; }
+.kanban-column.drag-over { background: #e6f7ff !important; border: 2px dashed #1890ff !important; }
 .kanban-col-title { font-weight: bold; padding-bottom: 8px; margin-bottom: 10px; border-bottom: 2px solid #edece9; display: flex; justify-content: space-between; }
 .kanban-card-item { background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #edece9; cursor: grab; transition: all 0.2s ease; }
 
@@ -256,19 +258,40 @@ button.inline-upload-trigger-btn { background: linear-gradient(135deg, #e67e22, 
 .view-radio-label { display: flex; align-items: center; background: #f5f5f5; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
 .view-radio-label input { width: auto; margin: 0 10px 0 0; transform: scale(1.3); }
 </style>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getDatabase, ref, onValue, set, push, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+  const firebaseConfig = {
+    databaseURL: "https://familycalender-a62ae-default-rtdb.firebaseio.com"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // 掛載到 window 確保全域舊邏輯相容
+  window.fbDb = db;
+  window.fbRef = ref;
+  window.fbOnValue = onValue;
+  window.fbSet = set;
+  window.fbPush = push;
+  window.fbUpdate = update;
+  window.fbRemove = remove;
+</script>
 </head>
 
 <body class="view-列表" id="bodyNode">
 
 <header>
-    <div>🏠 Family OS - 麟李家庭智慧管理系統 v5.0</div>
+    <div>🏠 Family OS - 麟李家庭智慧管理系統 v5.5</div>
     <div id="roleBadge" style="font-size:14px; background:#f5f5f5; padding:4px 10px; border-radius:12px; font-weight:bold; color:#666;">🔒 訪客模式 (Viewer)</div>
 </header>
 
 <div class="container">
 
     <div class="search-filter-card">
-        <input type="text" id="searchBox" class="search-box" placeholder="🔍 全文檢索搜尋：支援標題、分類、執行分工、Block 內文與 Relation 關聯活動..." oninput="filterDatabaseEvents()">
+        <input type="text" id="searchBox" class="search-box" placeholder="🔍 全文檢索搜尋 (支援空格忽略、模糊匹配、跨關聯資料庫深度穿透)...">
     </div>
 
     <div class="top-action-card">
@@ -290,12 +313,16 @@ button.inline-upload-trigger-btn { background: linear-gradient(135deg, #e67e22, 
         <div class="layout-main-column">
             
             <div id="panel-dashboard" class="view-panel active">
+                <div class="card" style="background: linear-gradient(135deg, #fff1f0, #fff); border-top: 4px solid #ff4d4f;">
+                    <h3 style="margin-top:0; color:#ff4d4f;">🔴 今日最重要（核心緊急未完成）</h3>
+                    <div id="dashUrgentTasks"></div>
+                </div>
                 <div class="card" style="background: linear-gradient(135deg, #fffcf6, #fff); border-top: 4px solid #25D366;">
-                    <h3 style="margin-top:0; color:#37352f;">📅 今日行程安排</h3>
+                    <h3 style="margin-top:0; color:#37352f;">📅 今日常規行程安排</h3>
                     <div id="dashTodayEvents"></div>
                 </div>
                 <div class="card" style="border-top: 4px solid #ef6c00;">
-                    <h3 style="margin-top:0; color:#ef6c00;">⏳ 未完成高優先任務區</h3>
+                    <h3 style="margin-top:0; color:#ef6c00;">⏳ 未完成任務歷史佇列 (最多5筆)</h3>
                     <div id="dashUnfinishedTasks"></div>
                 </div>
                 <div class="card">
@@ -319,15 +346,15 @@ button.inline-upload-trigger-btn { background: linear-gradient(135deg, #e67e22, 
 
             <div id="panel-kanban" class="view-panel">
                 <div class="kanban-board">
-                    <div class="kanban-column" ondragover="allowDrop(event)" ondrop="handleDropBlock(event, '待處理')">
+                    <div class="kanban-column" id="kanban-col-todo">
                         <div class="kanban-col-title" style="color:#ef6c00;">⏳ 待處理</div>
                         <div id="kanban-todo-list"></div>
                     </div>
-                    <div class="kanban-column" ondragover="allowDrop(event)" ondrop="handleDropBlock(event, '進行中')">
+                    <div class="kanban-column" id="kanban-col-progress">
                         <div class="kanban-col-title" style="color:#1890ff;">⚡ 進行中</div>
                         <div id="kanban-progress-list"></div>
                     </div>
-                    <div class="kanban-column" ondragover="allowDrop(event)" ondrop="handleDropBlock(event, '已完成')">
+                    <div class="kanban-column" id="kanban-col-done">
                         <div class="kanban-col-title" style="color:#25D366;">✅ 已完成</div>
                         <div id="kanban-done-list"></div>
                     </div>
@@ -434,8 +461,8 @@ button.inline-upload-trigger-btn { background: linear-gradient(135deg, #e67e22, 
                 
                 <label>🔗 關聯其他資料庫活動 (Relation)：</label>
                 <select id="eventRelations" multiple style="height: 100px; background:#fffdf6;">
-                    </select>
-                <p style="font-size:11px; color:gray; margin:2px 0;">* 按住 Ctrl 或手機多選可建立跨資料庫活動的多向 Relationship 網絡網絡。</p>
+                </select>
+                <p style="font-size:11px; color:gray; margin:2px 0;">* 按住 Ctrl 或手機多選可建立跨資料庫活動的多向 Relationship 網絡。</p>
 
                 <div style="background: #fffdf6; border: 1px dashed #f39c12; padding: 12px; border-radius: 8px; margin: 12px 0;">
                     <label style="font-weight:bold; color:#e67e22; display:block; margin-bottom:4px;">🖼️ 隨附相片或短片 (選填)：</label>
@@ -548,9 +575,7 @@ button.inline-upload-trigger-btn { background: linear-gradient(135deg, #e67e22, 
 </div>
 
 <script>
-const dbURL = "https://familycalender-a62ae-default-rtdb.firebaseio.com/family_calendar_activities";
-const albumURL = "https://familycalender-a62ae-default-rtdb.firebaseio.com/family_mutual_album";
-
+// 🚀 注意：移除了以往底層的 REST URL String 拼接交互
 let activities = [];
 let albumItems = [];
 let current = new Date(); 
@@ -562,7 +587,20 @@ let uploadedBase64Cache = "";
 let formUploadedBase64Cache = "";
 let userRole = "viewer";
 
-// ⚡ Quick Add 按「N」秒速喚醒新增視窗
+// 🚀 升級：全方位模糊與忽略空格搜尋規則
+function normalize(text) {
+    if (!text) return "";
+    return String(text).toLowerCase().replace(/\s+/g, "");
+}
+
+// 🧩 初始化與全域監聽繫結
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById('searchBox').addEventListener('input', filterDatabaseEvents);
+    initKanbanUXListeners();
+    initFirebaseRealtimeSubscription();
+});
+
+// 按「N」秒速喚醒新增視窗
 document.addEventListener("keydown", e => {
     if (e.key === "n" || e.key === "N") {
         if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'SELECT') {
@@ -572,7 +610,7 @@ document.addEventListener("keydown", e => {
     }
 });
 
-// 📱 Mobile Swipe 左右滑動切換月份
+// 行動端滑動切換月份
 let touchStartX = 0; let touchEndX = 0;
 document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, false);
 document.addEventListener('touchend', e => {
@@ -582,6 +620,70 @@ document.addEventListener('touchend', e => {
         if (touchEndX - touchStartX > 80) changeMonth(-1); 
     }
 }, false);
+
+// 🚀 核心升級：移除 setInterval 輪詢，改為 Firebase 原生訂閱監聽
+function initFirebaseRealtimeSubscription() {
+    let checkInterval = setInterval(() => {
+        if (window.fbDb && window.fbRef && window.fbOnValue) {
+            clearInterval(checkInterval);
+            
+            // 監聽日誌主資料庫
+            const activitiesRef = window.fbRef(window.fbDb, "family_calendar_activities");
+            window.fbOnValue(activitiesRef, (snapshot) => {
+                activities = [];
+                const data = snapshot.val();
+                if (data) {
+                    for (let key in data) {
+                        activities.push({
+                            id: key,
+                            date: data[key].date || "",
+                            time: data[key].time || "全日",
+                            title: data[key].title || "行程",
+                            note: data[key].note || "",
+                            repeat: data[key].repeat || "不重複",
+                            reminder: data[key].reminder || "無",
+                            assignee: data[key].assignee || "",
+                            category: data[key].category || "家庭",
+                            status: data[key].status || "待處理",
+                            blocks: data[key].blocks || null,
+                            relations: data[key].relations || null,
+                            isMultiDayEvent: data[key].isMultiDayEvent || false,
+                            multiDayRangeArray: data[key].multiDayRangeArray || null
+                        });
+                    }
+                }
+                triggerUIRenderPipeline();
+            });
+
+            // 監聽家庭相簿資料庫
+            const albumRef = window.fbRef(window.fbDb, "family_mutual_album");
+            window.fbOnValue(albumRef, (snapshot) => {
+                albumItems = [];
+                const albumData = snapshot.val();
+                if (albumData) {
+                    for (let key in albumData) {
+                        albumItems.push({
+                            id: key,
+                            title: albumData[key].title,
+                            url: albumData[key].url,
+                            type: albumData[key].type || "image",
+                            date: albumData[key].date || "未知日期",
+                            eventId: albumData[key].eventId || ""
+                        });
+                    }
+                }
+                triggerUIRenderPipeline();
+            });
+        }
+    }, 100);
+}
+
+// 🚀 核心優化：變更資料後直接由事件驅動更新畫面，無須重抓
+function triggerUIRenderPipeline() {
+    renderCalendarWithData(activities);
+    renderDashboardBlocks();
+    if (currentViewMode === 'kanban') renderKanbanBoard();
+}
 
 function switchNotionView(modeStr) {
     currentViewMode = modeStr;
@@ -601,7 +703,6 @@ function syncFormComboPicker(inputElement, targetInputId) {
     document.getElementById(targetInputId).value = formattedTime;
 }
 
-// 🎨 Notion 風色彩分配
 function getCategoryColor(cat){
     if(cat==="家庭") return "#e6f7ff";
     if(cat==="學校") return "#f6ffed";
@@ -687,7 +788,7 @@ function openAddFormPopup(mode) {
 function closeEventPopup() { document.getElementById('addEventPopupOverlay').style.display = 'none'; }
 function closePopupOverlayOutside(e) { if (e.target === document.getElementById('addEventPopupOverlay')) closeEventPopup(); }
 
-/* ─── 🚀 核心升級一：HTML5 原生拖拉排序 Reorder 引擎 ─── */
+/* ─── 🚀 核心排序：HTML5 原生拖拉排序 Reorder 引擎 ─── */
 let draggedBlockNode = null;
 
 function initBlockDragAndDropListeners() {
@@ -715,7 +816,6 @@ function initBlockDragAndDropListeners() {
         }
     });
 
-    // ⚡ 核心升級：Inline Save 監聽器。改 input 即時背景無縫秒速自動儲存
     container.removeEventListener('input', debounceAutoSaveBlocks);
     container.addEventListener('input', debounceAutoSaveBlocks);
     container.removeEventListener('change', debounceAutoSaveBlocks);
@@ -758,7 +858,6 @@ function openEventPage(id){
         <div style="display:inline-block; margin-right:15px;" onmouseenter="highlightSyncEvent('${ev.date}')" onmouseleave="removeHighlightSyncEvent('${ev.date}')">🎯 <b>狀態項目：</b>${ev.status || '待處理'} <small style="color:gray;cursor:help;">(滑鼠觸碰連動 Highlight)</small></div>
     `;
 
-    // 🔗 跨活動 關係連結樹網絡渲染
     let relBlock = document.getElementById('eventPageRelationsBlock');
     if (ev.relations && Array.isArray(ev.relations)) {
         let linksHtml = "<b>🔗 雙向鏈接關聯活動網絡 (Relations Graph)：</b><br>";
@@ -772,7 +871,6 @@ function openEventPage(id){
         relBlock.style.display = "none";
     }
 
-    // 🔗 建立「相簿關聯關係」過濾器
     let relatedMedia = albumItems.filter(m => m.eventId === id || m.date === ev.date);
     let mediaHtml = "";
     relatedMedia.forEach(m => {
@@ -784,7 +882,6 @@ function openEventPage(id){
     });
     document.getElementById('eventPageRelatedMedia').innerHTML = mediaHtml || "<p style='color:gray; font-size:12px; margin:8px 0;'>此頁面目前暫無關聯相片。</p>";
 
-    // 裝載富內容 Blocks 陣列
     let container = document.getElementById('blockEditorContainer');
     container.innerHTML = "";
     if (ev.blocks && Array.isArray(ev.blocks)) {
@@ -826,7 +923,6 @@ function addBlockToEditor(type, content = "", done = false, url = "") {
             <input type="hidden" class="block-field-content" value="img_block">`;
     }
     
-    // 🧩 補強功能：追加「📄 複製功能」與「中間插入」複合按鈕列
     html += `</div>
         <div style="display:flex; gap:2px; align-self:center; margin-left:4px;">
             <button onclick="duplicateBlockNode(this)" title="複製此 Block" style="background:none; border:none; cursor:pointer; font-size:14px;">📄</button>
@@ -843,7 +939,6 @@ function duplicateBlockNode(btn) {
     let container = document.getElementById('blockEditorContainer');
     let clone = sourceNode.cloneNode(true);
     
-    // 修正複製後欄位內數值的對映複製
     if(sourceNode.dataset.type === 'heading' || sourceNode.dataset.type === 'text') {
         clone.querySelector('.block-field-content').value = sourceNode.querySelector('.block-field-content').value;
     } else if(sourceNode.dataset.type === 'todo') {
@@ -893,20 +988,21 @@ function saveWholeBlockPageData(isSilent = false) {
         blocksArray.push({ type: type, content: content, done: done, url: url });
     });
 
-    fetch(`${dbURL}/${id}.json`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ blocks: blocksArray, note: blocksArray[0]?.content || "" })
-    }).then(() => { 
-        document.getElementById('inlineSaveStatusLabel').innerText = "✓ 所有 Block 已保持雲端即時同步";
-        if(!isSilent) { closeEventPage(); fetchCloudData(); }
-    });
+    if (window.fbDb && window.fbRef && window.fbUpdate) {
+        const targetRef = window.fbRef(window.fbDb, `family_calendar_activities/${id}`);
+        window.fbUpdate(targetRef, {
+            blocks: blocksArray,
+            note: blocksArray[0]?.content || ""
+        }).then(() => {
+            document.getElementById('inlineSaveStatusLabel').innerText = "✓ 所有 Block 已保持雲端即時同步";
+            if (!isSilent) closeEventPage();
+        });
+    }
 }
 
 function closeEventPage() { document.getElementById('eventPageModal').style.display = 'none'; }
 function closeEventPageOverlayOutside(e) { if (e.target === document.getElementById('eventPageModal')) closeEventPage(); }
 
-// 📅 Highlight 同步連動引擎
 function highlightSyncEvent(dateStr) {
     let targetCell = document.querySelector(`.calendar-day[data-date="${dateStr}"]`);
     if(targetCell) targetCell.classList.add('highlight-sync');
@@ -916,7 +1012,6 @@ function removeHighlightSyncEvent(dateStr) {
     if(targetCell) targetCell.classList.remove('highlight-sync');
 }
 
-/* ─── 📸 拍照與檔案載入控制引擎 ─── */
 function triggerFileInput(type) {
     if (type === 'image') document.getElementById('nativeImageInput').click();
     if (type === 'video') document.getElementById('nativeVideoInput').click();
@@ -978,7 +1073,6 @@ function resetPhotoUploadForm() {
     document.getElementById('videoUploadPreview').style.display = 'none';
 }
 
-/* ─── 📸 互助相簿牆排版 ─── */
 function renderMainAlbumUI() {
     let mainGrid = document.getElementById('mainAlbumGrid');
     let popGrid = document.getElementById('popupAlbumManageList');
@@ -1003,9 +1097,10 @@ function renderMainAlbumUI() {
         let popMediaTag = item.type === "video" ? `<video src="${item.url}" controls></video>` : `<img src="${item.url}">`;
 
         let aiLabel = "🤖 AI標籤: 家庭 / 聚會";
-        if (item.title.includes("排球") || item.title.includes("大排") || item.title.includes("練")) {
+        let normTitle = normalize(item.title);
+        if (normTitle.includes("排球") || normTitle.includes("大排") || normTitle.includes("練")) {
             aiLabel = "🤖 AI標籤: 體育 / 運動訓練";
-        } else if (item.title.includes("二胡") || item.title.includes("音樂") || item.title.includes("課")) {
+        } else if (normTitle.includes("二胡") || normTitle.includes("音樂") || normTitle.includes("課")) {
             aiLabel = "🤖 AI標籤: 學習 / 藝術培育";
         }
 
@@ -1029,20 +1124,20 @@ function resetFormPhotoUpload() {
     document.getElementById('formVideoPreview').style.display = 'none';
 }
 
-/* ─── 🤖 AI 大數據自動屬性與看版狀態判定 ─── */
 function autoAssignAIProps(title) {
     let match = { category: "家庭", status: "待處理" };
-    if (title.includes("生日") || title.includes("壽") || title.includes("重要")) {
+    let normTitle = normalize(title);
+    if (normTitle.includes("生日") || normTitle.includes("壽") || normTitle.includes("重要")) {
         match.category = "重要"; match.status = "待處理";
-    } else if (title.includes("排球") || title.includes("訓練") || title.includes("大排") || title.includes("學")) {
+    } else if (normTitle.includes("排球") || normTitle.includes("訓練") || normTitle.includes("大排") || normTitle.includes("學")) {
         match.category = "學校"; match.status = "進行中";
-    } else if (title.includes("工作") || title.includes("代碼") || title.includes("系統")) {
+    } else if (normTitle.includes("工作") || normTitle.includes("代碼") || normTitle.includes("系統")) {
         match.category = "工作"; match.status = "待處理";
     }
     return match;
 }
 
-/* ─── 🌐 核心功能：完美融合雲端雙向同步 ─── */
+/* ─── 🌐 核心功能：解決 Race Condition 的多向寫入異步鎖定 ─── */
 function addFamilyEvent() {
     let title = document.getElementById('eventTitle').value.trim();
     let startVal = document.getElementById('eventTime').value.trim();
@@ -1065,7 +1160,8 @@ function addFamilyEvent() {
     let aiProps = autoAssignAIProps(title);
     
     let preBlocks = [{ type: "heading", content: `📝 ${title} 專屬頁面面版` }];
-    if (title.includes("生日")) {
+    let normTitle = normalize(title);
+    if (normTitle.includes("生日")) {
         preBlocks.push({ type: "todo", content: "訂購法式手工鮮奶油蛋糕", done: false });
         preBlocks.push({ type: "todo", content: "預訂家庭聚餐大排檔餐廳", done: false });
     } else {
@@ -1086,34 +1182,40 @@ function addFamilyEvent() {
         blocks: preBlocks
     };
 
-    let method = editKey ? "PUT" : "POST";
-    let targetURL = editKey ? `${dbURL}/${editKey}.json` : `${dbURL}.json`;
-    
-    fetch(targetURL, {
-        method: method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    }).then(res => res.json()).then(data => {
-        let currentEventId = editKey ? editKey : (data ? data.name : null);
-        
-        // 🔗 核心升級：Relation 雙向同步網架構邏輯 🚀
+    if (!window.fbDb) return;
+
+    let targetRef;
+    if (editKey) {
+        targetRef = window.fbRef(window.fbDb, `family_calendar_activities/${editKey}`);
+        window.fbSet(targetRef, payload).then(() => handleRelationsAndMedia(editKey));
+    } else {
+        const listRef = window.fbRef(window.fbDb, "family_calendar_activities");
+        const newEventRef = window.fbPush(listRef);
+        window.fbSet(newEventRef, payload).then(() => handleRelationsAndMedia(newEventRef.key));
+    }
+
+    // 🚀 升級：藉由 Promise.all 徹底擊碎多個隨機並行產生的 Race Condition
+    function handleRelationsAndMedia(currentEventId) {
+        let asyncQueue = [];
+
         if (currentEventId && selectedRelations.length > 0) {
             selectedRelations.forEach(relId => {
-                fetch(`${dbURL}/${relId}.json`)
-                .then(r => r.json())
-                .then(targetData => {
-                    if (targetData) {
-                        let relArray = targetData.relations || [];
-                        if (!relArray.includes(currentEventId)) {
-                            relArray.push(currentEventId);
-                            fetch(`${dbURL}/${relId}.json`, {
-                                method: "PATCH",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ relations: relArray })
-                            });
-                        }
-                    }
+                let p = new Promise((resolve) => {
+                    const relationRef = window.fbRef(window.fbDb, `family_calendar_activities/${relId}`);
+                    // 這裡改採獲取最新快照，阻斷髒讀與覆蓋
+                    fetch(`https://familycalender-a62ae-default-rtdb.firebaseio.com/family_calendar_activities/${relId}.json`)
+                    .then(r => r.json())
+                    .then(targetData => {
+                        if (targetData) {
+                            let relArray = targetData.relations || [];
+                            if (!relArray.includes(currentEventId)) {
+                                relArray.push(currentEventId);
+                                window.fbUpdate(relationRef, { relations: relArray }).then(resolve);
+                            } else { resolve(); }
+                        } else { resolve(); }
+                    }).catch(resolve);
                 });
+                asyncQueue.push(p);
             });
         }
 
@@ -1121,22 +1223,24 @@ function addFamilyEvent() {
         let formMediaType = document.getElementById('formMediaType').value;
         
         if (formMediaData && currentEventId) {
-            fetch(`${albumURL}.json`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title: `隨附活動: ${title}`, url: formMediaData, type: formMediaType, date: detectedDate, eventId: currentEventId })
-            }).then(() => { completeAction(); });
-        } else {
-            completeAction();
+            const albumListRef = window.fbRef(window.fbDb, "family_mutual_album");
+            const newAlbumItemRef = window.fbPush(albumListRef);
+            let albumP = window.fbSet(newAlbumItemRef, {
+                title: `隨附活動: ${title}`, 
+                url: formMediaData, 
+                type: formMediaType, 
+                date: detectedDate, 
+                eventId: currentEventId
+            });
+            asyncQueue.push(albumP);
         }
-    });
 
-    function completeAction() {
-        document.getElementById('eventTitle').value = "";
-        resetFormPhotoUpload();
-        closeEventPopup();
-        alert("🎉 大數據庫雙向同步儲存成功！");
-        fetchCloudData();
+        Promise.all(asyncQueue).then(() => {
+            document.getElementById('eventTitle').value = "";
+            resetFormPhotoUpload();
+            closeEventPopup();
+            alert("🎉 大數據庫雙向同步儲存成功！");
+        });
     }
 }
 
@@ -1149,38 +1253,70 @@ function uploadMediaToAlbum() {
     if (!title || !finalMediaData) { alert("請輸入描述並上傳媒體網址！"); return; }
 
     let matchedTodayEvent = activities.find(a => a.date === selectedDateStr);
-    let boundEventId = matchedTodayEvent ? matchedTodayEvent.id : "無特異活動關聯";
+    let boundEventId = matchedTodayEvent ? matchedTodayEvent.id : "無特定活動關聯";
 
-    fetch(`${albumURL}.json`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: title, url: finalMediaData, type: type, date: selectedDateStr, eventId: boundEventId })
+    const albumListRef = window.fbRef(window.fbDb, "family_mutual_album");
+    const newAlbumItemRef = window.fbPush(albumListRef);
+    window.fbSet(newAlbumItemRef, {
+        title: title, 
+        url: finalMediaData, 
+        type: type, 
+        date: selectedDateStr, 
+        eventId: boundEventId
     }).then(() => {
         resetPhotoUploadForm();
         alert("🎉 成功上傳添加至麟李家庭相簿！");
-        fetchCloudData();
     });
 }
 
 function deleteMediaFromAlbum(id) {
     if (confirm("確定要刪除這張家庭相片嗎？")) {
-        fetch(`${albumURL}/${id}.json`, { method: "DELETE" }).then(() => { fetchCloudData(); });
+        const itemRef = window.fbRef(window.fbDb, `family_mutual_album/${id}`);
+        window.fbRemove(itemRef);
     }
 }
 
-/* ─── 📋 看板分工控制 ─── */
-function allowDrop(ev) { ev.preventDefault(); }
-function drag(ev, id) { ev.dataTransfer.setData("text", id); }
-function handleDropBlock(ev, targetStatus) {
-    ev.preventDefault();
-    let id = ev.dataTransfer.getData("text"); if(!id) return;
+/* ─── 🚀 核心升級：精準看板 UX 監聽與視覺提示反饋 ─── */
+function initKanbanUXListeners() {
+    const columns = ["todo", "progress", "done"];
+    columns.forEach(col => {
+        let node = document.getElementById(`kanban-col-${col}`);
+        if(!node) return;
+        
+        node.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            node.classList.add('drag-over');
+        });
+        
+        node.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            node.classList.add('drag-over');
+        });
+        
+        node.addEventListener('dragleave', () => {
+            node.classList.remove('drag-over');
+        });
+        
+        node.addEventListener('drop', (e) => {
+            e.preventDefault();
+            node.classList.remove('drag-over');
+            let id = e.dataTransfer.getData("text");
+            let targetStatus = col === "todo" ? "待處理" : (col === "progress" ? "進行中" : "已完成");
+            executeKanbanStatusPatch(id, targetStatus);
+        });
+    });
+}
+
+function drag(ev, id) { 
+    ev.dataTransfer.setData("text", id); 
+}
+
+function executeKanbanStatusPatch(id, targetStatus) {
+    if(!id) return;
     if(userRole !== 'admin') { alert("唯讀訪客模式不支援拖拽修改狀態！請先驗證解鎖。"); return; }
     
-    fetch(`${dbURL}/${id}.json`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: targetStatus })
-    }).then(() => { fetchCloudData(); });
+    const targetRef = window.fbRef(window.fbDb, `family_calendar_activities/${id}`);
+    window.fbUpdate(targetRef, { status: targetStatus });
 }
 
 function renderKanbanBoard() {
@@ -1204,20 +1340,17 @@ function renderKanbanBoard() {
     });
 }
 
-/* ─── 📊 全文搜尋進階過濾器 ─── */
+/* ─── 📊 全文搜尋進階過濾器 (導入優化模組) ─── */
 function filterDatabaseEvents() {
-    let val = document.getElementById('searchBox').value.toLowerCase().trim();
+    let val = normalize(document.getElementById('searchBox').value);
     if(val === "") { renderCalendarWithData(activities); return; }
 
     let filtered = activities.filter(a => {
-        // 1️⃣ 穿透搜尋標題、分類與分工
-        let matchBasic = a.title.toLowerCase().includes(val) || a.category.toLowerCase().includes(val) || (a.assignee && a.assignee.toLowerCase().includes(val));
-        // 2️⃣ 穿透搜尋每個 Block 內文細節
-        let matchBlocks = a.blocks && Array.isArray(a.blocks) && a.blocks.some(b => b.content && b.content.toLowerCase().includes(val));
-        // 3️⃣ 穿透搜尋關聯活動標題
+        let matchBasic = normalize(a.title).includes(val) || normalize(a.category).includes(val) || normalize(a.assignee).includes(val);
+        let matchBlocks = a.blocks && Array.isArray(a.blocks) && a.blocks.some(b => b.content && normalize(b.content).includes(val));
         let matchRelations = a.relations && Array.isArray(a.relations) && a.relations.some(relId => {
             let target = activities.find(x => x.id === relId);
-            return target && target.title.toLowerCase().includes(val);
+            return target && normalize(target.title).includes(val);
         });
         return matchBasic || matchBlocks || matchRelations;
     });
@@ -1227,12 +1360,25 @@ function filterDatabaseEvents() {
 /* ─── 🎯 DASHBOARD 總覽首頁 ─── */
 function renderDashboardBlocks() {
     let todayStr = new Date().toISOString().slice(0, 10);
+    
+    // 🚀 升級：Dashboard 緊急特急高優先任務置頂渲染
+    let urgentActs = activities.filter(a => a.category === "重要" && (a.status || "待處理") !== "已完成");
+    let urgentHtml = "";
+    urgentActs.forEach(a => {
+        urgentHtml += `
+            <div style="padding:10px; margin-bottom:6px; background:#fff1f0; border-radius:6px; font-size:14px; border-left: 5px solid #ff4d4f; cursor:pointer;" onclick="openEventPage('${a.id}')">
+                <span style="background:#ff4d4f; color:white; font-size:11px; padding:1px 4px; border-radius:3px; font-weight:bold; margin-right:6px;">⚠️ 特急</span>
+                <b>[${a.date}] ${a.time}</b> | ${a.title}
+            </div>`;
+    });
+    document.getElementById('dashUrgentTasks').innerHTML = urgentHtml || "<p style='color:gray; font-size:14px;'>🎉 目前無任何未完成的重要特急任務。</p>";
+
     let todayActs = activities.filter(a => a.date === todayStr);
     let todayHtml = "";
     todayActs.forEach(a => {
         todayHtml += `
             <div style="padding:10px; margin-bottom:6px; background:${getCategoryColor(a.category)}; border-radius:6px; font-size:14px; cursor:pointer;" onclick="openEventPage('${a.id}')">
-                <b>${a.time}</b> | ${a.title} <span style="float:right; font-weight:bold; color:#2e7d32;">👤${a.assignee || '全員'}</span>
+                <b>${a.time}</b> | ${a.title} <span style="float:right; font-weight:bold; color:#2e7d32;">👤 ${a.assignee || '全員'}</span>
             </div>`;
     });
     document.getElementById('dashTodayEvents').innerHTML = todayHtml || "<p style='color:gray; font-size:14px;'>今日無行程安排。</p>";
@@ -1257,7 +1403,6 @@ function renderDashboardBlocks() {
     });
 }
 
-/* ─── ⚙️ 修改與刪除管理 ─── */
 function renderPopupManageListUI() {
     let container = document.getElementById('popupManageList');
     let filtered = activities.filter(a => a.date === selectedDateStr);
@@ -1283,7 +1428,10 @@ function openModifyEventForm(id) {
     document.getElementById('secureFormPanel').style.display = 'block';
     document.getElementById('formTitle').innerText = "✏️ 修改行程內容";
     document.getElementById('eventTitle').value = ev.title;
-    document.getElementById('eventTime').value = ev.date + " " + (ev.time.split(' ~ ')[0] || "08:30");
+    
+    // 🚀 Bug修復：使用常規條件守護，防範時段未定義引發的分割崩潰
+    let safeTimeStr = ev.time || "";
+    document.getElementById('eventTime').value = ev.date + " " + (safeTimeStr.split(' ~ ')[0] || "08:30");
     document.getElementById('editKey').value = ev.id;
     document.getElementById('eventRepeat').value = ev.repeat || "不重複";
     document.getElementById('eventReminder').value = ev.reminder || "無";
@@ -1293,11 +1441,11 @@ function openModifyEventForm(id) {
 
 function deleteEventFromPopup(id) {
     if (confirm("確定要刪除這項活動嗎？")) {
-        fetch(`${dbURL}/${id}.json`, { method: "DELETE" }).then(() => { fetchCloudData(); closeEventPopup(); });
+        const itemRef = window.fbRef(window.fbDb, `family_calendar_activities/${id}`);
+        window.fbRemove(itemRef).then(() => { closeEventPopup(); });
     }
 }
 
-/* ─── 💬 WHATSAPP 通知 ─── */
 function renderPopupWhatsApp_UI() {
     let container = document.getElementById('popupWhatsAppList');
     let filtered = activities.filter(a => a.date === selectedDateStr);
@@ -1315,11 +1463,11 @@ function renderPopupWhatsApp_UI() {
 
 function sendWhatsAppNotification(id) {
     let ev = activities.find(a => a.id === id); if (!ev) return;
-    let智慧特徵 = "";
-    if (ev.assignee) 智慧特徵 += `\n👥 負責分工：${ev.assignee}`;
-    if (ev.repeat && ev.repeat !== "不重複") 智慧特徵 += `\n🔁 重複週期：${ev.repeat}`;
-    if (ev.reminder && ev.reminder !== "無") 智慧特徵 += `\n⏰ 提醒設定：${ev.reminder}`;
-    let textMessage = `💡【麟李互助家庭日誌 - 行程通知】\n\n📅 日期：${ev.date}\n⏰ 時間：${ev.time}\n📌 項目：${ev.title}${智慧特徵}\n\n請大家安排好時間，互相照顧扶持！❤️`;
+    let extraMeta = "";
+    if (ev.assignee) extraMeta += `\n👥 負責分工：${ev.assignee}`;
+    if (ev.repeat && ev.repeat !== "不重複") extraMeta += `\n🔁 重複週期：${ev.repeat}`;
+    if (ev.reminder && ev.reminder !== "無") extraMeta += `\n⏰ 提醒設定：${ev.reminder}`;
+    let textMessage = `💡【麟李互助家庭日誌 - 行程通知】\n\n📅 日期：${ev.date}\n⏰ 時間：${ev.time}\n📌 項目：${ev.title}${extraMeta}\n\n請大家安排好時間，互相照顧扶持！❤️`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textMessage)}`, '_blank');
 }
 
@@ -1344,89 +1492,22 @@ function getLunarDayText(dateStr) {
     } catch(e) { return ""; }
 }
 
-/* ─── 📥 數據加載與聯網同步 ─── */
-function fetchCloudData() {
-    fetch(`${dbURL}.json`, { method: "GET" }).then(res => res.json()).then(data => {
-        activities = [];
-        if (data) {
-            for (let key in data) {
-                if (data[key]) {
-                    activities.push({
-                        id: key, date: data[key].date || "", time: data[key].time || "全日", title: data[key].title || "行程",
-                        note: data[key].note || "", repeat: data[key].repeat || "不重複", reminder: data[key].reminder || "無",
-                        assignee: data[key].assignee || "", category: data[key].category || "家庭", status: data[key].status || "待處理",
-                        blocks: data[key].blocks || null, relations: data[key].relations || null
-                    });
-                }
-            }
-        }
-        fetch(`${albumURL}.json`, { method: "GET" }).then(res => res.json()).then(albumData => {
-            albumItems = [];
-            if (albumData) {
-                for (let key in albumData) {
-                    if (albumData[key]) {
-                        albumItems.push({ id: key, title: albumData[key].title, url: albumData[key].url, type: albumData[key].type || "image", date: albumData[key].date || "未知日期", eventId: albumData[key].eventId || "" });
-                    }
-                }
-            }
-            renderCalendarWithData(activities);
-            renderDashboardBlocks();
-            if(currentViewMode === 'kanban') renderKanbanBoard();
-            autoCheckAndInjectAllMonthsEvents(); 
-        });
-    });
-}
-
-setInterval(fetchCloudData, 8000);
-
-function autoCheckAndInjectAllMonthsEvents() {
-    let hasJuneData = activities.some(a => a.date && a.date.startsWith("2026-06"));
-    let hasJulyData = activities.some(a => a.date && a.date.startsWith("2026-07"));
-    if (hasJuneData && hasJulyData) return; 
-
-    let batchPayloads = [];
-    if (!hasJuneData) {
-        batchPayloads = batchPayloads.concat([
-            { date: "2026-06-01", time: "08:30", title: "蓓 8:30 放學", isMultiDayEvent: true, multiDayRangeArray: ["2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04"], category: "學校", status: "進行中" },
-            { date: "2026-06-02", time: "19:15 / 21:45", title: "蓓 7:15pm 放學 / 熹 9:45pm 放學", category: "學校", status: "進行中" },
-            { date: "2026-06-03", time: "11:15", title: "蓓 11:15 放學 / 熹 放假", category: "學校", status: "待處理" },
-            { date: "2026-06-04", time: "09:25", title: "蓓 放假 / 熹 9:25 放學", category: "學校", status: "待處理" },
-            { date: "2026-06-05", time: "11:15 / 21:45", title: "蓓 11:15 放學 / 熹 9:45 放學", category: "學校", status: "進行中" },
-            { date: "2026-06-09", time: "10:00 / 20:15", title: "蓓 10:00 放學 / 熹 8:15 放學", category: "學校", status: "進行中" },
-            { date: "2026-06-12", time: "11:10", title: "蓓 11:10 放學 / 全日 二胡課 🎼", assignee: "熹", repeat: "每週", category: "學校", status: "進行中" },
-            { date: "2026-06-19", time: "端午節公眾假期", title: "🔴 端午節紅日放假", category: "重要", status: "待處理" }
-        ]);
-    }
-    if (!hasJulyData) {
-        batchPayloads = batchPayloads.concat([
-            { date: "2026-07-01", time: "全日紅日", title: "🔴 香港特區成立紀念日 (放假)", category: "重要", status: "待處理" },
-            { date: "2026-07-02", time: "08:50 / 12:00", title: "熹 8:50 放學 / 12:00 排球🏐", assignee: "熹", category: "學校", status: "進行中" },
-            { date: "2026-07-04", time: "16:00", title: "蓓 4:00pm 有 Bball 排球 / 熹 二胡班 🎼", category: "學校", status: "待處理" },
-            { date: "2026-07-05", time: "16:00 - 18:00", title: "熹 4:00-6:00pm 練排球 🏐", assignee: "熹", category: "學校", status: "進行中" },
-            { date: "2026-07-06", time: "08:50 / 11:00 / 16:00", title: "蓓 4:00pm 有活動 / 熹 8:50 放學，11:00 排球 🏐", category: "學校", status: "進行中" },
-            { date: "2026-07-07", time: "09:50 / 12:30", title: "熹 9:50 放學 / 12:30 排球 🏐", assignee: "熹", category: "學校", status: "進行中" },
-            { date: "2026-07-08", time: "全日", title: "熹 放假", category: "家庭", status: "待處理" },
-            { date: "2026-07-09", time: "08:50 / 11:00", title: "熹 8:50 放學 / 11:00 排球 🏐", assignee: "熹", category: "學校", status: "進行中" },
-            { date: "2026-07-10", time: "08:50 / 10:30", title: "熹 8:50 放學 / 10:30 排球 🏐", category: "學校", status: "進行中" },
-            { date: "2026-07-11", time: "全日活動", title: "蓓 放假 / 熹 上二胡班 + 排球活動 🏐", category: "學校", status: "待處理" },
-            { date: "2026-07-12", time: "全日", title: "熹 練排球 🏐", assignee: "熹", category: "學校", status: "進行中" }
-        ]);
-    }
-
-    Promise.all(batchPayloads.map(p => {
-        return fetch(`${dbURL}.json`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p) });
-    })).then(() => { fetchCloudData(); });
-}
-
 function renderCalendar(){ renderCalendarWithData(activities); }
 
+/* ─── 🚀 升級：使用 DocumentFragment 優化高性能月曆 DOM 渲染 ─── */
 function renderCalendarWithData(dataset) {
     let y = current.getFullYear(); let m = current.getMonth();
     monthLabel.innerText = y + "年 " + (m + 1) + "月";
     let first = new Date(y, m, 1).getDay();
     let days = new Date(y, m + 1, 0).getDate();
-    let html = "", total = 0;
-    for(let i=0; i<first; i++){ html += `<div class="calendar-day empty"></div>`; total++; }
+    
+    let fragmentWrapper = document.createDocumentFragment();
+    
+    for(let i=0; i<first; i++){ 
+        let emptyCell = document.createElement('div');
+        emptyCell.className = "calendar-day empty";
+        fragmentWrapper.appendChild(emptyCell);
+    }
 
     for(let i=1; i<=days; i++){
         let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
@@ -1435,37 +1516,59 @@ function renderCalendarWithData(dataset) {
         let dayActivities = dataset.filter(a => a.date === dStr || (a.isMultiDayEvent && a.multiDayRangeArray && a.multiDayRangeArray.includes(dStr)));
         let dayMediaItems = albumItems.filter(item => item.date === dStr);
         let belongsToMultiDay = dataset.some(act => act.isMultiDayEvent && act.multiDayRangeArray && act.multiDayRangeArray.includes(dStr));
-        let eventsHtml = "";
         
+        let eventsHtml = "";
         dayActivities.forEach(act => { 
             let inlineMeta = "";
             if ((currentGlobalMode === "詳細資料" || currentGlobalMode === "開展") && act.assignee) {
                 inlineMeta = ` (👤${act.assignee})`;
             }
-            eventsHtml += `<span class="day-event-badge" style="background:${getCategoryColor(act.category)}; color:#37352f; border-left:3px solid #666;" title="${act.title}" onmouseenter="highlightSyncEvent('${act.date}')" onmouseleave="removeHighlightSyncEvent('${act.date}')">${act.time} ${act.title}${inlineMeta}</span>`; 
+            eventsHtml += `<span class="day-event-badge" style="background:${getCategoryColor(act.category)}; color:#37352f; border-left:3px solid #666;" title="${act.title}">${act.time} ${act.title}${inlineMeta}</span>`; 
         });
+        
         dayMediaItems.forEach(media => {
             eventsHtml = `<span class="day-event-badge" style="background:#fff7e6; color:#d46b08; border-left: 3px solid #f39c12; font-weight:bold;">🖼️ 附圖: ${media.title}</span>` + eventsHtml;
         });
+        
+        let dayCell = document.createElement('div');
         let dayClass = "calendar-day";
         if (isToday) dayClass += " today";
         if (isSelected) dayClass += " selected-day";
         if (belongsToMultiDay) dayClass += " multiday-pass-range";
         if (getHKHoliday(m+1, i)) dayClass += " hk-holiday-pass-range";
-        html += `
-        <div class="${dayClass}" data-date="${dStr}" onclick="selectDate('${dStr}')">
+        
+        dayCell.className = dayClass;
+        dayCell.setAttribute('data-date', dStr);
+        dayCell.onclick = () => selectDate(dStr);
+        
+        dayCell.innerHTML = `
             <strong>${i}</strong><div class="lunar">${getLunarDayText(dStr)}</div>
             ${getHKHoliday(m+1, i) ? `<div class="holiday">🔴 ${getHKHoliday(m+1, i)}</div>` : ""}
             <div class="day-events-container">${eventsHtml}</div>
-        </div>`;
-        total++;
+        `;
+        fragmentWrapper.appendChild(dayCell);
     }
-    while(total % 7 !== 0){ html += `<div class="calendar-day empty"></div>`; total++; }
-    calendar.innerHTML = html;
+    
+    let totalCells = first + days;
+    while(totalCells % 7 !== 0){ 
+        let emptyCell = document.createElement('div');
+        emptyCell.className = "calendar-day empty";
+        fragmentWrapper.appendChild(emptyCell);
+        totalCells++;
+    }
+    
+    calendar.innerHTML = "";
+    calendar.appendChild(fragmentWrapper);
     renderDayEvents();
 }
 
-function selectDate(dateStr) { selectedDateStr = dateStr; document.getElementById('selectedDateLabel').innerText = selectedDateStr; renderCalendar(); renderMainAlbumUI(); }
+// 🚀 優化：切換月份僅觸發輕量視圖重繪，杜絕不必要的網路 fetch 重複請求
+function selectDate(dateStr) { 
+    selectedDateStr = dateStr; 
+    document.getElementById('selectedDateLabel').innerText = selectedDateStr; 
+    renderCalendar(); 
+    renderMainAlbumUI(); 
+}
 
 function renderDayEvents() {
     let container = document.getElementById('dayEvents');
@@ -1489,8 +1592,10 @@ function renderDayEvents() {
     container.innerHTML = html;
 }
 
-function changeMonth(dir) { current.setMonth(current.getMonth() + dir); fetchCloudData(); }
-fetchCloudData();
+function changeMonth(dir) { 
+    current.setMonth(current.getMonth() + dir); 
+    renderCalendar(); 
+}
 </script>
 
 </body>
