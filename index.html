@@ -1,5 +1,4 @@
-# 由於使用者要求「每次有任何修改修復後, 給我輸出一個新文件檔為html記事本格式檔案給我下載」，此處使用 Python 寫入本地檔案供使用者下載。
-html_code = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
@@ -1531,9 +1530,4 @@ function renderDayEvents() {
 function changeMonth(dir) { current.setMonth(current.getMonth() + dir); renderCalendarWithData(activities); }
 </script>
 </body>
-</html>"""
-
-import textwrap
-with open("Family_OS_v8_AI_Upgrade.html", "w", encoding="utf-8") as f:
-    f.write(html_code)
-print("新版檔案已成功產生並開放下載！")
+</html>
