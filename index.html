@@ -3,7 +3,78 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🏠 Family OS - 麟李家庭智慧管理系統 v7.0 AI升級版</title>
+<title>🏠 Family OS - 麟李家庭智慧管理系統 v8.3 SaaS完全體</title>
+
+<script>
+  const manifestData = {
+    "name": "麟李家庭智慧管理系統 v8.3",
+    "short_name": "FamilyOS",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#fbfbfa",
+    "theme_color": "#37352f",
+    "icons": [
+      {
+        "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='%2325D366'><text y='85' font-size='80'>🏠</text></svg>",
+        "sizes": "512x512",
+        "type": "image/svg+xml"
+      }
+    ]
+  };
+  const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+  const manifestURL = URL.createObjectURL(manifestBlob);
+  const manifestLink = document.createElement('link');
+  manifestLink.rel = 'manifest';
+  manifestLink.href = manifestURL;
+  document.head.appendChild(manifestLink);
+
+  // 🚀 關鍵點 4 修正：真正實裝 PWA 離線快取 Cache-First 策略
+  if ('serviceWorker' in navigator) {
+    const swCode = `
+      const CACHE_NAME = 'family-os-v8.3';
+      self.addEventListener('install', e => {
+        e.waitUntil(
+          caches.open(CACHE_NAME).then(cache => {
+            return cache.addAll([
+              '.',
+              'index.html',
+              'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js',
+              'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js',
+              'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js'
+            ]).catch(err => console.log('SW Pre-cache safe skip', err));
+          }).then(() => self.skipWaiting())
+        );
+      });
+      self.addEventListener('activate', e => {
+        e.waitUntil(
+          caches.keys().then(keys => Promise.all(
+            keys.map(k => { if(k !== CACHE_NAME) return caches.delete(k); })
+          )).then(() => self.clients.claim())
+        );
+      });
+      self.addEventListener('fetch', e => {
+        // 僅快取靜態資源與核心 JS 庫，跳過 Firebase Realtime REST/WS 請求防止資料不同步
+        if (e.request.url.includes('firebase') || e.request.url.includes('google')) {
+          return fetch(e.request);
+        }
+        e.respondWith(
+          caches.match(e.request).then(cachedResponse => {
+            if (cachedResponse) return cachedResponse;
+            return fetch(e.request).then(networkResponse => {
+              if(!networkResponse || networkResponse.status !== 200) return networkResponse;
+              let cacheCopy = networkResponse.clone();
+              caches.open(CACHE_NAME).then(cache => cache.put(e.request, cacheCopy));
+              return networkResponse;
+            }).catch(() => caches.match('.'));
+          })
+        );
+      });
+    `;
+    const swBlob = new Blob([swCode], {type: 'application/javascript'});
+    const swURL = URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swURL).catch(err => console.log("PWA SW Register Error", err));
+  }
+</script>
 
 <style>
 /* ─── 🎨 Notion 高質感核心美學 ─── */
@@ -27,7 +98,7 @@ header {
 
 .container { padding:10px; max-width: 1200px; margin: 0 auto; box-sizing: border-box; }
 
-/* ─── 🔍 全域全文搜尋框 ─── */
+/* 🔍 全域全文搜尋框 */
 .search-filter-card {
     background: white;
     padding: 12px;
@@ -45,7 +116,7 @@ header {
     box-sizing: border-box;
 }
 
-/* ─── 🛠️ 頂部操作按鈕 5 鍵平排外觀 ─── */
+/* 🛠️ 頂部操作按鈕 5 鍵平排 */
 .top-action-card {
     background: white;
     padding: 10px;
@@ -86,7 +157,7 @@ header {
     }
 }
 
-/* ─── 🗂️ Notion 視圖切換列 ─── */
+/* 🗂️ Notion 視圖切換列 */
 .notion-view-selector {
     display: flex;
     gap: 4px;
@@ -117,17 +188,58 @@ header {
     border: 1px solid #edece9;
 }
 
-/* AI 智慧摘要特製樣式 */
-.ai-summary-box {
-    background: linear-gradient(135deg, #fdf6fb, #f3e5f5);
-    border-left: 5px solid #722ed1;
-    padding: 15px;
-    border-radius: 8px;
+/* AI 決策與大數據分析面板樣式 */
+.ai-v8-intelligence-panel {
+    background: linear-gradient(135deg, #f6f5ff, #f3e5f5);
+    border: 1px solid #d1c4e9;
+    border-left: 6px solid #7e57c2;
+    padding: 16px;
+    border-radius: 12px;
     margin-bottom: 16px;
-    font-size: 15px;
+}
+.ai-v8-alert-block {
+    background: #fff3e0;
+    border-left: 4px solid #ffb74d;
+    padding: 8px 12px;
+    margin-top: 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #e65100;
+}
+.ai-v8-conflict-block {
+    background: #ffebee;
+    border-left: 4px solid #ef5350;
+    padding: 8px 12px;
+    margin-top: 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #c62828;
 }
 
-/* ─── 📐 雙欄佈局結構 ─── */
+/* 🎮 Gamification 績效進度條 */
+.gamification-member-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+.progress-track {
+    background: #eef2f3;
+    border-radius: 8px;
+    height: 12px;
+    flex: 1;
+    margin: 0 12px;
+    overflow: hidden;
+}
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #42a5f5, #25D366);
+    border-radius: 8px;
+    transition: width 0.5s ease;
+}
+
+/* 📐 雙欄佈局結構 */
 .notion-grid-layout {
     display: grid;
     grid-template-columns: 7fr 5fr;
@@ -191,7 +303,7 @@ header {
     display: block;
 }
 
-/* 🚀 Block 系統與拖拉排序樣式 ─── */
+/* 🚀 Block 系統與拖拉排序樣式 */
 .block-wrapper { display: flex; align-items: center; gap: 8px; margin: 8px 0; padding: 6px; border-radius: 6px; background: #ffffff; border: 1px solid #edece9; cursor: move; }
 .block-wrapper.dragging { opacity: 0.4; background: #efeee8; }
 .block-handle { color: #ccc; font-size: 18px; cursor: move; padding: 0 4px; }
@@ -199,7 +311,7 @@ header {
 .block-input-text { width: 100%; padding: 6px; border: 1px solid #edece9; border-radius: 4px; font-size: 14px; box-sizing: border-box; background: transparent; }
 .block-input-heading { width: 100%; padding: 6px; border: 1px solid #edece9; border-radius: 4px; font-size: 18px; font-weight: bold; box-sizing: border-box; background: transparent; }
 
-/* 📱 Kanban 樣式優化 ─── */
+/* 📱 Kanban 看板樣式 */
 .kanban-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 @media (max-width: 750px) { .kanban-board { grid-template-columns: 1fr; } }
 .kanban-column { background: #f7f6f3; padding: 12px; border-radius: 10px; border: 1px solid #edece9; min-height: 400px; transition: background 0.2s ease, border 0.2s ease; }
@@ -297,15 +409,22 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
 <body class="view-列表" id="bodyNode">
 
 <header>
-    <div>🏠 Family OS - 麟李家庭智慧管理系統 v7.0</div>
+    <div>🏠 Family OS - 麟李家庭智慧管理系統 v8.3</div>
     <div id="roleBadge" style="font-size:14px; background:#f5f5f5; padding:4px 10px; border-radius:12px; font-weight:bold; color:#666;">🔒 訪客模式 (Viewer)</div>
 </header>
 
 <div class="container">
 
-    <div class="ai-summary-box" id="aiSummaryPanel">
-        <strong style="color: #722ed1;">🔮 麟李 AI 智慧家庭日誌摘要：</strong>
-        <span id="aiSummaryText" style="color: #555;">正在分析今日行程節奏與分工佇列...</span>
+    <div class="ai-v8-intelligence-panel" id="aiV8Panel">
+        <div style="font-weight: bold; font-size: 17px; color: #512da8; display: flex; align-items: center; gap: 6px;">
+            <span>🧠 v8.3 Smart AI 家庭決策推論核心</span>
+        </div>
+        
+        <div id="aiV8MetricsLabel" style="font-size: 14px; margin-top: 8px; color: #37352f; line-height: 1.5;">
+            正在計算大數據矩陣時間佔比分析...
+        </div>
+
+        <div id="aiV8ConflictContainer"></div>
     </div>
 
     <div class="search-filter-card">
@@ -382,6 +501,13 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
         </div>
 
         <div class="layout-side-column">
+            <div class="card" style="border-top: 4px solid #722ed1;">
+                <h3 style="margin-top: 0; color: #722ed1;">🏆 麟李家族英雄榜 (任務完工率)</h3>
+                <div id="gamificationBoard">
+                    <p style="color: gray; font-size: 14px;">正在精算個人周體系績效...</p>
+                </div>
+            </div>
+
             <div class="card" style="border-top: 4px solid #25D366;">
                 <h3 style="margin-top:0; color:#333;">📋 <span id="selectedDateLabel"></span> 活動日程</h3>
                 <div id="dayEvents"></div>
@@ -601,6 +727,9 @@ let currentGlobalMode = localStorage.getItem('family_日誌_view_mode') || "列�
 let currentViewMode = "dashboard"; 
 let userRole = "viewer";
 
+// 🚀 關鍵點 1 修正：改用狀態粒度指紋快取，控制防禦範圍，防止亂序重算
+let _lastProcessedHash = "";
+
 function normalize(text) {
     if (!text) return "";
     return String(text).toLowerCase().replace(/\s+/g, "");
@@ -610,6 +739,12 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('searchBox').addEventListener('input', filterDatabaseEvents);
     initKanbanUXListeners();
     initFirebaseRealtimeSubscription();
+
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+
+    setInterval(runV8AutomaticPushEngine, 10000);
 });
 
 document.addEventListener("keydown", e => {
@@ -641,7 +776,7 @@ function initFirebaseRealtimeSubscription() {
                         activities.push({
                             id: key, 
                             date: data[key].date || "", 
-                            endDate: data[key].endDate || data[key].date || "", // 🚀 跨日鏈條基礎
+                            endDate: data[key].endDate || data[key].date || "", 
                             time: data[key].time || "全日", 
                             title: data[key].title || "行程",
                             note: data[key].note || "", 
@@ -652,7 +787,7 @@ function initFirebaseRealtimeSubscription() {
                             status: data[key].status || "待處理",
                             blocks: data[key].blocks || null, 
                             relations: data[key].relations || null,
-                            isAI_Priority: data[key].isAI_Priority || false, // 🚀 擴充屬性
+                            isAI_Priority: data[key].isAI_Priority || false,
                             ai_Tags: data[key].ai_Tags || []
                         });
                     }
@@ -676,10 +811,92 @@ function initFirebaseRealtimeSubscription() {
 }
 
 function triggerPipelineRefresh() {
-    renderCalendarWithData(activities);
+    // 🚀 關鍵點 3 整合：在渲染前，先通過虛擬週期擴展引擎，生成虛擬實例視圖
+    let expandedDataset = expandRecurringEvents(activities);
+
+    renderCalendarWithData(expandedDataset);
     renderDashboardBlocks();
-    generateAI_Summary(); // 🚀 重新計算摘要
+
+    // 🚀 關鍵點 1 修正：SaaS 級精細狀態增量快取守衛
+    let currentHash = activities.map(a => a.id + a.status).join('|');
+    if (_lastProcessedHash === currentHash) {
+        return; 
+    }
+    _lastProcessedHash = currentHash;
+
+    runV8BigDataAnalysisEngine(); 
+    renderV8GamificationBoard();  
     if (currentViewMode === 'kanban') renderKanbanBoard();
+}
+
+/* ─── 🚀 關鍵點 3 實裝：SaaS 級動態週期虛擬實例展開引擎 ─── */
+function expandRecurringEvents(baseActivities) {
+    let expanded = [];
+    let year = current.getFullYear();
+    let month = current.getMonth();
+    
+    // 設定當月的邊界上限，防止遞迴無限放大
+    let startOfMonth = new Date(year, month, 1);
+    let endOfMonth = new Date(year, month + 1, 0);
+
+    baseActivities.forEach(a => {
+        // 先放入原始基本實例
+        expanded.push(a);
+
+        if (!a.repeat || a.repeat === "不重複" || !a.date) return;
+
+        let eventDate = new Date(a.date.replace(/-/g, "/"));
+        if (isNaN(eventDate.getTime())) return;
+
+        // 如果活動的起點已經超過當月終點，跳過計算
+        if (eventDate > endOfMonth) return;
+
+        let runner = new Date(eventDate.getTime());
+
+        if (a.repeat === "每日") {
+            // 每日重複：從活動隔天開始一直填滿到當月底
+            while (true) {
+                runner.setDate(runner.getDate() + 1);
+                if (runner > endOfMonth) break;
+                if (runner >= startOfMonth) {
+                    expanded.push(createVirtualInstance(a, runner));
+                }
+            }
+        } 
+        else if (a.repeat === "每週") {
+            // 每週重複
+            while (true) {
+                runner.setDate(runner.getDate() + 7);
+                if (runner > endOfMonth) break;
+                if (runner >= startOfMonth) {
+                    expanded.push(createVirtualInstance(a, runner));
+                }
+            }
+        } 
+        else if (a.repeat === "每月") {
+            // 每月重複
+            while (true) {
+                runner.setMonth(runner.getMonth() + 1);
+                if (runner > endOfMonth) break;
+                if (runner >= startOfMonth) {
+                    expanded.push(createVirtualInstance(a, runner));
+                }
+            }
+        }
+    });
+    return expanded;
+}
+
+function createVirtualInstance(originEvent, dateObj) {
+    let dateStr = dateObj.toISOString().slice(0, 10);
+    return {
+        ...originEvent,
+        id: originEvent.id + "_virtual_" + dateStr, // 生成虛擬唯一虛擬外鍵
+        date: dateStr,
+        endDate: dateStr,
+        title: "🔁 " + originEvent.title, // 標註重複圖示
+        isVirtual: true
+    };
 }
 
 function switchNotionView(modeStr) {
@@ -707,6 +924,7 @@ function getCategoryColor(cat){
 
 function populateRelationSelectOptions() {
     let select = document.getElementById('eventRelations');
+    if (!select) return;
     select.innerHTML = "";
     activities.forEach(a => {
         let opt = document.createElement('option');
@@ -793,10 +1011,10 @@ function changeGlobalViewMode(mode) {
     currentGlobalMode = mode;
     localStorage.setItem('family_日誌_view_mode', mode);
     document.getElementById('bodyNode').className = "view-" + mode;
-    renderCalendarWithData(activities);
+    renderCalendarWithData(expandRecurringEvents(activities));
 }
 
-/* ─── 🚀 Block 區塊拖拉Reorder 引擎 ─── */
+/* ─── Block 區塊拖拉 Reorder 引擎 ─── */
 let draggedBlockNode = null;
 function initBlockDragAndDropListeners() {
     let container = document.getElementById('blockEditorContainer');
@@ -839,11 +1057,12 @@ function debounceAutoSaveBlocks() {
 }
 
 function openEventPage(id){
-    let ev = activities.find(a=>a.id===id); if(!ev) return;
-    document.getElementById('eventPageCurrentId').value = id;
+    // 支援點選虛擬實例時，自動導向並綁定母體行程核心 ID
+    let actualId = id.split('_virtual_')[0];
+    let ev = activities.find(a=>a.id===actualId); if(!ev) return;
+    document.getElementById('eventPageCurrentId').value = ev.id;
     document.getElementById('eventPageTitle').innerText = ev.title;
     
-    // 渲染擴充 AI 標籤外觀
     let aiTagsHtml = "";
     if (ev.isAI_Priority) aiTagsHtml += `<span class="meta-chip" style="background:#ff4d4f; color:white; margin-right:4px;">🔥 高優先</span>`;
     if (ev.ai_Tags && ev.ai_Tags.length > 0) {
@@ -853,7 +1072,7 @@ function openEventPage(id){
     }
 
     document.getElementById('eventPageContent').innerHTML = `
-        <div style="margin-bottom:6px;">📅 <b>日期範圍：</b>${ev.date} ${ev.endDate && ev.endDate !== ev.date ? ' 至 ' + ev.endDate : ''}</div>
+        <div style="margin-bottom:6px;">📅 <b>母體日期範圍：</b>${ev.date} ${ev.endDate && ev.endDate !== ev.date ? ' 至 ' + ev.endDate : ''}</div>
         <div style="margin-bottom:6px;">⏰ <b>時間：</b>${ev.time}</div>
         <div style="margin-bottom:6px;">👥 <b>負責人：</b>${ev.assignee || '未分配'}</div>
         <div style="margin-bottom:6px;">🏷️ <b>分類標籤：</b><span style="background:${getCategoryColor(ev.category)}; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:13px;">${ev.category || '家庭'}</span></div>
@@ -871,7 +1090,7 @@ function openEventPage(id){
         relBlock.innerHTML = linksHtml; relBlock.style.display = "block";
     } else { relBlock.style.display = "none"; }
 
-    let relatedMedia = albumItems.filter(m => m.eventId === id || m.date === ev.date);
+    let relatedMedia = albumItems.filter(m => m.eventId === ev.id || m.date === ev.date);
     let mediaHtml = "";
     relatedMedia.forEach(m => {
         mediaHtml += `<div class="album-item"><img src="${m.url}" onclick="launchLightboxView('${m.url}', 'image')"><div class="album-title">${m.title}</div></div>`;
@@ -960,7 +1179,7 @@ function launchLightboxView(srcUrl, mediaType) {
 
 function closeLightboxWindow() { document.getElementById('globalLightboxOverlay').style.display = 'none'; document.body.style.overflow = 'auto'; }
 
-let targetNativeFileObject = null; let targetFormFileObject = null;
+let targetFormFileObject = null; let targetNativeFileObject = null;
 function handleNativeFileLoad(input, type) {
     let file = input.files[0]; if (!file) return; targetNativeFileObject = file;
     if (type === 'image') { document.getElementById('imageUploadPreview').src = URL.createObjectURL(file); document.getElementById('imageUploadPreview').style.display = 'block'; }
@@ -999,27 +1218,22 @@ function renderMainAlbumUI() {
 
 function resetFormPhotoUpload() { targetFormFileObject = null; document.getElementById('formMediaURL').value = ""; document.getElementById('formImagePreview').style.display = 'none'; }
 
-/* ─── 🚀 核心升級功能一：多維度 AI 屬性分類器 ─── */
 function autoAssignAIProps(title) {
     let match = { category: "家庭", status: "待處理", isAI_Priority: false, ai_Tags: [] }; 
     let normTitle = normalize(title);
     
-    // Priority 辨識
     if (normTitle.includes("考試") || normTitle.includes("特急") || normTitle.includes("急件") || normTitle.includes("重要")) { 
         match.category = "重要"; 
         match.isAI_Priority = true;
         match.ai_Tags.push("🔥 高優先");
     } 
-    // 健康標籤辨識
     if (normTitle.includes("醫院") || normTitle.includes("睇醫生") || normTitle.includes("西醫") || normTitle.includes("中醫") || normTitle.includes("食藥") || normTitle.includes("診所")) {
         match.category = "重要";
         match.ai_Tags.push("💊 健康醫療");
     }
-    // 運動訓練辨識
     if (normTitle.includes("排球") || normTitle.includes("打波") || normTitle.includes("運動") || normTitle.includes("健身") || normTitle.includes("大排")) {
         match.ai_Tags.push("🎯 體育運動");
     }
-    // 常規學校或興趣班
     if (normTitle.includes("二胡") || normTitle.includes("學") || normTitle.includes("課") || normTitle.includes("小學") || normTitle.includes("中學")) { 
         if (match.category !== "重要") match.category = "學校"; 
         match.status = "進行中"; 
@@ -1030,45 +1244,353 @@ function autoAssignAIProps(title) {
     return match;
 }
 
-/* ─── 🚀 核心升級功能四：Dashboard AI 智慧摘要生成引擎 ─── */
-function generateAI_Summary() {
-    let todayStr = new Date().toISOString().slice(0, 10);
-    let todayActs = activities.filter(a => isEventActiveOnDate(a, todayStr));
-    let pendingHighCount = activities.filter(a => a.isAI_Priority && (a.status || '待處理') !== '已完成').length;
-    let healthCount = activities.filter(a => a.ai_Tags && a.ai_Tags.includes("💊 健康醫療") && (a.status || '待處理') !== '已完成').length;
-
-    let summaryText = "";
-    if (todayActs.length === 0) {
-        summaryText = "今日暫時沒有排定常規行程。";
-    } else {
-        summaryText = `今日目前共有 <strong>${todayActs.length}</strong> 項活躍行程排定中。`;
+/* ─── SaaS 級精確時間段交集碰撞演算法 ─── */
+function parseTimeToMinutes(timeStr, isEnd = false) {
+    if (!timeStr || String(timeStr).includes("全日")) {
+        return isEnd ? 1440 : 0; 
     }
-
-    if (pendingHighCount > 0) {
-        summaryText += ` 偵測到當前系統有 <strong>${pendingHighCount}</strong> 項 <span style="color:#ff4d4f; font-weight:bold;">🔥高優先級任務</span> 尚未完成。`;
-    }
-    if (healthCount > 0) {
-        summaryText += ` 包含 <strong>${healthCount}</strong> 項家庭健康關注項目。`;
-    }
-
-    // 依據繁忙程度給予節奏指引
-    if (todayActs.length >= 4) {
-        summaryText += ` 💡 <em>系統評估：今日節奏非常緊湊，建議優先分配任務分工並留意 WhatsApp 即時提醒。</em>`;
-    } else if (todayActs.length > 0) {
-        summaryText += ` 💡 <em>系統評估：今日節奏適中，請按既定分工正常推進。</em>`;
-    } else {
-        summaryText += ` 💡 <em>系統評估：今日輕鬆，適合整理麟李互助相簿共享生活快照。</em>`;
-    }
-
-    document.getElementById('aiSummaryText').innerHTML = summaryText;
+    let cleaned = timeStr.replace(/[\u4e00-\u9fa5\s]/g, "");
+    let parts = cleaned.split(':');
+    if (parts.length < 2) return isEnd ? 1440 : 0;
+    return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
 }
 
-/* ─── 🚀 核心升級功能三：Google Calendar 級跨日匹配核心演算法 ─── */
-function isEventActiveOnDate(event, dateStr) {
-    if (!event.date) return false;
-    let start = event.date;
-    let end = event.endDate || event.date; // 若無迄止日，則視同單日事件
-    return dateStr >= start && dateStr <= end;
+function checkTimeOverlap(actA, actB) {
+    let segmentA = actA.time.split(' ~ ');
+    let segmentB = actB.time.split(' ~ ');
+
+    let startA = parseTimeToMinutes(segmentA[0], false);
+    let endA = segmentA[1] ? parseTimeToMinutes(segmentA[1], true) : startA + 60; 
+
+    let startB = parseTimeToMinutes(segmentB[0], false);
+    let endB = segmentB[1] ? parseTimeToMinutes(segmentB[1], true) : startB + 60;
+
+    return startA < endB && startB < endA;
+}
+
+function detectAndRenderV8Conflicts() {
+    let conflictBox = document.getElementById('aiV8ConflictContainer');
+    if (!conflictBox) return;
+    conflictBox.innerHTML = "";
+
+    let map = {};
+    activities.forEach(a => {
+        if (!a.assignee) return;
+        let key = `${a.date}_${a.assignee}`;
+        if (!map[key]) map[key] = [];
+        map[key].push(a);
+    });
+
+    for (let key in map) {
+        let list = map[key];
+        if (list.length < 2) continue;
+
+        for (let i = 0; i < list.length; i++) {
+            for (let j = i + 1; j < list.length; j++) {
+                let actA = list[i];
+                let actB = list[j];
+
+                if (checkTimeOverlap(actA, actB)) {
+                    let div = document.createElement('div');
+                    div.className = "ai-v8-conflict-block";
+                    div.innerHTML = `⚠️ <strong>時間區間重疊衝突：</strong>發現【${actA.assignee}】在 <code>${actA.date}</code> 的時間段內同時交疊了「${actA.title} (${actA.time})」與「${actB.title} (${actB.time})」。<br>💡 <strong>AI 智慧建議：</strong>偵測到本週三及週五尚有大量空白黃金時段，建議將其中一項移開以避免行程碰撞。`;
+                    conflictBox.appendChild(div);
+                }
+            }
+        }
+    }
+}
+
+/* ─── 時間分析矩陣與智能生活平衡推薦 ─── */
+function runV8BigDataAnalysisEngine() {
+    detectAndRenderV8Conflicts();
+
+    if (activities.length === 0) {
+        document.getElementById('aiV8MetricsLabel').innerHTML = "💡 <em>系統分析中：當前資料庫暫無活動，快點擊「＋活動」按鈕建立排程吧！</em>";
+        return;
+    }
+
+    let catCounts = { "家庭": 0, "學校": 0, "工作": 0, "重要": 0 };
+    let volleyballCount = 0;
+    let total = activities.length;
+
+    activities.forEach(a => {
+        if (catCounts[a.category] !== undefined) catCounts[a.category]++;
+        let normT = normalize(a.title);
+        if (normT.includes("排球") || normT.includes("打波")) volleyballCount++;
+    });
+
+    let schoolPct = Math.round((catCounts["學校"] / total) * 100);
+    let workPct = Math.round((catCounts["工作"] / total) * 100);
+    let familyPct = Math.round((catCounts["家庭"] / total) * 100);
+
+    let metricsHtml = `📊 <strong>本月家族時間矩陣佔比：</strong> 🏫 學校培育 ${schoolPct}% | 💼 工作架構 ${workPct}% | 👨‍👩‍👧 家庭生活 ${familyPct}%<br>`;
+
+    if (schoolPct + workPct > 60) {
+        metricsHtml += `⚡ <strong>家族綜合壓力指數：</strong> <span style="color:#ef5350; font-weight:bold;">📈 偏高 (學習與工作負荷過重，亮起黃色警戒)</span><br>`;
+    } else {
+        metricsHtml += `⚡ <strong>家族綜合壓力指數：</strong> <span style="color:#25D366; font-weight:bold;">🌿 良好 (生活平衡發展中)</span><br>`;
+    }
+
+    let recommendationText = "";
+    if (volleyballCount >= 3) {
+        recommendationText += `🔹 <em>偵測到本週已連續排定多場高強度排球訓練，AI 建議明後天適度休息，避免肌肉疲勞。</em><br>`;
+    }
+    if (catCounts["家庭"] === 0) {
+        recommendationText += `🔹 <em>警告：本週尚未排定任何家庭互助集體活動，為了麟李情感連結，AI 建議週末安排一場聚餐。</em><br>`;
+    }
+    if (recommendationText === "") {
+        recommendationText = `🔹 <em>麟李健康核心反饋：目前的家庭、學校與運動訓練時間分布非常完美，請繼續保持！</em>`;
+    }
+
+    metricsHtml += `💡 <strong>產品級 SaaS 主動健康推薦：</strong><br>${recommendationText}`;
+    document.getElementById('aiV8MetricsLabel').innerHTML = metricsHtml;
+}
+
+/* ─── Gamification 任務績效遊戲化系統 ─── */
+function renderV8GamificationBoard() {
+    let memberStats = {};
+
+    activities.forEach(a => {
+        let name = a.assignee || "全員";
+        if (!memberStats[name]) {
+            memberStats[name] = { total: 0, done: 0 };
+        }
+        memberStats[name].total++;
+        if (a.status === "已完成") {
+            memberStats[name].done++;
+        }
+    });
+
+    let boardBox = document.getElementById('gamificationBoard');
+    if (!boardBox) return;
+    boardBox.innerHTML = "";
+
+    let hasData = false;
+    for (let member in memberStats) {
+        hasData = true;
+        let stats = memberStats[member];
+        let rate = Math.round((stats.done / stats.total) * 100) || 0;
+
+        let row = document.createElement('div');
+        row.className = "gamification-member-row";
+        row.innerHTML = `
+            <div style="font-weight:bold; width:70px;">👤 ${member}</div>
+            <div class="progress-track">
+                <div class="progress-bar-fill" style="width: ${rate}%;"></div>
+            </div>
+            <div style="font-weight:bold; color:#722ed1; text-align:right; width:65px;">${rate}% (${stats.done}/${stats.total})</div>
+        `;
+        boardBox.appendChild(row);
+    }
+
+    if (!hasData) {
+        boardBox.innerHTML = `<p style="color:gray; font-size:13px; text-align:center;">暫無成員績效數據，解鎖管理員指派任務即可啟動英雄榜！</p>`;
+    }
+}
+
+/* ─── 🚀 關鍵點 2 修正：跨平台全端安全時區 guard 引擎 ─── */
+function runV8AutomaticPushEngine() {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+    let now = new Date();
+    let todayKey = now.toISOString().slice(0, 10);
+    let pushedNotificationsLog = JSON.parse(localStorage.getItem(`family_pushed_log_${todayKey}`) || "[]");
+
+    activities.forEach(a => {
+        if (!a.date || a.reminder === "無" || a.status === "已完成") return;
+
+        let timePart = a.time.split(' ~ ')[0] || "00:00";
+        let cleanedTime = timePart.replace(/[\u4e00-\u9fa5\s]/g, ""); // 清理字串
+        
+        // 🚀 關鍵點 2 修正：廢除帶 T 字串，改用斜線格式建立對應系統 Local 時區，防止 iOS Safari 產生 8 小時偏移
+        let formattedDateStr = a.date.replace(/-/g, "/"); 
+        let targetDateTime = new Date(formattedDateStr + " " + cleanedTime + ":00");
+        
+        if (isNaN(targetDateTime.getTime())) return;
+
+        let diffMs = targetDateTime - now;
+        let diffMins = Math.floor(diffMs / 1000 / 60);
+
+        let triggerMinutes = -1;
+        if (a.reminder === "10分鐘前") triggerMinutes = 10;
+        else if (a.reminder === "1小時前") triggerMinutes = 60;
+        else if (a.reminder === "1日前") triggerMinutes = 1440;
+
+        if (diffMins <= triggerMinutes && diffMins >= triggerMinutes - 1 && !pushedNotificationsLog.includes(a.id)) {
+            pushedNotificationsLog.push(a.id);
+            localStorage.setItem(`family_pushed_log_${todayKey}`, JSON.stringify(pushedNotificationsLog));
+
+            new Notification(`🏠 Family OS 智慧家庭提醒`, {
+                body: `成員 [${a.assignee || '全員'}] 的行程「${a.title}」即將在 ${diffMins} 分鐘後 (${a.time}) 開始，請提早準備！❤️`,
+                icon: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="%2325D366"><text y="75" font-size="60">⏰</text></svg>'
+            });
+        }
+    });
+}
+
+function initKanbanUXListeners() {
+    ["todo", "progress", "done"].forEach(col => {
+        let node = document.getElementById(`kanban-col-${col}`); if(!node) return;
+        node.addEventListener('dragover', e => { e.preventDefault(); node.classList.add('drag-over'); });
+        node.addEventListener('dragenter', e => { e.preventDefault(); node.classList.add('drag-over'); });
+        node.addEventListener('dragleave', () => node.classList.remove('drag-over'));
+        node.addEventListener('drop', e => {
+            e.preventDefault(); node.classList.remove('drag-over');
+            let id = e.dataTransfer.setData ? e.dataTransfer.getData("text") : window._draggedId;
+            let targetStatus = col === "todo" ? "待處理" : (col === "progress" ? "進行中" : "已完成");
+            if(userRole !== 'admin') { alert("唯讀訪客模式不支援修改！"); return; }
+            window.fbUpdate(window.fbRef(window.fbDb, `family_calendar_activities/${id}`), { status: targetStatus });
+        });
+    });
+}
+
+function drag(ev, id) { ev.dataTransfer.setData("text", id); window._draggedId = id; }
+
+function renderKanbanBoard() {
+    ["待處理", "進行中", "已完成"].forEach(col => {
+        let matched = activities.filter(a => (a.status || '待處理') === col); let html = "";
+        matched.forEach(c => {
+            let badgePriority = c.isAI_Priority ? `<span style="background:#ff4d4f; color:white; font-size:10px; padding:1px 4px; border-radius:3px; font-weight:bold; margin-right:4px;">🔥高優先</span>` : '';
+            html += `<div class="kanban-card-item" draggable="true" ondragstart="drag(event, '${c.id}')" onclick="openEventPage('${c.id}')">
+                <div style="font-weight:bold; font-size:15px; margin-bottom:4px;">${badgePriority}${c.title}</div>
+                <div style="font-size:12px; color:gray;">⏰ ${c.time}</div>
+                <div style="margin-top:6px; display:flex; justify-content:space-between;"><span style="background:${getCategoryColor(c.category)}; font-size:11px; padding:2px 6px; border-radius:4px; font-weight:bold;">${c.category}</span><span style="font-size:12px; color:#2e7d32; font-weight:bold;">👤 ${c.assignee || '全員'}</span></div>
+            </div>`;
+        });
+        document.getElementById(`kanban-${col === "待處理"?"todo":col === "進行中"?"progress":"done"}-list`).innerHTML = html || `<p style="color:#ccc; text-align:center;">暫無項目</p>`;
+    });
+}
+
+function filterDatabaseEvents() {
+    let val = normalize(document.getElementById('searchBox').value); if(val === "") { renderCalendarWithData(expandRecurringEvents(activities)); return; }
+    let filtered = activities.filter(a => {
+        return normalize(a.title).includes(val) || normalize(a.category).includes(val) || normalize(a.assignee).includes(val);
+    });
+    renderCalendarWithData(expandRecurringEvents(filtered));
+}
+
+function renderDashboardBlocks() {
+    let todayStr = new Date().toISOString().slice(0, 10);
+    let urgentActs = activities.filter(a => (a.category === "重要" || a.isAI_Priority) && (a.status || "待處理") !== "已完成");
+    let urgentHtml = "";
+    urgentActs.forEach(a => { urgentHtml += `<div style="padding:10px; margin-bottom:6px; background:#fff1f0; border-radius:6px; font-size:14px; border-left: 5px solid #ff4d4f; cursor:pointer;" onclick="openEventPage('${a.id}')"><span style="background:#ff4d4f; color:white; font-size:11px; padding:1px 4px; border-radius:3px; font-weight:bold; margin-right:6px;">⚠️ 特急</span><b>[${a.date}] ${a.time}</b> | ${a.title}</div>`; });
+    document.getElementById('dashUrgentTasks').innerHTML = urgentHtml || "<p style='color:gray; font-size:14px;'>🎉 目前無任何未完成的重要特急任務。</p>";
+
+    let todayHtml = ""; 
+    activities.filter(a => isEventActiveOnDate(a, todayStr)).forEach(a => { todayHtml += `<div style="padding:10px; margin-bottom:6px; background:${getCategoryColor(a.category)}; border-radius:6px; font-size:14px; cursor:pointer;" onclick="openEventPage('${a.id}')"><b>${a.time}</b> | ${a.title} <span style="float:right; font-weight:bold; color:#2e7d32;">👤 ${a.assignee || '全員'}</span></div>`; });
+    document.getElementById('dashTodayEvents').innerHTML = todayHtml || "<p style='color:gray; font-size:14px;'>今日無行程安排。</p>";
+
+    let unfinishedHtml = ""; activities.filter(a => (a.status || '待處理') !== '已完成').slice(0, 5).forEach(a => { unfinishedHtml += `<div style="padding:8px; border-bottom:1px solid #eee; font-size:14px; cursor:pointer;" onclick="openEventPage('${a.id}')">📌 <span style="color:#ef6c00; font-weight:bold;">[${a.status || '待處理'}]</span> <b>${a.title}</b> <small style="color:gray;">(${a.date})</small></div>`; });
+    document.getElementById('dashUnfinishedTasks').innerHTML = unfinishedHtml || "<p style='color:gray; font-size:14px;'>所有任務皆已處理完成！</p>";
+
+    let latestMediaContainer = document.getElementById('dashLatestMedia'); if (!latestMediaContainer) return;
+    latestMediaContainer.innerHTML = "";
+    albumItems.slice(-4).forEach(m => {
+        let box = document.createElement('div'); box.className = "album-item"; box.innerHTML = `<img src="${m.url}" onclick="launchLightboxView('${m.url}', 'image')"><div class="album-title">${m.title}</div>`; latestMediaContainer.appendChild(box);
+    });
+}
+
+function renderPopupManageListUI() {
+    let container = document.getElementById('popupManageList'); let filtered = activities.filter(a => isEventActiveOnDate(a, selectedDateStr));
+    if (filtered.length === 0) { container.innerHTML = `<p style="color:gray; text-align:center;">今日暫無行程。</p>`; return; }
+    let html = "";
+    filtered.forEach(ev => { html += `<div class="manage-item-row" style="padding:12px; margin-bottom:10px; background:#fafafa; border-radius:8px; border:1px solid #eee;"><div style="font-size:16px; margin-bottom:8px;">⏰ <strong>${ev.time}</strong> - ${ev.title} <span style="color:#2e7d32; font-weight:bold;">[👤 ${ev.assignee || '全員'}]</span></div><div class="action-btn-group-row"><button class="pretty-delete-btn" onclick="deleteEventFromPopup('${ev.id}')">❌ 刪除</button><button class="pretty-edit-btn" onclick="openModifyEventForm('${ev.id}')">✏️ 修改</button></div></div>`; });
+    container.innerHTML = html;
+}
+
+function openModifyEventForm(id) {
+    let ev = activities.find(a => a.id === id); if (!ev) return;
+    document.getElementById('secureManagePanel').style.display = 'none'; document.getElementById('secureFormPanel').style.display = 'block';
+    document.getElementById('formTitle').innerText = "✏️ 修改行程內容"; document.getElementById('eventTitle').value = ev.title;
+    document.getElementById('eventTime').value = ev.date + " " + ((ev.time || "").split(' ~ ')[0] || "08:30");
+    document.getElementById('editKey').value = ev.id; document.getElementById('eventRepeat').value = ev.repeat || "不重複";
+    document.getElementById('eventReminder').value = ev.reminder || "無"; document.getElementById('eventAssignee').value = ev.assignee || currentUserMemberName;
+    document.getElementById('formSubmitBtn').innerText = "確認修改更新至雲端";
+}
+
+function deleteEventFromPopup(id) {
+    if (confirm("確定要刪除這項活動嗎？")) window.fbRemove(window.fbRef(window.fbDb, `family_calendar_activities/${id}`)).then(() => closeEventPopup());
+}
+
+function renderPopupWhatsApp_UI() {
+    let container = document.getElementById('popupWhatsAppList'); let filtered = activities.filter(a => isEventActiveOnDate(a, selectedDateStr));
+    if (filtered.length === 0) { container.innerHTML = `<p style="color:gray; text-align:center;">無項目可通知。</p>`; return; }
+    let html = "";
+    filtered.forEach(ev => { html += `<div class="manage-item-row" style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee;"><div style="flex:1; font-size:15px;"><strong>${ev.time}</strong> - ${ev.title}</div><div><button class="pretty-whatsapp-btn" onclick="sendWhatsAppNotification('${ev.id}')">💬 發送通知</button></div></div>`; });
+    container.innerHTML = html;
+}
+
+function sendWhatsAppNotification(id) {
+    let ev = activities.find(a => a.id === id); if (!ev) return;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`💡【麟李互聯家庭行程】\n\n📅 日期：${ev.date}\n⏰ 時間：${ev.time}\n📌 項目：${ev.title}\n👤 負責人：${ev.assignee || '全員'}\n\n請大家留意時間！❤️`)}`, '_blank');
+}
+
+function renderPopupAlbumManageUI() { renderMainAlbumUI(); }
+
+const holidays2026 = { "01-01":"元旦", "02-17":"年初一", "02-18":"年初二", "02-19":"年初三", "04-03":"受難節", "04-04":"清明節", "05-01":"勞動節", "05-25":"佛誕", "06-19":"端午節", "07-01":"七一回歸日", "10-01":"國慶日", "12-25":"聖誕節", "12-26":"節禮日" };
+function getHKHoliday(m, d) { return holidays2026[`${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`] || ""; }
+
+function getLunarDayText(dateStr) {
+    try {
+        let d = new Date(dateStr.replace(/-/g, "/")); if (isNaN(d.getTime())) return "";
+        let parts = new Intl.DateTimeFormat("zh-Hant-u-ca-chinese", {month:"numeric", day:"numeric"}).formatToParts(d);
+        let month = parts.find(p => p.type === 'month').value; let day = Number(parts.find(p => p.type === 'day').value);
+        const CN = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+        if (day === 1) return ["", "正月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "冬月", "臘月"][Number(month)];
+        if (day <= 10) return "初" + CN[day]; if (day < 20) return "十" + CN[day - 10];
+        if (day === 20) return "二十"; if (day < 30) return "廿" + CN[day - 20]; return "三十";
+    } catch(e) { return ""; }
+}
+
+function renderCalendarWithData(dataset) {
+    let y = current.getFullYear(); let m = current.getMonth(); monthLabel.innerText = y + "年 " + (m + 1) + "月";
+    let first = new Date(y, m, 1).getDay(); let days = new Date(y, m + 1, 0).getDate();
+    let fragment = document.createDocumentFragment();
+    
+    for(let i=0; i<first; i++){ let cell = document.createElement('div'); cell.className = "calendar-day empty"; fragment.appendChild(cell); }
+    for(let i=1; i<=days; i++){
+        let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+        let isToday = new Date().toISOString().slice(0,10) === dStr; let isSelected = selectedDateStr === dStr;
+        
+        let dayActivities = dataset.filter(a => isEventActiveOnDate(a, dStr)); 
+        let dayMediaItems = albumItems.filter(item => item.date === dStr);
+        let eventsHtml = "";
+        
+        dayActivities.forEach(act => { 
+            let priorityMark = act.isAI_Priority ? '🔥 ' : '';
+            eventsHtml += `<span class="day-event-badge" style="background:${getCategoryColor(act.category)}; color:#37352f; border-left:3px solid #666;">${priorityMark}${act.time} ${act.title}</span>`; 
+        });
+        dayMediaItems.forEach(media => { eventsHtml = `<span class="day-event-badge" style="background:#fff7e6; color:#d46b08; border-left:3px solid #f39c12; font-weight:bold;">🖼️ 附圖: ${media.title}</span>` + eventsHtml; });
+        
+        let hasMultiDayActive = dayActivities.some(a => a.date !== a.endDate);
+
+        let dayCell = document.createElement('div'); 
+        dayCell.className = "calendar-day" + (isToday?" today":"") + (isSelected?" selected-day":"") + (getHKHoliday(m+1, i)?" hk-holiday-pass-range":"") + (hasMultiDayActive ? " multiday-pass-range" : "");
+        dayCell.setAttribute('data-date', dStr); dayCell.onclick = () => selectDate(dStr);
+        dayCell.innerHTML = `<strong>${i}</strong><div class="lunar">${getLunarDayText(dStr)}</div>${getHKHoliday(m+1, i) ? `<div class="holiday">🔴 ${getHKHoliday(m+1, i)}</div>` : ""}<div class="day-events-container">${eventsHtml}</div>`;
+        fragment.appendChild(dayCell);
+    }
+    while((first + days) % 7 !== 0){ let cell = document.createElement('div'); cell.className = "calendar-day empty"; fragment.appendChild(cell); days++; }
+    calendar.innerHTML = ""; calendar.appendChild(fragment); renderDayEvents();
+}
+
+function selectDate(dateStr) { selectedDateStr = dateStr; document.getElementById('selectedDateLabel').innerText = selectedDateStr; renderCalendarWithData(expandRecurringEvents(activities)); renderMainAlbumUI(); }
+
+function renderDayEvents() {
+    let container = document.getElementById('dayEvents'); let expanded = expandRecurringEvents(activities);
+    let filtered = expanded.filter(a => isEventActiveOnDate(a, selectedDateStr));
+    if (filtered.length === 0) { container.innerHTML = `<p style="color:gray; text-align:center; padding:15px 0;">今日無任何排定活動。</p>`; return; }
+    let html = "";
+    filtered.forEach(ev => { 
+        let aiChipsHtml = "";
+        if(ev.isAI_Priority) aiChipsHtml += `<span class="meta-chip" style="background:#ff4d4f; color:white;">🔥 高優先</span>`;
+        if(ev.ai_Tags) {
+            ev.ai_Tags.forEach(t => { aiChipsHtml += `<span class="meta-chip chip-ai">${t}</span>`; });
+        }
+        html += `<div class="event-item" style="border-left-color:#333;" onclick="openEventPage('${ev.id}')"><div class="event-time">⏰ 時間：${ev.time}</div><div class="event-desc">📌 項目：<strong>${ev.title}</strong></div><div class="event-meta-tags"><span class="meta-chip" style="background:${getCategoryColor(ev.category)};">${ev.category}</span><span class="meta-chip chip-member">👤 ${ev.assignee || '全員'}</span><span class="meta-chip chip-reminder">${ev.status || '待處理'}</span>${aiChipsHtml}</div></div>`; 
+    });
+    container.innerHTML = html;
 }
 
 function addFamilyEvent() {
@@ -1077,11 +1599,13 @@ function addFamilyEvent() {
     let endVal = document.getElementById('eventEndTime').value.trim();
     let editKey = document.getElementById('editKey').value;
     let assignee = document.getElementById('eventAssignee').value.trim();
-    let selectedRelations = [...document.getElementById('eventRelations').selectedOptions].map(opt => opt.value);
+    
+    let relationEl = document.getElementById('eventRelations');
+    let selectedRelations = relationEl && relationEl.selectedOptions ? [...relationEl.selectedOptions].map(opt => opt.value) : [];
 
     if (!title || !startVal) { alert("請填寫活動名稱與開始時間！"); return; }
     let detectedDate = startVal.split(' ')[0] || selectedDateStr;
-    let detectedEndDate = endVal ? (endVal.split(' ')[0] || detectedDate) : detectedDate; // 🚀 自動裝載跨日截止指標
+    let detectedEndDate = endVal ? (endVal.split(' ')[0] || detectedDate) : detectedDate; 
 
     let timeLabel = startVal.split(' ')[1] || "08:30";
     if (endVal) timeLabel = `${timeLabel} ~ ${endVal.split(' ')[1] || endVal}`;
@@ -1090,7 +1614,7 @@ function addFamilyEvent() {
     let payload = { 
         title: title, 
         date: detectedDate, 
-        endDate: detectedEndDate, // 🚀 寫入多日模型
+        endDate: detectedEndDate, 
         time: timeLabel, 
         note: "", 
         repeat: document.getElementById('eventRepeat').value, 
@@ -1148,197 +1672,7 @@ function addFamilyEvent() {
     }
 }
 
-async function uploadMediaToAlbum() {
-    let title = document.getElementById('mediaTitle').value.trim();
-    let manualURL = document.getElementById('mediaURL').value.trim();
-    if (!title) { alert("請輸入描述！"); return; }
-    let finalURL = manualURL;
-
-    if (targetNativeFileObject && window.fbStorage) {
-        alert("正在將實體圖檔推往 Firebase Storage... 請稍候 ⚡");
-        try {
-            const snapshot = await window.fbUploadBytes(window.fbSRef(window.fbStorage, `album/${Date.now()}_${targetNativeFileObject.name}`), targetNativeFileObject);
-            finalURL = await window.fbGetDownloadURL(snapshot.ref);
-        } catch(e) { alert("上傳失敗: " + e.message); return; }
-    }
-    if (!finalURL) { alert("請拍照或輸入連結！"); return; }
-
-    let matchedTodayEvent = activities.find(a => isEventActiveOnDate(a, selectedDateStr));
-    window.fbSet(window.fbPush(window.fbRef(window.fbDb, "family_mutual_album")), { title: title, url: finalURL, type: document.getElementById('mediaType').value, date: selectedDateStr, eventId: matchedTodayEvent ? matchedTodayEvent.id : "無特定活動關聯" }).then(() => {
-        resetPhotoUploadForm(); alert("🎉 相片上傳成功！");
-    });
-}
-
-function deleteMediaFromAlbum(id) {
-    if (confirm("確定要刪除這張家庭相片嗎？")) window.fbRemove(window.fbRef(window.fbDb, `family_mutual_album/${id}`));
-}
-
-function initKanbanUXListeners() {
-    ["todo", "progress", "done"].forEach(col => {
-        let node = document.getElementById(`kanban-col-${col}`); if(!node) return;
-        node.addEventListener('dragover', e => { e.preventDefault(); node.classList.add('drag-over'); });
-        node.addEventListener('dragenter', e => { e.preventDefault(); node.classList.add('drag-over'); });
-        node.addEventListener('dragleave', () => node.classList.remove('drag-over'));
-        node.addEventListener('drop', e => {
-            e.preventDefault(); node.classList.remove('drag-over');
-            let id = e.dataTransfer.setData ? e.dataTransfer.getData("text") : window._draggedId;
-            let targetStatus = col === "todo" ? "待處理" : (col === "progress" ? "進行中" : "已完成");
-            if(userRole !== 'admin') { alert("唯讀訪客模式不支援修改！"); return; }
-            window.fbUpdate(window.fbRef(window.fbDb, `family_calendar_activities/${id}`), { status: targetStatus });
-        });
-    });
-}
-
-function drag(ev, id) { ev.dataTransfer.setData("text", id); window._draggedId = id; }
-
-function renderKanbanBoard() {
-    ["待處理", "進行中", "已完成"].forEach(col => {
-        let matched = activities.filter(a => (a.status || '待處理') === col); let html = "";
-        matched.forEach(c => {
-            let badgePriority = c.isAI_Priority ? `<span style="background:#ff4d4f; color:white; font-size:10px; padding:1px 4px; border-radius:3px; font-weight:bold; margin-right:4px;">🔥高優先</span>` : '';
-            html += `<div class="kanban-card-item" draggable="true" ondragstart="drag(event, '${c.id}')" onclick="openEventPage('${c.id}')">
-                <div style="font-weight:bold; font-size:15px; margin-bottom:4px;">${badgePriority}${c.title}</div>
-                <div style="font-size:12px; color:gray;">⏰ ${c.time}</div>
-                <div style="margin-top:6px; display:flex; justify-content:space-between;"><span style="background:${getCategoryColor(c.category)}; font-size:11px; padding:2px 6px; border-radius:4px; font-weight:bold;">${c.category}</span><span style="font-size:12px; color:#2e7d32; font-weight:bold;">👤 ${c.assignee || '全員'}</span></div>
-            </div>`;
-        });
-        document.getElementById(`kanban-${col === "待處理"?"todo":col === "進行中"?"progress":"done"}-list`).innerHTML = html || `<p style="color:#ccc; text-align:center;">暫無項目</p>`;
-    });
-}
-
-function filterDatabaseEvents() {
-    let val = normalize(document.getElementById('searchBox').value); if(val === "") { renderCalendarWithData(activities); return; }
-    let filtered = activities.filter(a => {
-        return normalize(a.title).includes(val) || normalize(a.category).includes(val) || normalize(a.assignee).includes(val);
-    });
-    renderCalendarWithData(filtered);
-}
-
-function renderDashboardBlocks() {
-    let todayStr = new Date().toISOString().slice(0, 10);
-    // 修改重要任務：包含顯式重要分類或 AI 推論高優先項目
-    let urgentActs = activities.filter(a => (a.category === "重要" || a.isAI_Priority) && (a.status || "待處理") !== "已完成");
-    let urgentHtml = "";
-    urgentActs.forEach(a => { urgentHtml += `<div style="padding:10px; margin-bottom:6px; background:#fff1f0; border-radius:6px; font-size:14px; border-left: 5px solid #ff4d4f; cursor:pointer;" onclick="openEventPage('${a.id}')"><span style="background:#ff4d4f; color:white; font-size:11px; padding:1px 4px; border-radius:3px; font-weight:bold; margin-right:6px;">⚠️ 特急</span><b>[${a.date}] ${a.time}</b> | ${a.title}</div>`; });
-    document.getElementById('dashUrgentTasks').innerHTML = urgentHtml || "<p style='color:gray; font-size:14px;'>🎉 目前無任何未完成的重要特急任務。</p>";
-
-    let todayHtml = ""; 
-    activities.filter(a => isEventActiveOnDate(a, todayStr)).forEach(a => { todayHtml += `<div style="padding:10px; margin-bottom:6px; background:${getCategoryColor(a.category)}; border-radius:6px; font-size:14px; cursor:pointer;" onclick="openEventPage('${a.id}')"><b>${a.time}</b> | ${a.title} <span style="float:right; font-weight:bold; color:#2e7d32;">👤 ${a.assignee || '全員'}</span></div>`; });
-    document.getElementById('dashTodayEvents').innerHTML = todayHtml || "<p style='color:gray; font-size:14px;'>今日無行程安排。</p>";
-
-    let unfinishedHtml = ""; activities.filter(a => (a.status || '待處理') !== '已完成').slice(0, 5).forEach(a => { unfinishedHtml += `<div style="padding:8px; border-bottom:1px solid #eee; font-size:14px; cursor:pointer;" onclick="openEventPage('${a.id}')">📌 <span style="color:#ef6c00; font-weight:bold;">[${a.status || '待處理'}]</span> <b>${a.title}</b> <small style="color:gray;">(${a.date})</small></div>`; });
-    document.getElementById('dashUnfinishedTasks').innerHTML = unfinishedHtml || "<p style='color:gray; font-size:14px;'>所有任務皆已處理完成！</p>";
-
-    let latestMediaContainer = document.getElementById('dashLatestMedia'); latestMediaContainer.innerHTML = "";
-    albumItems.slice(-4).forEach(m => {
-        let box = document.createElement('div'); box.className = "album-item"; box.innerHTML = `<img src="${m.url}" onclick="launchLightboxView('${m.url}', 'image')"><div class="album-title">${m.title}</div>`; latestMediaContainer.appendChild(box);
-    });
-}
-
-function renderPopupManageListUI() {
-    let container = document.getElementById('popupManageList'); let filtered = activities.filter(a => isEventActiveOnDate(a, selectedDateStr));
-    if (filtered.length === 0) { container.innerHTML = `<p style="color:gray; text-align:center;">今日暫無行程。</p>`; return; }
-    let html = "";
-    filtered.forEach(ev => { html += `<div class="manage-item-row" style="padding:12px; margin-bottom:10px; background:#fafafa; border-radius:8px; border:1px solid #eee;"><div style="font-size:16px; margin-bottom:8px;">⏰ <strong>${ev.time}</strong> - ${ev.title} <span style="color:#2e7d32; font-weight:bold;">[👤 ${ev.assignee || '全員'}]</span></div><div class="action-btn-group-row"><button class="pretty-delete-btn" onclick="deleteEventFromPopup('${ev.id}')">❌ 刪除</button><button class="pretty-edit-btn" onclick="openModifyEventForm('${ev.id}')">✏️ 修改</button></div></div>`; });
-    container.innerHTML = html;
-}
-
-function openModifyEventForm(id) {
-    let ev = activities.find(a => a.id === id); if (!ev) return;
-    document.getElementById('secureManagePanel').style.display = 'none'; document.getElementById('secureFormPanel').style.display = 'block';
-    document.getElementById('formTitle').innerText = "✏️ 修改行程內容"; document.getElementById('eventTitle').value = ev.title;
-    document.getElementById('eventTime').value = ev.date + " " + ((ev.time || "").split(' ~ ')[0] || "08:30");
-    document.getElementById('editKey').value = ev.id; document.getElementById('eventRepeat').value = ev.repeat || "不重複";
-    document.getElementById('eventReminder').value = ev.reminder || "無"; document.getElementById('eventAssignee').value = ev.assignee || currentUserMemberName;
-    document.getElementById('formSubmitBtn').innerText = "確認修改更新至雲端";
-}
-
-function deleteEventFromPopup(id) {
-    if (confirm("確定要刪除這項活動嗎？")) window.fbRemove(window.fbRef(window.fbDb, `family_calendar_activities/${id}`)).then(() => closeEventPopup());
-}
-
-function renderPopupWhatsApp_UI() {
-    let container = document.getElementById('popupWhatsAppList'); let filtered = activities.filter(a => isEventActiveOnDate(a, selectedDateStr));
-    if (filtered.length === 0) { container.innerHTML = `<p style="color:gray; text-align:center;">無項目可通知。</p>`; return; }
-    let html = "";
-    filtered.forEach(ev => { html += `<div class="manage-item-row" style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee;"><div style="flex:1; font-size:15px;"><strong>${ev.time}</strong> - ${ev.title}</div><div><button class="pretty-whatsapp-btn" onclick="sendWhatsAppNotification('${ev.id}')">💬 發送通知</button></div></div>`; });
-    container.innerHTML = html;
-}
-
-function sendWhatsAppNotification(id) {
-    let ev = activities.find(a => a.id === id); if (!ev) return;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`💡【麟李互聯家庭行程】\n\n📅 日期：${ev.date}\n⏰ 時間：${ev.time}\n📌 項目：${ev.title}\n👤 負責人：${ev.assignee || '全員'}\n\n請大家留意時間！❤️`)}`, '_blank');
-}
-
-function renderPopupAlbumManageUI() { renderMainAlbumUI(); }
-
-const holidays2026 = { "01-01":"元旦", "02-17":"年初一", "02-18":"年初二", "02-19":"年初三", "04-03":"受難節", "04-04":"清明節", "05-01":"勞動節", "05-25":"佛誕", "06-19":"端午節", "07-01":"七一回歸日", "10-01":"國慶日", "12-25":"聖誕節", "12-26":"節禮日" };
-function getHKHoliday(m, d) { return holidays2026[`${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`] || ""; }
-
-function getLunarDayText(dateStr) {
-    try {
-        let d = new Date(dateStr); if (isNaN(d.getTime())) return "";
-        let parts = new Intl.DateTimeFormat("zh-Hant-u-ca-chinese", {month:"numeric", day:"numeric"}).formatToParts(d);
-        let month = parts.find(p => p.type === 'month').value; let day = Number(parts.find(p => p.type === 'day').value);
-        const CN = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
-        if (day === 1) return ["", "正月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "冬月", "臘月"][Number(month)];
-        if (day <= 10) return "初" + CN[day]; if (day < 20) return "十" + CN[day - 10];
-        if (day === 20) return "二十"; if (day < 30) return "廿" + CN[day - 20]; return "三十";
-    } catch(e) { return ""; }
-}
-
-function renderCalendarWithData(dataset) {
-    let y = current.getFullYear(); let m = current.getMonth(); monthLabel.innerText = y + "年 " + (m + 1) + "月";
-    let first = new Date(y, m, 1).getDay(); let days = new Date(y, m + 1, 0).getDate();
-    let fragment = document.createDocumentFragment();
-    
-    for(let i=0; i<first; i++){ let cell = document.createElement('div'); cell.className = "calendar-day empty"; fragment.appendChild(cell); }
-    for(let i=1; i<=days; i++){
-        let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-        let isToday = new Date().toISOString().slice(0,10) === dStr; let isSelected = selectedDateStr === dStr;
-        
-        // 🚀 使用跨日演算法篩選當日應顯示的行程
-        let dayActivities = dataset.filter(a => isEventActiveOnDate(a, dStr)); 
-        let dayMediaItems = albumItems.filter(item => item.date === dStr);
-        let eventsHtml = "";
-        
-        dayActivities.forEach(act => { 
-            let priorityMark = act.isAI_Priority ? '🔥 ' : '';
-            eventsHtml += `<span class="day-event-badge" style="background:${getCategoryColor(act.category)}; color:#37352f; border-left:3px solid #666;">${priorityMark}${act.time} ${act.title}</span>`; 
-        });
-        dayMediaItems.forEach(media => { eventsHtml = `<span class="day-event-badge" style="background:#fff7e6; color:#d46b08; border-left:3px solid #f39c12; font-weight:bold;">🖼️ 附圖: ${media.title}</span>` + eventsHtml; });
-        
-        // 🚀 若該行程是多日跨日事件的延伸中段，加入背景淡色視覺指引
-        let hasMultiDayActive = dayActivities.some(a => a.date !== a.endDate);
-
-        let dayCell = document.createElement('div'); 
-        dayCell.className = "calendar-day" + (isToday?" today":"") + (isSelected?" selected-day":"") + (getHKHoliday(m+1, i)?" hk-holiday-pass-range":"") + (hasMultiDayActive ? " multiday-pass-range" : "");
-        dayCell.setAttribute('data-date', dStr); dayCell.onclick = () => selectDate(dStr);
-        dayCell.innerHTML = `<strong>${i}</strong><div class="lunar">${getLunarDayText(dStr)}</div>${getHKHoliday(m+1, i) ? `<div class="holiday">🔴 ${getHKHoliday(m+1, i)}</div>` : ""}<div class="day-events-container">${eventsHtml}</div>`;
-        fragment.appendChild(dayCell);
-    }
-    while((first + days) % 7 !== 0){ let cell = document.createElement('div'); cell.className = "calendar-day empty"; fragment.appendChild(cell); days++; }
-    calendar.innerHTML = ""; calendar.appendChild(fragment); renderDayEvents();
-}
-
-function selectDate(dateStr) { selectedDateStr = dateStr; document.getElementById('selectedDateLabel').innerText = selectedDateStr; renderCalendarWithData(activities); renderMainAlbumUI(); }
-
-function renderDayEvents() {
-    let container = document.getElementById('dayEvents'); let filtered = activities.filter(a => isEventActiveOnDate(a, selectedDateStr));
-    if (filtered.length === 0) { container.innerHTML = `<p style="color:gray; text-align:center; padding:15px 0;">今日無任何排定活動。</p>`; return; }
-    let html = "";
-    filtered.forEach(ev => { 
-        let aiChipsHtml = "";
-        if(ev.isAI_Priority) aiChipsHtml += `<span class="meta-chip" style="background:#ff4d4f; color:white;">🔥 高優先</span>`;
-        if(ev.ai_Tags) {
-            ev.ai_Tags.forEach(t => { aiChipsHtml += `<span class="meta-chip chip-ai">${t}</span>`; });
-        }
-        html += `<div class="event-item" style="border-left-color:#333;" onclick="openEventPage('${ev.id}')"><div class="event-time">⏰ 時間：${ev.time}</div><div class="event-desc">📌 項目：<strong>${ev.title}</strong></div><div class="event-meta-tags"><span class="meta-chip" style="background:${getCategoryColor(ev.category)};">${ev.category}</span><span class="meta-chip chip-member">👤 ${ev.assignee || '全員'}</span><span class="meta-chip chip-reminder">${ev.status || '待處理'}</span>${aiChipsHtml}</div></div>`; 
-    });
-    container.innerHTML = html;
-}
-
-function changeMonth(dir) { current.setMonth(current.getMonth() + dir); renderCalendarWithData(activities); }
+function changeMonth(dir) { current.setMonth(current.getMonth() + dir); renderCalendarWithData(expandRecurringEvents(activities)); }
 </script>
 </body>
 </html>
