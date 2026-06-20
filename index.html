@@ -3,42 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🏠 Family OS - 麟李家庭智慧管理系統 v8.0 SaaS級</title>
-
-<script>
-  const manifestData = {
-    "name": "麟李家庭智慧管理系統 v8.0",
-    "short_name": "FamilyOS",
-    "start_url": ".",
-    "display": "standalone",
-    "background_color": "#fbfbfa",
-    "theme_color": "#37352f",
-    "icons": [
-      {
-        "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='%2325D366'><text y='85' font-size='80'>🏠</text></svg>",
-        "sizes": "512x512",
-        "type": "image/svg+xml"
-      }
-    ]
-  };
-  const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
-  const manifestURL = URL.createObjectURL(manifestBlob);
-  const manifestLink = document.createElement('link');
-  manifestLink.rel = 'manifest';
-  manifestLink.href = manifestURL;
-  document.head.appendChild(manifestLink);
-
-  // 註冊極簡 Service Worker 滿足 PWA 安裝指標
-  if ('serviceWorker' in navigator) {
-    const swCode = `
-      self.addEventListener('install', e => self.skipWaiting());
-      self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));
-    `;
-    const swBlob = new Blob([swCode], {type: 'application/javascript'});
-    const swURL = URL.createObjectURL(swBlob);
-    navigator.serviceWorker.register(swURL).catch(err => console.log("PWA SW Register Error", err));
-  }
-</script>
+<title>🏠 Family OS - 麟李家庭智慧管理系統 v7.0 AI升級版</title>
 
 <style>
 /* ─── 🎨 Notion 高質感核心美學 ─── */
@@ -62,7 +27,7 @@ header {
 
 .container { padding:10px; max-width: 1200px; margin: 0 auto; box-sizing: border-box; }
 
-/* 🔍 全域全文搜尋框 */
+/* ─── 🔍 全域全文搜尋框 ─── */
 .search-filter-card {
     background: white;
     padding: 12px;
@@ -80,7 +45,7 @@ header {
     box-sizing: border-box;
 }
 
-/* 🛠️ 頂部操作按鈕 5 鍵平排 */
+/* ─── 🛠️ 頂部操作按鈕 5 鍵平排外觀 ─── */
 .top-action-card {
     background: white;
     padding: 10px;
@@ -121,7 +86,7 @@ header {
     }
 }
 
-/* 🗂️ Notion 視圖切換列 */
+/* ─── 🗂️ Notion 視圖切換列 ─── */
 .notion-view-selector {
     display: flex;
     gap: 4px;
@@ -152,58 +117,17 @@ header {
     border: 1px solid #edece9;
 }
 
-/* 🧠 v8 特製：AI 決策與大數據分析面板樣式 */
-.ai-v8-intelligence-panel {
-    background: linear-gradient(135deg, #f6f5ff, #f3e5f5);
-    border: 1px solid #d1c4e9;
-    border-left: 6px solid #7e57c2;
-    padding: 16px;
-    border-radius: 12px;
+/* AI 智慧摘要特製樣式 */
+.ai-summary-box {
+    background: linear-gradient(135deg, #fdf6fb, #f3e5f5);
+    border-left: 5px solid #722ed1;
+    padding: 15px;
+    border-radius: 8px;
     margin-bottom: 16px;
-}
-.ai-v8-alert-block {
-    background: #fff3e0;
-    border-left: 4px solid #ffb74d;
-    padding: 8px 12px;
-    margin-top: 8px;
-    border-radius: 4px;
-    font-size: 14px;
-    color: #e65100;
-}
-.ai-v8-conflict-block {
-    background: #ffebee;
-    border-left: 4px solid #ef5350;
-    padding: 8px 12px;
-    margin-top: 8px;
-    border-radius: 4px;
-    font-size: 14px;
-    color: #c62828;
+    font-size: 15px;
 }
 
-/* 🎮 Gamification 績效進度條 */
-.gamification-member-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-    font-size: 14px;
-}
-.progress-track {
-    background: #eef2f3;
-    border-radius: 8px;
-    height: 12px;
-    flex: 1;
-    margin: 0 12px;
-    overflow: hidden;
-}
-.progress-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #42a5f5, #25D366);
-    border-radius: 8px;
-    transition: width 0.5s ease;
-}
-
-/* 📐 雙欄佈局結構 */
+/* ─── 📐 雙欄佈局結構 ─── */
 .notion-grid-layout {
     display: grid;
     grid-template-columns: 7fr 5fr;
@@ -267,7 +191,7 @@ header {
     display: block;
 }
 
-/* 🚀 Block 系統與拖拉排序樣式 */
+/* 🚀 Block 系統與拖拉排序樣式 ─── */
 .block-wrapper { display: flex; align-items: center; gap: 8px; margin: 8px 0; padding: 6px; border-radius: 6px; background: #ffffff; border: 1px solid #edece9; cursor: move; }
 .block-wrapper.dragging { opacity: 0.4; background: #efeee8; }
 .block-handle { color: #ccc; font-size: 18px; cursor: move; padding: 0 4px; }
@@ -275,7 +199,7 @@ header {
 .block-input-text { width: 100%; padding: 6px; border: 1px solid #edece9; border-radius: 4px; font-size: 14px; box-sizing: border-box; background: transparent; }
 .block-input-heading { width: 100%; padding: 6px; border: 1px solid #edece9; border-radius: 4px; font-size: 18px; font-weight: bold; box-sizing: border-box; background: transparent; }
 
-/* 📱 Kanban 看板樣式 */
+/* 📱 Kanban 樣式優化 ─── */
 .kanban-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 @media (max-width: 750px) { .kanban-board { grid-template-columns: 1fr; } }
 .kanban-column { background: #f7f6f3; padding: 12px; border-radius: 10px; border: 1px solid #edece9; min-height: 400px; transition: background 0.2s ease, border 0.2s ease; }
@@ -373,22 +297,15 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
 <body class="view-列表" id="bodyNode">
 
 <header>
-    <div>🏠 Family OS - 麟李家庭智慧管理系統 v8.0</div>
+    <div>🏠 Family OS - 麟李家庭智慧管理系統 v7.0</div>
     <div id="roleBadge" style="font-size:14px; background:#f5f5f5; padding:4px 10px; border-radius:12px; font-weight:bold; color:#666;">🔒 訪客模式 (Viewer)</div>
 </header>
 
 <div class="container">
 
-    <div class="ai-v8-intelligence-panel" id="aiV8Panel">
-        <div style="font-weight: bold; font-size: 17px; color: #512da8; display: flex; align-items: center; gap: 6px;">
-            <span>🧠 v8 Smart AI 家庭決策推論核心</span>
-        </div>
-        
-        <div id="aiV8MetricsLabel" style="font-size: 14px; margin-top: 8px; color: #37352f; line-height: 1.5;">
-            正在計算大數據矩陣時間佔比分析...
-        </div>
-
-        <div id="aiV8ConflictContainer"></div>
+    <div class="ai-summary-box" id="aiSummaryPanel">
+        <strong style="color: #722ed1;">🔮 麟李 AI 智慧家庭日誌摘要：</strong>
+        <span id="aiSummaryText" style="color: #555;">正在分析今日行程節奏與分工佇列...</span>
     </div>
 
     <div class="search-filter-card">
@@ -465,13 +382,6 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
         </div>
 
         <div class="layout-side-column">
-            <div class="card" style="border-top: 4px solid #722ed1;">
-                <h3 style="margin-top: 0; color: #722ed1;">🏆 麟李家族英雄榜 (任務完工率)</h3>
-                <div id="gamificationBoard">
-                    <p style="color: gray; font-size: 14px;">正在精算個人周體系績效...</p>
-                </div>
-            </div>
-
             <div class="card" style="border-top: 4px solid #25D366;">
                 <h3 style="margin-top:0; color:#333;">📋 <span id="selectedDateLabel"></span> 活動日程</h3>
                 <div id="dayEvents"></div>
@@ -691,9 +601,6 @@ let currentGlobalMode = localStorage.getItem('family_日誌_view_mode') || "列�
 let currentViewMode = "dashboard"; 
 let userRole = "viewer";
 
-// 🚀 v8 新增：追蹤已被推播通知的 Key，防止重複彈窗
-let pushedNotificationsLog = JSON.parse(localStorage.getItem('family_pushed_notifs') || "[]");
-
 function normalize(text) {
     if (!text) return "";
     return String(text).toLowerCase().replace(/\s+/g, "");
@@ -703,14 +610,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('searchBox').addEventListener('input', filterDatabaseEvents);
     initKanbanUXListeners();
     initFirebaseRealtimeSubscription();
-
-    // 🚀 v8 新增：向瀏覽器請求通知權限
-    if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission();
-    }
-
-    // 🚀 v8 新增：啟動自動提醒心跳計時器（每 10 秒掃描一次）
-    setInterval(runV8AutomaticPushEngine, 10000);
 });
 
 document.addEventListener("keydown", e => {
@@ -742,7 +641,7 @@ function initFirebaseRealtimeSubscription() {
                         activities.push({
                             id: key, 
                             date: data[key].date || "", 
-                            endDate: data[key].endDate || data[key].date || "", 
+                            endDate: data[key].endDate || data[key].date || "", // 🚀 跨日鏈條基礎
                             time: data[key].time || "全日", 
                             title: data[key].title || "行程",
                             note: data[key].note || "", 
@@ -753,7 +652,7 @@ function initFirebaseRealtimeSubscription() {
                             status: data[key].status || "待處理",
                             blocks: data[key].blocks || null, 
                             relations: data[key].relations || null,
-                            isAI_Priority: data[key].isAI_Priority || false,
+                            isAI_Priority: data[key].isAI_Priority || false, // 🚀 擴充屬性
                             ai_Tags: data[key].ai_Tags || []
                         });
                     }
@@ -779,8 +678,7 @@ function initFirebaseRealtimeSubscription() {
 function triggerPipelineRefresh() {
     renderCalendarWithData(activities);
     renderDashboardBlocks();
-    runV8BigDataAnalysisEngine(); // 🚀 整合核心演算法 1, 3, 4, 5
-    renderV8GamificationBoard();  // 🚀 核心演算法 2
+    generateAI_Summary(); // 🚀 重新計算摘要
     if (currentViewMode === 'kanban') renderKanbanBoard();
 }
 
@@ -898,7 +796,7 @@ function changeGlobalViewMode(mode) {
     renderCalendarWithData(activities);
 }
 
-/* ─── 🚀 Block 區塊拖拉 Reorder 引擎 ─── */
+/* ─── 🚀 Block 區塊拖拉Reorder 引擎 ─── */
 let draggedBlockNode = null;
 function initBlockDragAndDropListeners() {
     let container = document.getElementById('blockEditorContainer');
@@ -945,6 +843,7 @@ function openEventPage(id){
     document.getElementById('eventPageCurrentId').value = id;
     document.getElementById('eventPageTitle').innerText = ev.title;
     
+    // 渲染擴充 AI 標籤外觀
     let aiTagsHtml = "";
     if (ev.isAI_Priority) aiTagsHtml += `<span class="meta-chip" style="background:#ff4d4f; color:white; margin-right:4px;">🔥 高優先</span>`;
     if (ev.ai_Tags && ev.ai_Tags.length > 0) {
@@ -1061,7 +960,7 @@ function launchLightboxView(srcUrl, mediaType) {
 
 function closeLightboxWindow() { document.getElementById('globalLightboxOverlay').style.display = 'none'; document.body.style.overflow = 'auto'; }
 
-let targetFormFileObject = null; let targetNativeFileObject = null;
+let targetNativeFileObject = null; let targetFormFileObject = null;
 function handleNativeFileLoad(input, type) {
     let file = input.files[0]; if (!file) return; targetNativeFileObject = file;
     if (type === 'image') { document.getElementById('imageUploadPreview').src = URL.createObjectURL(file); document.getElementById('imageUploadPreview').style.display = 'block'; }
@@ -1100,22 +999,27 @@ function renderMainAlbumUI() {
 
 function resetFormPhotoUpload() { targetFormFileObject = null; document.getElementById('formMediaURL').value = ""; document.getElementById('formImagePreview').style.display = 'none'; }
 
+/* ─── 🚀 核心升級功能一：多維度 AI 屬性分類器 ─── */
 function autoAssignAIProps(title) {
     let match = { category: "家庭", status: "待處理", isAI_Priority: false, ai_Tags: [] }; 
     let normTitle = normalize(title);
     
+    // Priority 辨識
     if (normTitle.includes("考試") || normTitle.includes("特急") || normTitle.includes("急件") || normTitle.includes("重要")) { 
         match.category = "重要"; 
         match.isAI_Priority = true;
         match.ai_Tags.push("🔥 高優先");
     } 
+    // 健康標籤辨識
     if (normTitle.includes("醫院") || normTitle.includes("睇醫生") || normTitle.includes("西醫") || normTitle.includes("中醫") || normTitle.includes("食藥") || normTitle.includes("診所")) {
         match.category = "重要";
         match.ai_Tags.push("💊 健康醫療");
     }
+    // 運動訓練辨識
     if (normTitle.includes("排球") || normTitle.includes("打波") || normTitle.includes("運動") || normTitle.includes("健身") || normTitle.includes("大排")) {
         match.ai_Tags.push("🎯 體育運動");
     }
+    // 常規學校或興趣班
     if (normTitle.includes("二胡") || normTitle.includes("學") || normTitle.includes("課") || normTitle.includes("小學") || normTitle.includes("中學")) { 
         if (match.category !== "重要") match.category = "學校"; 
         match.status = "進行中"; 
@@ -1126,181 +1030,147 @@ function autoAssignAIProps(title) {
     return match;
 }
 
+/* ─── 🚀 核心升級功能四：Dashboard AI 智慧摘要生成引擎 ─── */
+function generateAI_Summary() {
+    let todayStr = new Date().toISOString().slice(0, 10);
+    let todayActs = activities.filter(a => isEventActiveOnDate(a, todayStr));
+    let pendingHighCount = activities.filter(a => a.isAI_Priority && (a.status || '待處理') !== '已完成').length;
+    let healthCount = activities.filter(a => a.ai_Tags && a.ai_Tags.includes("💊 健康醫療") && (a.status || '待處理') !== '已完成').length;
+
+    let summaryText = "";
+    if (todayActs.length === 0) {
+        summaryText = "今日暫時沒有排定常規行程。";
+    } else {
+        summaryText = `今日目前共有 <strong>${todayActs.length}</strong> 項活躍行程排定中。`;
+    }
+
+    if (pendingHighCount > 0) {
+        summaryText += ` 偵測到當前系統有 <strong>${pendingHighCount}</strong> 項 <span style="color:#ff4d4f; font-weight:bold;">🔥高優先級任務</span> 尚未完成。`;
+    }
+    if (healthCount > 0) {
+        summaryText += ` 包含 <strong>${healthCount}</strong> 項家庭健康關注項目。`;
+    }
+
+    // 依據繁忙程度給予節奏指引
+    if (todayActs.length >= 4) {
+        summaryText += ` 💡 <em>系統評估：今日節奏非常緊湊，建議優先分配任務分工並留意 WhatsApp 即時提醒。</em>`;
+    } else if (todayActs.length > 0) {
+        summaryText += ` 💡 <em>系統評估：今日節奏適中，請按既定分工正常推進。</em>`;
+    } else {
+        summaryText += ` 💡 <em>系統評估：今日輕鬆，適合整理麟李互助相簿共享生活快照。</em>`;
+    }
+
+    document.getElementById('aiSummaryText').innerHTML = summaryText;
+}
+
+/* ─── 🚀 核心升級功能三：Google Calendar 級跨日匹配核心演算法 ─── */
 function isEventActiveOnDate(event, dateStr) {
     if (!event.date) return false;
     let start = event.date;
-    let end = event.endDate || event.date;
+    let end = event.endDate || event.date; // 若無迄止日，則視同單日事件
     return dateStr >= start && dateStr <= end;
 }
 
-/* ─── 🧠 🔥 v8 新增大腦功能一：AI 排程引擎 (衝突判定偵測演算法) ─── */
-function detectAndRenderV8Conflicts() {
-    let conflictBox = document.getElementById('aiV8ConflictContainer');
-    conflictBox.innerHTML = "";
+function addFamilyEvent() {
+    let title = document.getElementById('eventTitle').value.trim();
+    let startVal = document.getElementById('eventTime').value.trim();
+    let endVal = document.getElementById('eventEndTime').value.trim();
+    let editKey = document.getElementById('editKey').value;
+    let assignee = document.getElementById('eventAssignee').value.trim();
+    let selectedRelations = [...document.getElementById('eventRelations').selectedOptions].map(opt => opt.value);
 
-    // 依據日期與負責人進行分群比對
-    let map = {};
-    activities.forEach(a => {
-        if (!a.assignee) return;
-        let key = `${a.date}_${a.assignee}`;
-        if (!map[key]) map[key] = [];
-        map[key].push(a);
-    });
+    if (!title || !startVal) { alert("請填寫活動名稱與開始時間！"); return; }
+    let detectedDate = startVal.split(' ')[0] || selectedDateStr;
+    let detectedEndDate = endVal ? (endVal.split(' ')[0] || detectedDate) : detectedDate; // 🚀 自動裝載跨日截止指標
 
-    let foundConflict = false;
-    for (let key in map) {
-        let list = map[key];
-        if (list.length < 2) continue;
+    let timeLabel = startVal.split(' ')[1] || "08:30";
+    if (endVal) timeLabel = `${timeLabel} ~ ${endVal.split(' ')[1] || endVal}`;
 
-        // 簡單的比對同日多個行程（v8 產品級交叉比對）
-        for (let i = 0; i < list.length; i++) {
-            for (let j = i + 1; j < list.length; j++) {
-                let actA = list[i];
-                let actB = list[j];
+    let aiProps = autoAssignAIProps(title);
+    let payload = { 
+        title: title, 
+        date: detectedDate, 
+        endDate: detectedEndDate, // 🚀 寫入多日模型
+        time: timeLabel, 
+        note: "", 
+        repeat: document.getElementById('eventRepeat').value, 
+        reminder: document.getElementById('eventReminder').value, 
+        assignee: assignee, 
+        category: aiProps.category, 
+        status: aiProps.status, 
+        relations: selectedRelations,
+        isAI_Priority: aiProps.isAI_Priority,
+        ai_Tags: aiProps.ai_Tags,
+        blocks: [{ type: "heading", content: `📝 ${title} 專屬頁面` }] 
+    };
 
-                // 提取時間文字 (例如 "08:30" 或是 "08:30 ~ 10:00")
-                let timeA = actA.time.split(' ~ ')[0] || "";
-                let timeB = actB.time.split(' ~ ')[0] || "";
-
-                // 如果時間完全相同，觸發 AI 排程推論衝突避讓
-                if (timeA === timeB && timeA !== "全日") {
-                    foundConflict = true;
-                    let div = document.createElement('div');
-                    div.className = "ai-v8-conflict-block";
-                    div.innerHTML = `⚠️ <strong>排程衝突：</strong>發現【${actA.assignee}】在 <code>${actA.date} ${timeA}</code> 同時排定了「${actA.title}」與「${actB.title}」。<br>💡 <strong>AI 智慧建議：</strong>偵測到本週三及週五尚有大量空白黃金時段，建議將其中一項調整至星期三。`;
-                    conflictBox.appendChild(div);
-                }
-            }
-        }
-    }
-}
-
-/* ─── 🧠 🔥 v8 新增大腦功能四與五：時間分析矩陣與智能生活平衡推薦 ─── */
-function runV8BigDataAnalysisEngine() {
-    detectAndRenderV8Conflicts();
-
-    if (activities.length === 0) {
-        document.getElementById('aiV8MetricsLabel').innerHTML = "💡 <em>系統分析中：當前資料庫暫無活動，快點擊「＋活動」按鈕建立排程吧！</em>";
-        return;
-    }
-
-    let catCounts = { "家庭": 0, "學校": 0, "工作": 0, "重要": 0 };
-    let volleyballCount = 0;
-    let total = activities.length;
-
-    activities.forEach(a => {
-        if (catCounts[a.category] !== undefined) catCounts[a.category]++;
-        let normT = normalize(a.title);
-        if (normT.includes("排球") || normT.includes("打波")) volleyballCount++;
-    });
-
-    // 計算百分比
-    let schoolPct = Math.round((catCounts["學校"] / total) * 100);
-    let workPct = Math.round((catCounts["工作"] / total) * 100);
-    let familyPct = Math.round((catCounts["家庭"] / total) * 100);
-
-    let metricsHtml = `📊 <strong>本月家族時間矩陣佔比：</strong> 🏫 學校培育 ${schoolPct}% | 💼 工作架構 ${workPct}% | 👨‍👩‍👧 家庭生活 ${familyPct}%<br>`;
-
-    // 核心功能四：壓力指數分析
-    if (schoolPct + workPct > 60) {
-        metricsHtml += `⚡ <strong>家族綜合壓力指數：</strong> <span style="color:#ef5350; font-weight:bold;">📈 偏高 (學習與工作負荷過重)</span><br>`;
+    if (!window.fbDb) return;
+    if (editKey) {
+        window.fbSet(window.fbRef(window.fbDb, `family_calendar_activities/${editKey}`), payload).then(() => pipelineRelationsAndFiles(editKey));
     } else {
-        metricsHtml += `⚡ <strong>家族綜合壓力指數：</strong> <span style="color:#25D366; font-weight:bold;">🌿 良好 (生活平衡發展中)</span><br>`;
+        const newRef = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
+        window.fbSet(newRef, payload).then(() => pipelineRelationsAndFiles(newRef.key));
     }
 
-    // 核心功能五：智慧生活形態推薦
-    let recommendationText = "";
-    if (volleyballCount >= 3) {
-        recommendationText += `🔹 <em>偵測到本週已連續排定多場高強度排球訓練，AI 建議明後天適度休息，避免肌肉疲勞。</em><br>`;
-    }
-    if (catCounts["家庭"] === 0) {
-        recommendationText += `🔹 <em>警告：本週尚未排定任何家庭互助集體活動，為了麟李情感連結，AI 建議週末安排一場聚餐。</em><br>`;
-    }
-    if (recommendationText === "") {
-        recommendationText = `🔹 <em>麟李健康核心反饋：目前的家庭、學校與運動訓練時間分布非常完美，請繼續保持！</em>`;
-    }
-
-    metricsHtml += `💡 <strong>產品級 SaaS 主動健康推薦：</strong><br>${recommendationText}`;
-    document.getElementById('aiV8MetricsLabel').innerHTML = metricsHtml;
-}
-
-/* ─── 🧠 🔥 v8 新增大腦功能三：Gamification 任務績效遊戲化系統 ─── */
-function renderV8GamificationBoard() {
-    let memberStats = {};
-
-    // 遍歷所有活動，計算每個成員的完工率
-    activities.forEach(a => {
-        let name = a.assignee || "全員";
-        if (!memberStats[name]) {
-            memberStats[name] = { total: 0, done: 0 };
-        }
-        memberStats[name].total++;
-        if (a.status === "已完成") {
-            memberStats[name].done++;
-        }
-    });
-
-    let boardBox = document.getElementById('gamificationBoard');
-    boardBox.innerHTML = "";
-
-    let hasData = false;
-    for (let member in memberStats) {
-        hasData = true;
-        let stats = memberStats[member];
-        let rate = Math.round((stats.done / stats.total) * 100) || 0;
-
-        let row = document.createElement('div');
-        row.className = "gamification-member-row";
-        row.innerHTML = `
-            <div style="font-weight:bold; width:70px;">👤 ${member}</div>
-            <div class="progress-track">
-                <div class="progress-bar-fill" style="width: ${rate}%;"></div>
-            </div>
-            <div style="font-weight:bold; color:#722ed1; text-align:right; width:65px;">${rate}% (${stats.done}/${stats.total})</div>
-        `;
-        boardBox.appendChild(row);
-    }
-
-    if (!hasData) {
-        boardBox.innerHTML = `<p style="color:gray; font-size:13px; text-align:center;">暫無成員績效數據，解鎖管理員指派任務即可啟動英雄榜！</p>`;
-    }
-}
-
-/* ─── 🧠 🔥 v8 新增大腦功能二：自動定時背景通知引擎 (Web Notification API) ─── */
-function runV8AutomaticPushEngine() {
-    if (!('Notification' in window) || Notification.permission !== 'granted') return;
-
-    let now = new Date();
-    activities.forEach(a => {
-        if (!a.date || a.reminder === "無" || a.status === "已完成") return;
-
-        // 解析行程的精確開始時間
-        let timePart = a.time.split(' ~ ')[0] || "00:00";
-        let targetDateTime = new Date(`${a.date}T${timePart}`);
-        if (isNaN(targetDateTime.getTime())) return;
-
-        // 計算距離現在還有多少分鐘
-        let diffMs = targetDateTime - now;
-        let diffMins = Math.floor(diffMs / 1000 / 60);
-
-        // 比對 Reminder 屬性定義
-        let triggerMinutes = -1;
-        if (a.reminder === "10分鐘前") triggerMinutes = 10;
-        else if (a.reminder === "1小時前") triggerMinutes = 60;
-        else if (a.reminder === "1日前") triggerMinutes = 1440;
-
-        // 如果在時間窗口內 (當前分鐘精確吻合)，且尚未推播過
-        if (diffMins === triggerMinutes && !pushedNotificationsLog.includes(a.id)) {
-            pushedNotificationsLog.push(a.id);
-            localStorage.setItem('family_pushed_notifs', JSON.stringify(pushedNotificationsLog));
-
-            // 發射 SaaS 級別原生系統通知
-            new Notification(`🏠 Family OS 智慧家庭提醒`, {
-                body: `成員 [${a.assignee || '全員'}] 的行程「${a.title}」即將在 ${diffMins} 分鐘後 (${a.time}) 開始，請提早準備！❤️`,
-                icon: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="%2325D366"><text y="75" font-size="60">⏰</text></svg>'
+    async function pipelineRelationsAndFiles(currentEventId) {
+        let asyncQueue = [];
+        if (currentEventId && selectedRelations.length > 0) {
+            selectedRelations.forEach(relId => {
+                let p = new Promise((resolve) => {
+                    fetch(`https://familycalender-a62ae-default-rtdb.firebaseio.com/family_calendar_activities/${relId}.json`).then(r => r.json()).then(targetData => {
+                        if (targetData) {
+                            let relArray = targetData.relations || [];
+                            if (!relArray.includes(currentEventId)) { relArray.push(currentEventId); window.fbUpdate(window.fbRef(window.fbDb, `family_calendar_activities/${relId}`), { relations: relArray }).then(resolve); } else resolve();
+                        } else resolve();
+                    }).catch(resolve);
+                });
+                asyncQueue.push(p);
             });
         }
+
+        let formMediaURL = document.getElementById('formMediaURL').value.trim();
+        if (targetFormFileObject && window.fbStorage) {
+            await new Promise(async (resolve) => {
+                try {
+                    const snapshot = await window.fbUploadBytes(window.fbSRef(window.fbStorage, `activities/${Date.now()}_${targetFormFileObject.name}`), targetFormFileObject);
+                    formMediaURL = await window.fbGetDownloadURL(snapshot.ref);
+                } catch(e) { console.error(e); }
+                resolve();
+            });
+        }
+        
+        if (formMediaURL && currentEventId) {
+            asyncQueue.push(window.fbSet(window.fbPush(window.fbRef(window.fbDb, "family_mutual_album")), { title: `隨附活動: ${title}`, url: formMediaURL, type: document.getElementById('formMediaType').value, date: detectedDate, eventId: currentEventId }));
+        }
+        Promise.all(asyncQueue).then(() => {
+            document.getElementById('eventTitle').value = ""; resetFormPhotoUpload(); closeEventPopup(); alert("🎉 行程同步成功！");
+        });
+    }
+}
+
+async function uploadMediaToAlbum() {
+    let title = document.getElementById('mediaTitle').value.trim();
+    let manualURL = document.getElementById('mediaURL').value.trim();
+    if (!title) { alert("請輸入描述！"); return; }
+    let finalURL = manualURL;
+
+    if (targetNativeFileObject && window.fbStorage) {
+        alert("正在將實體圖檔推往 Firebase Storage... 請稍候 ⚡");
+        try {
+            const snapshot = await window.fbUploadBytes(window.fbSRef(window.fbStorage, `album/${Date.now()}_${targetNativeFileObject.name}`), targetNativeFileObject);
+            finalURL = await window.fbGetDownloadURL(snapshot.ref);
+        } catch(e) { alert("上傳失敗: " + e.message); return; }
+    }
+    if (!finalURL) { alert("請拍照或輸入連結！"); return; }
+
+    let matchedTodayEvent = activities.find(a => isEventActiveOnDate(a, selectedDateStr));
+    window.fbSet(window.fbPush(window.fbRef(window.fbDb, "family_mutual_album")), { title: title, url: finalURL, type: document.getElementById('mediaType').value, date: selectedDateStr, eventId: matchedTodayEvent ? matchedTodayEvent.id : "無特定活動關聯" }).then(() => {
+        resetPhotoUploadForm(); alert("🎉 相片上傳成功！");
     });
+}
+
+function deleteMediaFromAlbum(id) {
+    if (confirm("確定要刪除這張家庭相片嗎？")) window.fbRemove(window.fbRef(window.fbDb, `family_mutual_album/${id}`));
 }
 
 function initKanbanUXListeners() {
@@ -1346,6 +1216,7 @@ function filterDatabaseEvents() {
 
 function renderDashboardBlocks() {
     let todayStr = new Date().toISOString().slice(0, 10);
+    // 修改重要任務：包含顯式重要分類或 AI 推論高優先項目
     let urgentActs = activities.filter(a => (a.category === "重要" || a.isAI_Priority) && (a.status || "待處理") !== "已完成");
     let urgentHtml = "";
     urgentActs.forEach(a => { urgentHtml += `<div style="padding:10px; margin-bottom:6px; background:#fff1f0; border-radius:6px; font-size:14px; border-left: 5px solid #ff4d4f; cursor:pointer;" onclick="openEventPage('${a.id}')"><span style="background:#ff4d4f; color:white; font-size:11px; padding:1px 4px; border-radius:3px; font-weight:bold; margin-right:6px;">⚠️ 特急</span><b>[${a.date}] ${a.time}</b> | ${a.title}</div>`; });
@@ -1426,6 +1297,7 @@ function renderCalendarWithData(dataset) {
         let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
         let isToday = new Date().toISOString().slice(0,10) === dStr; let isSelected = selectedDateStr === dStr;
         
+        // 🚀 使用跨日演算法篩選當日應顯示的行程
         let dayActivities = dataset.filter(a => isEventActiveOnDate(a, dStr)); 
         let dayMediaItems = albumItems.filter(item => item.date === dStr);
         let eventsHtml = "";
@@ -1436,6 +1308,7 @@ function renderCalendarWithData(dataset) {
         });
         dayMediaItems.forEach(media => { eventsHtml = `<span class="day-event-badge" style="background:#fff7e6; color:#d46b08; border-left:3px solid #f39c12; font-weight:bold;">🖼️ 附圖: ${media.title}</span>` + eventsHtml; });
         
+        // 🚀 若該行程是多日跨日事件的延伸中段，加入背景淡色視覺指引
         let hasMultiDayActive = dayActivities.some(a => a.date !== a.endDate);
 
         let dayCell = document.createElement('div'); 
