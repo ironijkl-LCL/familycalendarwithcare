@@ -1,9 +1,10 @@
-<!DOCTYPE html>
+# 由於使用者要求「每次有任何修改修復後, 給我輸出一個新文件檔為html記事本格式檔案給我下載」，此處使用 Python 寫入本地檔案供使用者下載。
+html_code = """<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🏠 Family OS - 麟李家庭智慧管理系統 v7.0 AI升級版</title>
+<title>🏠 Family OS - 麟李家庭智慧管理系統 v8.0 AI究極進化版</title>
 
 <style>
 /* ─── 🎨 Notion 高質感核心美學 ─── */
@@ -168,7 +169,7 @@ header {
 .calendar-day:hover { background: #f7f6f3; }
 .calendar-day.highlight-sync { background: #fff1f0 !important; border: 2px solid #ff4d4f !important; transform: scale(1.02); }
 
-.today { border:3px solid orange; }
+today { border:3px solid orange; }
 .selected-day { background: #d0f5db !important; border: 2px solid #25D366; }
 .multiday-pass-range { background: rgba(37, 211, 102, 0.08) !important; }
 .hk-holiday-pass-range { background: rgba(255, 77, 79, 0.06) !important; }
@@ -192,12 +193,38 @@ header {
 }
 
 /* 🚀 Block 系統與拖拉排序樣式 ─── */
-.block-wrapper { display: flex; align-items: center; gap: 8px; margin: 8px 0; padding: 6px; border-radius: 6px; background: #ffffff; border: 1px solid #edece9; cursor: move; }
+.block-wrapper { display: flex; align-items: center; gap: 8px; margin: 8px 0; padding: 6px; border-radius: 6px; background: #ffffff; border: 1px solid #edece9; cursor: move; position: relative; }
 .block-wrapper.dragging { opacity: 0.4; background: #efeee8; }
 .block-handle { color: #ccc; font-size: 18px; cursor: move; padding: 0 4px; }
 .block-content-area { flex: 1; display: flex; flex-direction: column; gap: 4px; }
 .block-input-text { width: 100%; padding: 6px; border: 1px solid #edece9; border-radius: 4px; font-size: 14px; box-sizing: border-box; background: transparent; }
 .block-input-heading { width: 100%; padding: 6px; border: 1px solid #edece9; border-radius: 4px; font-size: 18px; font-weight: bold; box-sizing: border-box; background: transparent; }
+
+/* 🚀 Slash Command 彈出清單樣式 */
+.slash-menu {
+    position: absolute;
+    background: white;
+    border: 1px solid #edece9;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 1010;
+    width: 180px;
+    display: none;
+    flex-direction: column;
+    padding: 4px 0;
+}
+.slash-item {
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #37352f;
+}
+.slash-item:hover, .slash-item.active {
+    background: #f1f0ee;
+}
 
 /* 📱 Kanban 樣式優化 ─── */
 .kanban-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -235,7 +262,7 @@ button.pretty-edit-btn { background: linear-gradient(135deg, #1890ff, #40a9ff); 
 button.action-btn-block { width:100%; padding:12px; margin-top:8px; background:#25D366; color:white; border:none; border-radius:10px; font-size:16px; font-weight:bold; cursor:pointer; }
 input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
 
-.event-item { background: #f9f9f9; padding: 12px; border-left: 4px solid #25D366; margin-bottom: 8px; border-radius: 0 8px 8px 0; transition: transform 0.2s ease; }
+.event-item { background: #f9f9f9; padding: 12px; border-left: 4px solid #25D366; margin-bottom: 8px; border-radius: 0 8px 8px 0; transition: transform 0.2s ease; cursor: pointer; }
 .event-item:hover { transform: scale(1.01); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 .event-time { font-weight: bold; color: #333; }
 .event-desc { margin-top: 4px; color: #555; }
@@ -297,7 +324,7 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
 <body class="view-列表" id="bodyNode">
 
 <header>
-    <div>🏠 Family OS - 麟李家庭智慧管理系統 v7.0</div>
+    <div>🏠 Family OS - 麟李家庭智慧管理系統 v8.0</div>
     <div id="roleBadge" style="font-size:14px; background:#f5f5f5; padding:4px 10px; border-radius:12px; font-weight:bold; color:#666;">🔒 訪客模式 (Viewer)</div>
 </header>
 
@@ -332,7 +359,7 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
             
             <div id="panel-dashboard" class="view-panel active">
                 <div class="card" style="background: linear-gradient(135deg, #fff1f0, #fff); border-top: 4px solid #ff4d4f;">
-                    <h3 style="margin-top:0; color:#ff4d4f;">🔴 今日最重要任務（特急未完成項目）</h3>
+                    <h3 style="margin-top:0; color:#ff4d4f;">🔴 今日最重要任務（基於 AI 權重深度計算）</h3>
                     <div id="dashUrgentTasks"></div>
                 </div>
                 <div class="card" style="background: linear-gradient(135deg, #fffcf6, #fff); border-top: 4px solid #25D366;">
@@ -399,6 +426,14 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
 
     <button class="floating-add-btn" onclick="openAddFormPopup('ADD')">＋</button>
 
+    <div id="slashMenu" class="slash-menu">
+        <div class="slash-item" data-type="heading">🎯 標題塊 (/heading)</div>
+        <div class="slash-item" data-type="text">📝 文字塊 (/text)</div>
+        <div class="slash-item" data-type="todo">✅ 待辦塊 (/todo)</div>
+        <div class="slash-item" data-type="divider">― 分隔線 (/divider)</div>
+        <div class="slash-item" data-type="image">🖼️ 圖片塊 (/image)</div>
+    </div>
+
     <div class="popup-overlay" id="addEventPopupOverlay" onclick="closePopupOverlayOutside(event)">
         <div class="popup-content-card">
             <span class="popup-close-x" onclick="closeEventPopup()">&times;</span>
@@ -454,7 +489,7 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
                 <div style="background: #eef9ff; border: 1px solid #bae7ff; padding: 12px; border-radius: 8px; margin: 12px 0;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                         <div>
-                            <label for="eventRepeat" style="font-size:14px; color:#444; font-weight:bold;">🔁 重複週期：</label>
+                            <label for="eventRepeat" style="font-size:14px; color:#444; font-weight:bold;">🔁 重庫週期：</label>
                             <select id="eventRepeat" style="padding:8px; margin:4px 0;">
                                 <option value="不重複">不重複</option>
                                 <option value="每日">每日</option>
@@ -567,6 +602,7 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
             <div id="eventPageRelatedMedia" class="album-grid" style="background:#fafafa; padding:8px; border-radius:8px; min-height:50px;"></div>
 
             <h4 style="margin:15px 0 5px 0;">🧱 Block 富文本陣列（⚡ Inline Save 雲端同步）</h4>
+            <div style="font-size: 13px; color: #8c8c8c; margin-bottom: 6px;">💡 提示：按 <b>Enter</b> 建立新區塊，輸入 <b>/</b> 喚出快捷指令選單</div>
             <div id="blockEditorContainer" style="background:#ffffff; border:1px solid #edece9; padding:12px; border-radius:8px; min-height:15px;"></div>
             
             <div style="display:flex; gap:4px; margin-top:10px; flex-wrap: wrap;">
@@ -601,6 +637,10 @@ let currentGlobalMode = localStorage.getItem('family_日誌_view_mode') || "列�
 let currentViewMode = "dashboard"; 
 let userRole = "viewer";
 
+// Slash Menu 全域追蹤變數
+let currentActiveSlashInput = null;
+let currentSlashSelectedIndex = 0;
+
 function normalize(text) {
     if (!text) return "";
     return String(text).toLowerCase().replace(/\s+/g, "");
@@ -610,6 +650,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('searchBox').addEventListener('input', filterDatabaseEvents);
     initKanbanUXListeners();
     initFirebaseRealtimeSubscription();
+    initSlashMenuClickListeners();
 });
 
 document.addEventListener("keydown", e => {
@@ -641,7 +682,7 @@ function initFirebaseRealtimeSubscription() {
                         activities.push({
                             id: key, 
                             date: data[key].date || "", 
-                            endDate: data[key].endDate || data[key].date || "", // 🚀 跨日鏈條基礎
+                            endDate: data[key].endDate || data[key].date || "", 
                             time: data[key].time || "全日", 
                             title: data[key].title || "行程",
                             note: data[key].note || "", 
@@ -652,7 +693,7 @@ function initFirebaseRealtimeSubscription() {
                             status: data[key].status || "待處理",
                             blocks: data[key].blocks || null, 
                             relations: data[key].relations || null,
-                            isAI_Priority: data[key].isAI_Priority || false, // 🚀 擴充屬性
+                            isAI_Priority: data[key].isAI_Priority || false, 
                             ai_Tags: data[key].ai_Tags || []
                         });
                     }
@@ -678,7 +719,7 @@ function initFirebaseRealtimeSubscription() {
 function triggerPipelineRefresh() {
     renderCalendarWithData(activities);
     renderDashboardBlocks();
-    generateAI_Summary(); // 🚀 重新計算摘要
+    generateAI_Summary(); 
     if (currentViewMode === 'kanban') renderKanbanBoard();
 }
 
@@ -843,7 +884,6 @@ function openEventPage(id){
     document.getElementById('eventPageCurrentId').value = id;
     document.getElementById('eventPageTitle').innerText = ev.title;
     
-    // 渲染擴充 AI 標籤外觀
     let aiTagsHtml = "";
     if (ev.isAI_Priority) aiTagsHtml += `<span class="meta-chip" style="background:#ff4d4f; color:white; margin-right:4px;">🔥 高優先</span>`;
     if (ev.ai_Tags && ev.ai_Tags.length > 0) {
@@ -885,13 +925,14 @@ function openEventPage(id){
     initBlockDragAndDropListeners();
 }
 
-function addBlockToEditor(type, content = "", done = false, url = "") {
+/* ─── 🧱 升級核心三：智慧化 Notion-like 輸入引擎 ─── */
+function addBlockToEditor(type, content = "", done = false, url = "", targetSiblingNode = null) {
     let container = document.getElementById('blockEditorContainer');
     let wrapper = document.createElement('div');
     wrapper.className = "block-wrapper"; wrapper.setAttribute("draggable", "true"); wrapper.dataset.type = type;
     let html = `<span class="block-handle">☰</span><div class="block-content-area">`;
     if (type === 'heading') html += `<input type="text" class="block-input-heading block-field-content" value="${content}" placeholder="標題 H2">`;
-    else if (type === 'text') html += `<input type="text" class="block-input-text block-field-content" value="${content}" placeholder="輸入文字內容...">`;
+    else if (type === 'text') html += `<input type="text" class="block-input-text block-field-content" value="${content}" placeholder="輸入文字內容... (輸入 / 開啟指令選單)">`;
     else if (type === 'todo') {
         let chk = done ? "checked" : "";
         html += `<div style="display:flex; align-items:center; gap:6px;"><input type="checkbox" class="block-field-done" ${chk} style="width:auto; margin:0;"><input type="text" class="block-input-text block-field-content" value="${content}" placeholder="待辦事項..."></div>`;
@@ -899,7 +940,125 @@ function addBlockToEditor(type, content = "", done = false, url = "") {
     else if (type === 'image') html += `<input type="text" class="block-input-text block-field-url" value="${url || ''}" placeholder="圖片 URL..." oninput="this.nextElementSibling.src=this.value; this.nextElementSibling.style.display='block';"><img src="${url || ''}" style="max-width:100%; height:80px; object-fit:cover; border-radius:4px; margin-top:4px; display:${url?'block':'none'};"><input type="hidden" class="block-field-content" value="img_block">`;
     
     html += `</div><div style="display:flex; gap:2px; align-self:center; margin-left:4px;"><button onclick="duplicateBlockNode(this)" style="background:none; border:none; cursor:pointer;">📄</button><button onclick="insertInlineBlockNode(this)" style="background:none; border:none; cursor:pointer;">➕</button><button onclick="this.parentElement.parentElement.remove(); debounceAutoSaveBlocks();" style="background:none; border:none; color:red; font-size:18px; cursor:pointer;">×</button></div>`;
-    wrapper.innerHTML = html; container.appendChild(wrapper);
+    wrapper.innerHTML = html;
+    
+    if (targetSiblingNode) {
+        container.insertBefore(wrapper, targetSiblingNode.nextSibling);
+    } else {
+        container.appendChild(wrapper);
+    }
+    
+    // 綁定鍵盤事件：Enter 鍵直接向下衍生新區塊，與 Slash Command 選單監聽
+    let textInput = wrapper.querySelector('input[type="text"]');
+    if (textInput) {
+        textInput.focus();
+        textInput.addEventListener('keydown', (e) => {
+            let menu = document.getElementById('slashMenu');
+            
+            // 如果 Slash 選單正在開啟中，接管鍵盤流
+            if (menu.style.display === 'flex') {
+                let items = menu.querySelectorAll('.slash-item');
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    items[currentSlashSelectedIndex].classList.remove('active');
+                    currentSlashSelectedIndex = (currentSlashSelectedIndex + 1) % items.length;
+                    items[currentSlashSelectedIndex].classList.add('active');
+                    return;
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    items[currentSlashSelectedIndex].classList.remove('active');
+                    currentSlashSelectedIndex = (currentSlashSelectedIndex - 1 + items.length) % items.length;
+                    items[currentSlashSelectedIndex].classList.add('active');
+                    return;
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    items[currentSlashSelectedIndex].click();
+                    return;
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    hideSlashMenu();
+                    return;
+                }
+            }
+
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addBlockToEditor('text', '', false, '', wrapper);
+            }
+        });
+
+        textInput.addEventListener('keyup', (e) => {
+            if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Enter') {
+                handleSlashCommandTrigger(textInput);
+            }
+        });
+    }
+}
+
+function handleSlashCommandTrigger(inputNode) {
+    let val = inputNode.value;
+    let menu = document.getElementById('slashMenu');
+    let slashIndex = val.lastIndexOf('/');
+    
+    if (slashIndex !== -1) {
+        currentActiveSlashInput = inputNode;
+        let rect = inputNode.getBoundingClientRect();
+        menu.style.top = (window.scrollY + rect.bottom + 4) + 'px';
+        menu.style.left = (window.scrollX + rect.left) + 'px';
+        menu.style.display = 'flex';
+        
+        let query = normalize(val.substring(slashIndex + 1));
+        let items = menu.querySelectorAll('.slash-item');
+        currentSlashSelectedIndex = 0;
+        
+        items.forEach((item, idx) => {
+            item.classList.remove('active');
+            if (idx === 0) item.classList.add('active');
+            let type = item.dataset.type;
+            if (query === "" || type.includes(query)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    } else {
+        hideSlashMenu();
+    }
+}
+
+function hideSlashMenu() {
+    document.getElementById('slashMenu').style.display = 'none';
+    currentActiveSlashInput = null;
+}
+
+function initSlashMenuClickListeners() {
+    document.getElementById('slashMenu').querySelectorAll('.slash-item').forEach(item => {
+        item.addEventListener('click', () => {
+            if (currentActiveSlashInput) {
+                let val = currentActiveSlashInput.value;
+                let slashIndex = val.lastIndexOf('/');
+                currentActiveSlashInput.value = val.substring(0, slashIndex); // 清除斜線與指令字串
+                
+                let targetWrapper = currentActiveSlashInput.closest('.block-wrapper');
+                let selectedType = item.dataset.type;
+                
+                addBlockToEditor(selectedType, '', false, '', targetWrapper);
+                
+                // 如果原本的文字塊已經沒有內容且被置換，自動移除空文字塊
+                if (currentActiveSlashInput.value.trim() === "") {
+                    targetWrapper.remove();
+                }
+                hideSlashMenu();
+                debounceAutoSaveBlocks();
+            }
+        });
+    });
+    
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#slashMenu') && !e.target.classList.contains('block-input-text')) {
+            hideSlashMenu();
+        }
+    });
 }
 
 function duplicateBlockNode(btn) {
@@ -911,10 +1070,9 @@ function duplicateBlockNode(btn) {
 }
 
 function insertInlineBlockNode(btn) {
-    let sourceNode = btn.parentElement.parentElement; let container = document.getElementById('blockEditorContainer');
-    let wrapper = document.createElement('div'); wrapper.className = "block-wrapper"; wrapper.setAttribute("draggable", "true"); wrapper.dataset.type = 'text';
-    wrapper.innerHTML = `<span class="block-handle">☰</span><div class="block-content-area"><input type="text" class="block-input-text block-field-content" value="" placeholder="新文字區塊..."></div><div style="display:flex; gap:2px; align-self:center; margin-left:4px;"><button onclick="duplicateBlockNode(this)" style="background:none; border:none; cursor:pointer;">📄</button><button onclick="insertInlineBlockNode(this)" style="background:none; border:none; cursor:pointer;">➕</button><button onclick="this.parentElement.parentElement.remove(); debounceAutoSaveBlocks();" style="background:none; border:none; color:red; font-size:18px; cursor:pointer;">×</button></div>`;
-    container.insertBefore(wrapper, sourceNode.nextSibling); debounceAutoSaveBlocks();
+    let sourceNode = btn.parentElement.parentElement;
+    addBlockToEditor('text', '', false, '', sourceNode);
+    debounceAutoSaveBlocks();
 }
 
 function saveWholeBlockPageData(isSilent = false) {
@@ -934,7 +1092,7 @@ function saveWholeBlockPageData(isSilent = false) {
     }
 }
 
-function closeEventPage() { document.getElementById('eventPageModal').style.display = 'none'; }
+function closeEventPage() { document.getElementById('eventPageModal').style.display = 'none'; hideSlashMenu(); }
 function closeEventPageOverlayOutside(e) { if (e.target === document.getElementById('eventPageModal')) closeEventPage(); }
 
 function highlightSyncEvent(dateStr) {
@@ -975,6 +1133,7 @@ function resetPhotoUploadForm() {
     document.getElementById('imageUploadPreview').style.display = 'none'; document.getElementById('videoUploadPreview').style.display = 'none';
 }
 
+/* ─── 🚀 升級核心五：時間線記憶與媒體自動分類系統 ─── */
 function renderMainAlbumUI() {
     let mainGrid = document.getElementById('mainAlbumGrid'); let popGrid = document.getElementById('popupAlbumManageList');
     let currentMonthPrefix = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
@@ -987,11 +1146,15 @@ function renderMainAlbumUI() {
     currentMonthMediaItems.forEach(item => {
         let mediaTag = item.type === "video" ? `<video src="${item.url}" onclick="launchLightboxView('${item.url}', 'video')"></video>` : `<img src="${item.url}" onclick="launchLightboxView('${item.url}', 'image')">`;
         let popMediaTag = item.type === "video" ? `<video src="${item.url}" controls></video>` : `<img src="${item.url}">`;
-        let aiLabel = "🤖 AI標籤: 家庭 / 聚會"; let normTitle = normalize(item.title);
-        if (normTitle.includes("排球") || normTitle.includes("大排")) aiLabel = "🤖 AI標籤: 體育 / 運動訓練";
-        else if (normTitle.includes("二胡") || normTitle.includes("音樂")) aiLabel = "🤖 AI標籤: 學習 / 藝術培育";
+        
+        // 記憶時間線自動主題錨定
+        let aiLabel = "🤖 AI分類: 👨‍👩‍👧 家庭生活聚會"; 
+        let normTitle = normalize(item.title);
+        if (normTitle.includes("排球") || normTitle.includes("打波") || normTitle.includes("運動") || normTitle.includes("大排")) aiLabel = "🤖 AI分類: 🎯 體育運動訓練";
+        else if (normTitle.includes("二胡") || normTitle.includes("音樂") || normTitle.includes("課") || normTitle.includes("學")) aiLabel = "🤖 AI分類: 🏫 藝術培育與學習";
+        else if (normTitle.includes("旅行") || normTitle.includes("酒店") || normTitle.includes("高鐵") || normTitle.includes("玩")) aiLabel = "🤖 AI分類: ✈️ 戶外旅遊記憶";
 
-        mainHtml += `<div class="album-item">${mediaTag}<div class="album-title">${item.title}</div><div style="font-size:11px; color:#7b1fa2; font-weight:bold;">${aiLabel}</div><div class="album-date-badge">📅 ${item.date}</div></div>`;
+        mainHtml += `<div class="album-item">${mediaTag}<div class="album-title">${item.title}</div><div style="font-size:11px; color:#7b1fa2; font-weight:bold; margin-bottom:4px;">${aiLabel}</div><div class="album-date-badge">📅 ${item.date}</div></div>`;
         popHtml += `<div class="album-item"><button class="album-delete-tag" onclick="deleteMediaFromAlbum('${item.id}')">×</button>${popMediaTag}<div class="album-title">${item.title}</div><div class="album-date-badge">${item.date}</div></div>`;
     });
     mainGrid.innerHTML = mainHtml; if(popGrid) popGrid.innerHTML = popHtml;
@@ -1004,22 +1167,18 @@ function autoAssignAIProps(title) {
     let match = { category: "家庭", status: "待處理", isAI_Priority: false, ai_Tags: [] }; 
     let normTitle = normalize(title);
     
-    // Priority 辨識
     if (normTitle.includes("考試") || normTitle.includes("特急") || normTitle.includes("急件") || normTitle.includes("重要")) { 
         match.category = "重要"; 
         match.isAI_Priority = true;
         match.ai_Tags.push("🔥 高優先");
     } 
-    // 健康標籤辨識
     if (normTitle.includes("醫院") || normTitle.includes("睇醫生") || normTitle.includes("西醫") || normTitle.includes("中醫") || normTitle.includes("食藥") || normTitle.includes("診所")) {
         match.category = "重要";
         match.ai_Tags.push("💊 健康醫療");
     }
-    // 運動訓練辨識
     if (normTitle.includes("排球") || normTitle.includes("打波") || normTitle.includes("運動") || normTitle.includes("健身") || normTitle.includes("大排")) {
         match.ai_Tags.push("🎯 體育運動");
     }
-    // 常規學校或興趣班
     if (normTitle.includes("二胡") || normTitle.includes("學") || normTitle.includes("課") || normTitle.includes("小學") || normTitle.includes("中學")) { 
         if (match.category !== "重要") match.category = "學校"; 
         match.status = "進行中"; 
@@ -1030,45 +1189,72 @@ function autoAssignAIProps(title) {
     return match;
 }
 
-/* ─── 🚀 核心升級功能四：Dashboard AI 智慧摘要生成引擎 ─── */
+/* ─── 🚀 升級核心一：AI 權重深度解算與決策矩陣 ─── */
+function calcEventUrgencyScore(event) {
+    let score = 0;
+    if (event.isAI_Priority || event.category === "重要") score += 5;
+    if (event.ai_Tags && event.ai_Tags.includes("💊 健康醫療")) score += 4;
+    if (event.ai_Tags && event.ai_Tags.includes("🎯 體育運動")) score += 2;
+    if (event.status === "待處理") score += 3;
+    if (event.status === "進行中") score += 1;
+    return score;
+}
+
+/* ─── 🚀 升級核心四：Dashboard AI 智慧壓力與分工生成引擎 ─── */
 function generateAI_Summary() {
     let todayStr = new Date().toISOString().slice(0, 10);
     let todayActs = activities.filter(a => isEventActiveOnDate(a, todayStr));
     let pendingHighCount = activities.filter(a => a.isAI_Priority && (a.status || '待處理') !== '已完成').length;
     let healthCount = activities.filter(a => a.ai_Tags && a.ai_Tags.includes("💊 健康醫療") && (a.status || '待處理') !== '已完成').length;
 
-    let summaryText = "";
+    // 計算今日核心家庭壓力指數
+    let stressScore = todayActs.length + (pendingHighCount * 2);
+    let stressLabel = "🔵 節奏輕鬆舒緩";
+    let stressColor = "#2e7d32";
+    if (stressScore >= 8) {
+        stressLabel = "🔴 系統核心高載爆忙";
+        stressColor = "#ff4d4f";
+    } else if (stressScore >= 4) {
+        stressLabel = "🟠 事務適中緊湊";
+        stressColor = "#ef6c00";
+    }
+
+    let summaryText = `<strong>【今日壓力解算】：</strong><span style="color:${stressColor}; font-weight:bold;">${stressLabel} (指標分數: ${stressScore})</span><br>`;
     if (todayActs.length === 0) {
-        summaryText = "今日暫時沒有排定常規行程。";
+        summaryText += "今日暫時沒有排定常規活躍行程。";
     } else {
-        summaryText = `今日目前共有 <strong>${todayActs.length}</strong> 項活躍行程排定中。`;
+        summaryText += `今日雲端同步推進項目共 <strong>${todayActs.length}</strong> 項。`;
     }
 
     if (pendingHighCount > 0) {
-        summaryText += ` 偵測到當前系統有 <strong>${pendingHighCount}</strong> 項 <span style="color:#ff4d4f; font-weight:bold;">🔥高優先級任務</span> 尚未完成。`;
+        summaryText += ` 偵測到有 <strong>${pendingHighCount}</strong> 項特急項目阻滯中。`;
     }
-    if (healthCount > 0) {
-        summaryText += ` 包含 <strong>${healthCount}</strong> 項家庭健康關注項目。`;
-    }
-
-    // 依據繁忙程度給予節奏指引
+    
+    // 智慧型分工最佳化指引建議
     if (todayActs.length >= 4) {
-        summaryText += ` 💡 <em>系統評估：今日節奏非常緊湊，建議優先分配任務分工並留意 WhatsApp 即時提醒。</em>`;
-    } else if (todayActs.length > 0) {
-        summaryText += ` 💡 <em>系統評估：今日節奏適中，請按既定分工正常推進。</em>`;
+        summaryText += `<br>💡 <b>AI 行為預測分工調配建議：</b>今日任務密度過高，檢測到多項常規行程交疊，<em>建議立即分流部分工作，並啟動 WhatsApp 即時聯動提醒！</em>`;
     } else {
-        summaryText += ` 💡 <em>系統評估：今日輕鬆，適合整理麟李互助相簿共享生活快照。</em>`;
+        summaryText += `<br>💡 <b>AI 行為預測分工調配建議：</b>當前架構運作平穩，負責人各就各位即可，適合上傳生活相片至家庭互助牆。`;
     }
 
     document.getElementById('aiSummaryText').innerHTML = summaryText;
 }
 
-/* ─── 🚀 核心升級功能三：Google Calendar 級跨日匹配核心演算法 ─── */
+/* ─── 🚀 升級核心二：精準多日跨度排程匹配核心演算法 ─── */
 function isEventActiveOnDate(event, dateStr) {
     if (!event.date) return false;
-    let start = event.date;
-    let end = event.endDate || event.date; // 若無迄止日，則視同單日事件
-    return dateStr >= start && dateStr <= end;
+    
+    // 將輸入的時間分割，取出精確日期部分 (YYYY-MM-DD)
+    let checkDate = new Date(dateStr + " 00:00:00");
+    
+    // 解析活動本身的開始與截止界線
+    let eventStartStr = event.date.split(' ')[0];
+    let eventEndStr = (event.endDate || event.date).split(' ')[0];
+    
+    let startBoundary = new Date(eventStartStr + " 00:00:00");
+    let endBoundary = new Date(eventEndStr + " 23:59:59");
+    
+    return (checkDate >= startBoundary && checkDate <= endBoundary);
 }
 
 function addFamilyEvent() {
@@ -1081,7 +1267,7 @@ function addFamilyEvent() {
 
     if (!title || !startVal) { alert("請填寫活動名稱與開始時間！"); return; }
     let detectedDate = startVal.split(' ')[0] || selectedDateStr;
-    let detectedEndDate = endVal ? (endVal.split(' ')[0] || detectedDate) : detectedDate; // 🚀 自動裝載跨日截止指標
+    let detectedEndDate = endVal ? (endVal.split(' ')[0] || detectedDate) : detectedDate; 
 
     let timeLabel = startVal.split(' ')[1] || "08:30";
     if (endVal) timeLabel = `${timeLabel} ~ ${endVal.split(' ')[1] || endVal}`;
@@ -1090,7 +1276,7 @@ function addFamilyEvent() {
     let payload = { 
         title: title, 
         date: detectedDate, 
-        endDate: detectedEndDate, // 🚀 寫入多日模型
+        endDate: detectedEndDate, 
         time: timeLabel, 
         note: "", 
         repeat: document.getElementById('eventRepeat').value, 
@@ -1216,10 +1402,16 @@ function filterDatabaseEvents() {
 
 function renderDashboardBlocks() {
     let todayStr = new Date().toISOString().slice(0, 10);
-    // 修改重要任務：包含顯式重要分類或 AI 推論高優先項目
+    
+    // 升級：融合重要分類與 AI 決策分數，對未完成的急件進行頂層權重排序
     let urgentActs = activities.filter(a => (a.category === "重要" || a.isAI_Priority) && (a.status || "待處理") !== "已完成");
+    urgentActs.sort((a, b) => calcEventUrgencyScore(b) - calcEventUrgencyScore(a));
+
     let urgentHtml = "";
-    urgentActs.forEach(a => { urgentHtml += `<div style="padding:10px; margin-bottom:6px; background:#fff1f0; border-radius:6px; font-size:14px; border-left: 5px solid #ff4d4f; cursor:pointer;" onclick="openEventPage('${a.id}')"><span style="background:#ff4d4f; color:white; font-size:11px; padding:1px 4px; border-radius:3px; font-weight:bold; margin-right:6px;">⚠️ 特急</span><b>[${a.date}] ${a.time}</b> | ${a.title}</div>`; });
+    urgentActs.forEach(a => { 
+        let score = calcEventUrgencyScore(a);
+        urgentHtml += `<div style="padding:10px; margin-bottom:6px; background:#fff1f0; border-radius:6px; font-size:14px; border-left: 5px solid #ff4d4f; cursor:pointer;" onclick="openEventPage('${a.id}')"><span style="background:#ff4d4f; color:white; font-size:11px; padding:1px 4px; border-radius:3px; font-weight:bold; margin-right:6px;">⚠️ 權重分數 ${score}</span><b>[${a.date}] ${a.time}</b> | ${a.title}</div>`; 
+    });
     document.getElementById('dashUrgentTasks').innerHTML = urgentHtml || "<p style='color:gray; font-size:14px;'>🎉 目前無任何未完成的重要特急任務。</p>";
 
     let todayHtml = ""; 
@@ -1297,7 +1489,6 @@ function renderCalendarWithData(dataset) {
         let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
         let isToday = new Date().toISOString().slice(0,10) === dStr; let isSelected = selectedDateStr === dStr;
         
-        // 🚀 使用跨日演算法篩選當日應顯示的行程
         let dayActivities = dataset.filter(a => isEventActiveOnDate(a, dStr)); 
         let dayMediaItems = albumItems.filter(item => item.date === dStr);
         let eventsHtml = "";
@@ -1308,7 +1499,6 @@ function renderCalendarWithData(dataset) {
         });
         dayMediaItems.forEach(media => { eventsHtml = `<span class="day-event-badge" style="background:#fff7e6; color:#d46b08; border-left:3px solid #f39c12; font-weight:bold;">🖼️ 附圖: ${media.title}</span>` + eventsHtml; });
         
-        // 🚀 若該行程是多日跨日事件的延伸中段，加入背景淡色視覺指引
         let hasMultiDayActive = dayActivities.some(a => a.date !== a.endDate);
 
         let dayCell = document.createElement('div'); 
@@ -1341,4 +1531,9 @@ function renderDayEvents() {
 function changeMonth(dir) { current.setMonth(current.getMonth() + dir); renderCalendarWithData(activities); }
 </script>
 </body>
-</html>
+</html>"""
+
+import textwrap
+with open("Family_OS_v8_AI_Upgrade.html", "w", encoding="utf-8") as f:
+    f.write(html_code)
+print("新版檔案已成功產生並開放下載！")
