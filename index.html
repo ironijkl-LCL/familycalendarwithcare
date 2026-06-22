@@ -508,7 +508,8 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
                     </div>
 
                     <label for="eventAssignee" style="font-size:14px; color:#444; font-weight:bold; margin-top:6px; display:block;">👥 執行分工 / 負責人：</label>
-                    <input type="text" id="eventAssignee" placeholder="登入後自動鎖定身分" style="padding:8px; margin:4px 0;" readonly>
+                    <!-- 🛠️ 已移除 readonly 屬性，改為可自由輸入與修改內容 -->
+                    <input type="text" id="eventAssignee" placeholder="請手動填寫或代班成員名稱" style="padding:8px; margin:4px 0;">
                 </div>
                 
                 <label>🔗 關聯其他資料庫活動 (Relation)：</label>
@@ -947,14 +948,12 @@ function addBlockToEditor(type, content = "", done = false, url = "", targetSibl
         container.appendChild(wrapper);
     }
     
-    // 綁定鍵盤事件：Enter 鍵直接向下衍生新區塊，與 Slash Command 選單監聽
     let textInput = wrapper.querySelector('input[type="text"]');
     if (textInput) {
         textInput.focus();
         textInput.addEventListener('keydown', (e) => {
             let menu = document.getElementById('slashMenu');
             
-            // 如果 Slash 選單正在開啟中，接管鍵盤流
             if (menu.style.display === 'flex') {
                 let items = menu.querySelectorAll('.slash-item');
                 if (e.key === 'ArrowDown') {
@@ -1036,14 +1035,13 @@ function initSlashMenuClickListeners() {
             if (currentActiveSlashInput) {
                 let val = currentActiveSlashInput.value;
                 let slashIndex = val.lastIndexOf('/');
-                currentActiveSlashInput.value = val.substring(0, slashIndex); // 清除斜線與指令字串
+                currentActiveSlashInput.value = val.substring(0, slashIndex);
                 
                 let targetWrapper = currentActiveSlashInput.closest('.block-wrapper');
                 let selectedType = item.dataset.type;
                 
                 addBlockToEditor(selectedType, '', false, '', targetWrapper);
                 
-                // 如果原本的文字塊已經沒有內容且被置換，自動移除空文字塊
                 if (currentActiveSlashInput.value.trim() === "") {
                     targetWrapper.remove();
                 }
@@ -1146,7 +1144,6 @@ function renderMainAlbumUI() {
         let mediaTag = item.type === "video" ? `<video src="${item.url}" onclick="launchLightboxView('${item.url}', 'video')"></video>` : `<img src="${item.url}" onclick="launchLightboxView('${item.url}', 'image')">`;
         let popMediaTag = item.type === "video" ? `<video src="${item.url}" controls></video>` : `<img src="${item.url}">`;
         
-        // 記憶時間線自動主題錨定
         let aiLabel = "🤖 AI分類: 👨‍👩‍👧 家庭生活聚會"; 
         let normTitle = normalize(item.title);
         if (normTitle.includes("排球") || normTitle.includes("打波") || normTitle.includes("運動") || normTitle.includes("大排")) aiLabel = "🤖 AI分類: 🎯 體育運動訓練";
@@ -1206,7 +1203,6 @@ function generateAI_Summary() {
     let pendingHighCount = activities.filter(a => a.isAI_Priority && (a.status || '待處理') !== '已完成').length;
     let healthCount = activities.filter(a => a.ai_Tags && a.ai_Tags.includes("💊 健康醫療") && (a.status || '待處理') !== '已完成').length;
 
-    // 計算今日核心家庭壓力指數
     let stressScore = todayActs.length + (pendingHighCount * 2);
     let stressLabel = "🔵 節奏輕鬆舒緩";
     let stressColor = "#2e7d32";
@@ -1229,7 +1225,6 @@ function generateAI_Summary() {
         summaryText += ` 偵測到有 <strong>${pendingHighCount}</strong> 項特急項目阻滯中。`;
     }
     
-    // 智慧型分工最佳化指引建議
     if (todayActs.length >= 4) {
         summaryText += `<br>💡 <b>AI 行為預測分工調配建議：</b>今日任務密度過高，檢測到多項常規行程交疊，<em>建議立即分流部分工作，並啟動 WhatsApp 即時聯動提醒！</em>`;
     } else {
@@ -1243,10 +1238,7 @@ function generateAI_Summary() {
 function isEventActiveOnDate(event, dateStr) {
     if (!event.date) return false;
     
-    // 將輸入的時間分割，取出精確日期部分 (YYYY-MM-DD)
     let checkDate = new Date(dateStr + " 00:00:00");
-    
-    // 解析活動本身的開始與截止界線
     let eventStartStr = event.date.split(' ')[0];
     let eventEndStr = (event.endDate || event.date).split(' ')[0];
     
@@ -1402,7 +1394,6 @@ function filterDatabaseEvents() {
 function renderDashboardBlocks() {
     let todayStr = new Date().toISOString().slice(0, 10);
     
-    // 升級：融合重要分類與 AI 決策分數，對未完成的急件進行頂層權重排序
     let urgentActs = activities.filter(a => (a.category === "重要" || a.isAI_Priority) && (a.status || "待處理") !== "已完成");
     urgentActs.sort((a, b) => calcEventUrgencyScore(b) - calcEventUrgencyScore(a));
 
