@@ -536,7 +536,7 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
                 </div>
 
                 <div style="background: #f6ffed; border: 1px dashed #b7eb8f; padding: 12px; border-radius: 8px; margin: 12px 0;">
-                    <label style="font-weight:bold; color:#389e0d; display:block; margin-bottom:4px;">💾 隨附通用檔案 (選填，支援 PDF/文件/試算表)：</label>
+                    <label style="font-weight:bold; color:#389e0d; display:block; margin-bottom:4px;">💾 隨附通用檔案 (選填，支援所有檔案，含 PDF/文件/相片/影片)：</label>
                     <div class="camera-upload-row">
                         <button type="button" class="camera-btn" style="background: linear-gradient(135deg, #27ae60, #219653);" onclick="triggerFileInput('FormDocument')">📁 選擇並附加檔案</button>
                     </div>
@@ -938,7 +938,7 @@ function openEventPage(id){
     initBlockDragAndDropListeners();
 }
 
-/* ─── 🧱 升級核心三：智慧化 Notion-like 輸入引擎 ─── */
+/* ─── 🧱 智慧化 Notion-like 輸入引擎 ─── */
 function addBlockToEditor(type, content = "", done = false, url = "", targetSiblingNode = null) {
     let container = document.getElementById('blockEditorContainer');
     let wrapper = document.createElement('div');
@@ -946,7 +946,7 @@ function addBlockToEditor(type, content = "", done = false, url = "", targetSibl
     let html = `<span class="block-handle">☰</span><div class="block-content-area">`;
     if (type === 'heading') html += `<input type="text" class="block-input-heading block-field-content" value="${content}" placeholder="標題 H2">`;
     else if (type === 'text') {
-        // 如果內容是下載通用檔案，可以特別加底色點綴
+        // 💾 如果是隨附檔案（包含相片與影片檔），提供美化綠色區塊直接點擊開啟或下載
         if (content.includes("📎 點此下載隨附檔案：")) {
             html += `<div style="display:flex; align-items:center; background:#f6ffed; padding:4px 8px; border-radius:4px; border:1px solid #b7eb8f;"><span style="margin-right:6px;">📄</span><a href="${url}" target="_blank" style="color:#27ae60; font-weight:bold; text-decoration:underline; font-size:14px; flex:1;">${content}</a><input type="hidden" class="block-field-content" value="${content}"><input type="hidden" class="block-field-url" value="${url}"></div>`;
         } else {
@@ -1124,7 +1124,7 @@ function triggerFileInput(type) {
     if (type === 'video') document.getElementById('nativeVideoInput').click();
     if (type === 'FormImage') document.getElementById('formImageInput').click();
     if (type === 'FormVideo') document.getElementById('formVideoInput').click();
-    if (type === 'FormDocument') document.getElementById('formDocumentInput').click(); // 💾 新增通用檔案選取觸發
+    if (type === 'FormDocument') document.getElementById('formDocumentInput').click(); 
 }
 
 function launchLightboxView(srcUrl, mediaType) {
@@ -1146,7 +1146,7 @@ function handleFormFileLoad(input, type) {
     if (type === 'image') { document.getElementById('formImagePreview').src = URL.createObjectURL(file); document.getElementById('formImagePreview').style.display = 'block'; }
 }
 
-/* 💾 新增：處理通用隨附檔案選取 */
+/* 💾 處理通用隨附檔案選取（支援 PDF/DOC/相片/影片任何檔案） */
 function handleFormDocumentLoad(input) {
     let file = input.files[0];
     if (!file) return;
@@ -1196,9 +1196,9 @@ function renderMainAlbumUI() {
 
 function resetFormPhotoUpload() { 
     targetFormFileObject = null; 
-    targetFormDocumentObject = null; // 💾 額外重置檔案快取
+    targetFormDocumentObject = null; 
     document.getElementById('formMediaURL').value = ""; 
-    document.getElementById('formDocumentURL').value = ""; // 💾 額外清除檔案手動網址
+    document.getElementById('formDocumentURL').value = ""; 
     document.getElementById('formImagePreview').style.display = 'none'; 
     if(document.getElementById('formDocumentPreview')) document.getElementById('formDocumentPreview').style.display = 'none';
 }
@@ -1360,7 +1360,7 @@ function addFamilyEvent() {
             asyncQueue.push(window.fbSet(window.fbPush(window.fbRef(window.fbDb, "family_mutual_album")), { title: `隨附活動: ${title}`, url: formMediaURL, type: document.getElementById('formMediaType').value, date: detectedDate, eventId: currentEventId }));
         }
 
-        // 💾 處理通用隨附檔案上傳至 Firebase Storage
+        // 💾 處理通用隨附檔案上傳（不限格式，相片檔、影片檔也一樣支援上傳與下載）
         let formDocumentURL = document.getElementById('formDocumentURL').value.trim();
         let docName = targetFormDocumentObject ? targetFormDocumentObject.name : "已夾帶檔案";
         
@@ -1374,7 +1374,7 @@ function addFamilyEvent() {
             });
         }
 
-        // 💾 成功上傳後，將檔案以文字下載 Block 形式注入詳細頁面的最前端
+        // 💾 成功上傳後，將通用檔案資訊以內嵌 Block 形式注入詳細頁面的區塊陣列中
         if (formDocumentURL && currentEventId) {
             let fileBlock = { type: "text", content: `📎 點此下載隨附檔案：${docName} 🔗`, done: false, url: formDocumentURL };
             asyncQueue.push(new Promise((resolve) => {
