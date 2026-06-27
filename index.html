@@ -189,6 +189,7 @@ today { border:3px solid orange; }
     text-overflow: ellipsis;
     white-space: nowrap;
     display: block;
+    font-weight: bold;
 }
 
 /* 🚀 Block 系統與拖拉排序樣式 ─── */
@@ -254,7 +255,7 @@ button.pretty-edit-btn { background: linear-gradient(135deg, #1890ff, #40a9ff); 
 
 .popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); z-index: 1000; overflow-y: auto; }
 .popup-content-card { position: relative; background: white; width: 90%; max-width: 550px; margin: 50px auto; padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
-.popup-close-x { position: absolute; top: 15px; right: 18px; font-size: 24px; color: #8c8c8c; cursor: pointer; font-weight: bold; }
+.popup-close-x { absolute; top: 15px; right: 18px; font-size: 24px; color: #8c8c8c; cursor: pointer; font-weight: bold; }
 .password-lock-section { background: #fffbe6; border: 1px solid #ffe58f; padding: 15px; border-radius: 10px; margin-top: 10px; text-align: center; }
 .secure-form-fields { display: none; margin-top: 15px; }
 
@@ -323,7 +324,7 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
 <body class="view-列表" id="bodyNode">
 
 <header>
-    <div>🏠 Family OS - 麟李家庭智慧管理系統 v8.0</div>
+    <div>🏠 Family OS - 麟李家庭智慧管理系統 v8.2</div>
     <div id="roleBadge" style="font-size:14px; background:#f5f5f5; padding:4px 10px; border-radius:12px; font-weight:bold; color:#666;">🔒 訪客模式 (Viewer)</div>
 </header>
 
@@ -510,7 +511,7 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
                     <label for="eventAssignee" style="font-size:14px; color:#444; font-weight:bold; margin-top:6px; display:block;">👥 執行分工 / 負責人：</label>
                     <select id="eventAssignee" style="padding:12px; margin:4px 0; background-color:#ffffff;">
                         <option value="全員">👨‍👩‍👧‍👦 全員</option>
-                        <option value="有鐵">👦 有鐵</option>
+                        <option value="鐵">👦 鐵</option>
                         <option value="Jolie">👧 Jolie</option>
                         <option value="蓓">👩 蓓</option>
                         <option value="熹">👶 熹</option>
@@ -756,34 +757,33 @@ function getCategoryColor(cat){
 /* ─── 🎨 麟李家庭成員專屬顏色解算矩陣 ─── */
 function getAssigneeColor(assignee) {
     let name = normalize(assignee);
-    
     if (!name || name === "全員" || name === "所有人" || name === "全部人") {
-        return { bg: "#f5f5f5", text: "#666666" }; 
+        return { bg: "#f5f5f5", text: "#666666" };
     }
     
     if (name.includes("鐵") || name.includes("tit")) {
-        return { bg: "#e6f7ff", text: "#0050b3" }; 
+        return { bg: "#e6f7ff", text: "#0050b3" };
     }
     if (name.includes("jolie") || name.includes("喬莉")) {
-        return { bg: "#f9f0ff", text: "#531dab" }; 
+        return { bg: "#f9f0ff", text: "#531dab" };
     }
     if (name.includes("蓓") || name.includes("bei")) {
-        return { bg: "#fff0f6", text: "#c41d7f" }; 
+        return { bg: "#fff0f6", text: "#c41d7f" };
     }
     if (name.includes("熹") || name.includes("hei")) {
-        return { bg: "#f6ffed", text: "#389e0d" }; 
+        return { bg: "#f6ffed", text: "#389e0d" };
     }
     if (name.includes("mummy") || name.includes("媽")) {
-        return { bg: "#fff7e6", text: "#d46b08" }; 
+        return { bg: "#fff7e6", text: "#d46b08" };
     }
     if (name.includes("daddy") || name.includes("爸")) {
-        return { bg: "#fcffe6", text: "#7cb305" }; 
+        return { bg: "#fcffe6", text: "#7cb305" };
     }
     if (name.includes("工作") || name.includes("admin")) {
-        return { bg: "#fff1f0", text: "#cf1322" }; 
+        return { bg: "#fff1f0", text: "#cf1322" };
     }
     
-    return { bg: "#e6fffb", text: "#08979c" }; 
+    return { bg: "#e6fffb", text: "#08979c" };
 }
 
 function populateRelationSelectOptions() {
@@ -799,16 +799,13 @@ function populateRelationSelectOptions() {
 
 function verifyGatePassword() {
     let inputPwd = document.getElementById('popupPassword').value.trim();
-    
     if (passwordDb[inputPwd]) {
         currentUserMemberName = passwordDb[inputPwd]; 
         userRole = "admin";
-        
         document.getElementById('roleBadge').innerText = `👑 ${currentUserMemberName} (管理員)`;
         document.getElementById('roleBadge').style.background = "#e2f7e9";
         document.getElementById('roleBadge').style.color = "#2e7d32";
         document.getElementById('lockSection').style.display = 'none';
-        
         if (currentPopupMode === "MANAGE") {
             document.getElementById('secureManagePanel').style.display = 'block';
             renderPopupManageListUI();
@@ -846,7 +843,7 @@ function verifyGatePassword() {
             resetFormPhotoUpload();
         }
     } else { 
-        alert("❌ 密碼錯誤！無法匹配麟李家庭成員身分。"); 
+        alert("❌ 密碼錯誤！無法匹配麟李家庭成員身分。");
     }
 }
 
@@ -861,7 +858,6 @@ function openAddFormPopup(mode) {
     document.getElementById('secureViewSwitchPanel').style.display = 'none';
     document.getElementById('formSubmitBtn').innerText = "儲存至此日期";
     document.getElementById('editKey').value = "";
-
     if (currentPopupMode === "MANAGE") { document.getElementById('formTitle').innerText = "⚙️ 修改/刪除舊行程"; }
     else if (currentPopupMode === "WHATSAPP") { document.getElementById('formTitle').innerText = "💬 WHATSAPP 通知發送控制"; }
     else if (currentPopupMode === "ALBUM") { document.getElementById('formTitle').innerText = "🏡 麟李互助相簿管理面版"; }
@@ -931,7 +927,6 @@ function openEventPage(id){
     let ev = activities.find(a=>a.id===id); if(!ev) return;
     document.getElementById('eventPageCurrentId').value = id;
     document.getElementById('eventPageTitle').innerText = ev.title;
-    
     let aiTagsHtml = "";
     if (ev.isAI_Priority) aiTagsHtml += `<span class="meta-chip" style="background:#ff4d4f; color:white; margin-right:4px;">🔥 高優先</span>`;
     if (ev.ai_Tags && ev.ai_Tags.length > 0) {
@@ -948,7 +943,6 @@ function openEventPage(id){
         <div style="margin-bottom:6px;">🤖 <b>AI 自動擴充屬性：</b> ${aiTagsHtml || '無'}</div>
         <div style="display:inline-block; margin-right:15px;" onmouseenter="highlightSyncEvent('${ev.date}')" onmouseleave="removeHighlightSyncEvent('${ev.date}')">🎯 <b>狀態項目：</b>${ev.status || '待處理'}</div>
     `;
-
     let relBlock = document.getElementById('eventPageRelationsBlock');
     if (ev.relations && Array.isArray(ev.relations)) {
         let linksHtml = "<b>🔗 雙向鏈接關聯活動網絡：</b><br>";
@@ -986,7 +980,6 @@ function addBlockToEditor(type, content = "", done = false, url = "", targetSibl
         html += `<div style="display:flex; align-items:center; gap:6px;"><input type="checkbox" class="block-field-done" ${chk} style="width:auto; margin:0;"><input type="text" class="block-input-text block-field-content" value="${content}" placeholder="待辦事項..."></div>`;
     } else if (type === 'divider') html += `<hr style="width:100%; border:none; border-top:2px dashed #edece9; margin:10px 0;"><input type="hidden" class="block-field-content" value="---">`;
     else if (type === 'image') html += `<input type="text" class="block-input-text block-field-url" value="${url || ''}" placeholder="圖片 URL..." oninput="this.nextElementSibling.src=this.value; this.nextElementSibling.style.display='block';"><img src="${url || ''}" style="max-width:100%; height:80px; object-fit:cover; border-radius:4px; margin-top:4px; display:${url?'block':'none'};"><input type="hidden" class="block-field-content" value="img_block">`;
-    
     html += `</div><div style="display:flex; gap:2px; align-self:center; margin-left:4px;"><button onclick="duplicateBlockNode(this)" style="background:none; border:none; cursor:pointer;">📄</button><button onclick="insertInlineBlockNode(this)" style="background:none; border:none; cursor:pointer;">➕</button><button onclick="this.parentElement.parentElement.remove(); debounceAutoSaveBlocks();" style="background:none; border:none; color:red; font-size:18px; cursor:pointer;">×</button></div>`;
     wrapper.innerHTML = html;
     
@@ -1001,11 +994,10 @@ function addBlockToEditor(type, content = "", done = false, url = "", targetSibl
         textInput.focus();
         textInput.addEventListener('keydown', (e) => {
             let menu = document.getElementById('slashMenu');
-            
             if (menu.style.display === 'flex') {
                 let items = menu.querySelectorAll('.slash-item');
                 if (e.key === 'ArrowDown') {
-                    e.preventDefault();
+                     e.preventDefault();
                     items[currentSlashSelectedIndex].classList.remove('active');
                     currentSlashSelectedIndex = (currentSlashSelectedIndex + 1) % items.length;
                     items[currentSlashSelectedIndex].classList.add('active');
@@ -1014,7 +1006,7 @@ function addBlockToEditor(type, content = "", done = false, url = "", targetSibl
                     e.preventDefault();
                     items[currentSlashSelectedIndex].classList.remove('active');
                     currentSlashSelectedIndex = (currentSlashSelectedIndex - 1 + items.length) % items.length;
-                    items[currentSlashSelectedIndex].classList.add('active');
+                     items[currentSlashSelectedIndex].classList.add('active');
                     return;
                 } else if (e.key === 'Enter') {
                     e.preventDefault();
@@ -1032,7 +1024,6 @@ function addBlockToEditor(type, content = "", done = false, url = "", targetSibl
                 addBlockToEditor('text', '', false, '', wrapper);
             }
         });
-
         textInput.addEventListener('keyup', (e) => {
             if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Enter') {
                 handleSlashCommandTrigger(textInput);
@@ -1045,18 +1036,15 @@ function handleSlashCommandTrigger(inputNode) {
     let val = inputNode.value;
     let menu = document.getElementById('slashMenu');
     let slashIndex = val.lastIndexOf('/');
-    
     if (slashIndex !== -1) {
         currentActiveSlashInput = inputNode;
         let rect = inputNode.getBoundingClientRect();
         menu.style.top = (window.scrollY + rect.bottom + 4) + 'px';
         menu.style.left = (window.scrollX + rect.left) + 'px';
         menu.style.display = 'flex';
-        
         let query = normalize(val.substring(slashIndex + 1));
         let items = menu.querySelectorAll('.slash-item');
         currentSlashSelectedIndex = 0;
-        
         items.forEach((item, idx) => {
             item.classList.remove('active');
             if (idx === 0) item.classList.add('active');
@@ -1064,7 +1052,7 @@ function handleSlashCommandTrigger(inputNode) {
             if (query === "" || type.includes(query)) {
                 item.style.display = 'flex';
             } else {
-                item.style.display = 'none';
+                 item.style.display = 'none';
             }
         });
     } else {
@@ -1084,21 +1072,17 @@ function initSlashMenuClickListeners() {
                 let val = currentActiveSlashInput.value;
                 let slashIndex = val.lastIndexOf('/');
                 currentActiveSlashInput.value = val.substring(0, slashIndex);
-                
                 let targetWrapper = currentActiveSlashInput.closest('.block-wrapper');
                 let selectedType = item.dataset.type;
-                
                 addBlockToEditor(selectedType, '', false, '', targetWrapper);
-                
                 if (currentActiveSlashInput.value.trim() === "") {
                     targetWrapper.remove();
                 }
                 hideSlashMenu();
                 debounceAutoSaveBlocks();
             }
-        });
+         });
     });
-    
     document.addEventListener('click', (e) => {
         if (!e.target.closest('#slashMenu') && !e.target.classList.contains('block-input-text')) {
             hideSlashMenu();
@@ -1109,7 +1093,8 @@ function initSlashMenuClickListeners() {
 function duplicateBlockNode(btn) {
     let sourceNode = btn.parentElement.parentElement; let container = document.getElementById('blockEditorContainer'); let clone = sourceNode.cloneNode(true);
     if(sourceNode.dataset.type === 'heading' || sourceNode.dataset.type === 'text') clone.querySelector('.block-field-content').value = sourceNode.querySelector('.block-field-content').value;
-    else if(sourceNode.dataset.type === 'todo') { clone.querySelector('.block-field-content').value = sourceNode.querySelector('.block-field-content').value; clone.querySelector('.block-field-done').checked = sourceNode.querySelector('.block-field-done').checked; }
+    else if(sourceNode.dataset.type === 'todo') { clone.querySelector('.block-field-content').value = sourceNode.querySelector('.block-field-content').value;
+    clone.querySelector('.block-field-done').checked = sourceNode.querySelector('.block-field-done').checked; }
     else if(sourceNode.dataset.type === 'image') clone.querySelector('.block-field-url').value = sourceNode.querySelector('.block-field-url').value;
     container.insertBefore(clone, sourceNode.nextSibling); debounceAutoSaveBlocks();
 }
@@ -1163,9 +1148,11 @@ function launchLightboxView(srcUrl, mediaType) {
 
 function closeLightboxWindow() { document.getElementById('globalLightboxOverlay').style.display = 'none'; document.body.style.overflow = 'auto'; }
 
-let targetNativeFileObject = null; let targetFormFileObject = null;
+let targetNativeFileObject = null;
+let targetFormFileObject = null;
 function handleNativeFileLoad(input, type) {
-    let file = input.files[0]; if (!file) return; targetNativeFileObject = file;
+    let file = input.files[0]; if (!file) return;
+    targetNativeFileObject = file;
     if (type === 'image') { document.getElementById('imageUploadPreview').src = URL.createObjectURL(file); document.getElementById('imageUploadPreview').style.display = 'block'; }
 }
 function handleFormFileLoad(input, type) {
@@ -1174,7 +1161,8 @@ function handleFormFileLoad(input, type) {
 }
 
 function resetPhotoUploadForm() {
-    targetNativeFileObject = null; document.getElementById('mediaTitle').value = ""; document.getElementById('mediaURL').value = "";
+    targetNativeFileObject = null;
+    document.getElementById('mediaTitle').value = ""; document.getElementById('mediaURL').value = "";
     document.getElementById('imageUploadPreview').style.display = 'none'; document.getElementById('videoUploadPreview').style.display = 'none';
 }
 
@@ -1208,7 +1196,6 @@ function resetFormPhotoUpload() { targetFormFileObject = null; document.getEleme
 function autoAssignAIProps(title) {
     let match = { category: "家庭", status: "待處理", isAI_Priority: false, ai_Tags: [] }; 
     let normTitle = normalize(title);
-    
     if (normTitle.includes("考試") || normTitle.includes("特急") || normTitle.includes("急件") || normTitle.includes("重要")) { 
         match.category = "重要"; 
         match.isAI_Priority = true;
@@ -1222,11 +1209,11 @@ function autoAssignAIProps(title) {
         match.ai_Tags.push("🎯 體育運動");
     }
     if (normTitle.includes("二胡") || normTitle.includes("學") || normTitle.includes("課") || normTitle.includes("小學") || normTitle.includes("中學")) { 
-        if (match.category !== "重要") match.category = "學校"; 
+        if (match.category !== "重要") match.category = "學校";
         match.status = "進行中"; 
     } 
     if (normTitle.includes("工作") || normTitle.includes("系統") || normTitle.includes("架構")) { 
-        match.category = "工作"; 
+        match.category = "工作";
     }
     return match;
 }
@@ -1246,7 +1233,6 @@ function generateAI_Summary() {
     let todayActs = activities.filter(a => isEventActiveOnDate(a, todayStr));
     let pendingHighCount = activities.filter(a => a.isAI_Priority && (a.status || '待處理') !== '已完成').length;
     let healthCount = activities.filter(a => a.ai_Tags && a.ai_Tags.includes("💊 健康醫療") && (a.status || '待處理') !== '已完成').length;
-
     let stressScore = todayActs.length + (pendingHighCount * 2);
     let stressLabel = "🔵 節奏輕鬆舒緩";
     let stressColor = "#2e7d32";
@@ -1264,30 +1250,24 @@ function generateAI_Summary() {
     } else {
         summaryText += `今日雲端同步推進項目共 <strong>${todayActs.length}</strong> 項。`;
     }
-
     if (pendingHighCount > 0) {
         summaryText += ` 偵測到有 <strong>${pendingHighCount}</strong> 項特急項目阻滯中。`;
     }
-    
     if (todayActs.length >= 4) {
         summaryText += `<br>💡 <b>AI 行為預測分工調配建議：</b>今日任務密度過高，檢測到多項常規行程交疊，<em>建議立即分流部分工作，並啟動 WhatsApp 即時聯動提醒！</em>`;
     } else {
         summaryText += `<br>💡 <b>AI 行為預測分工調配建議：</b>當前架構運作平穩，負責人各就各位即可，適合上傳生活相片至家庭互助牆。`;
     }
-
     document.getElementById('aiSummaryText').innerHTML = summaryText;
 }
 
 function isEventActiveOnDate(event, dateStr) {
     if (!event.date) return false;
-    
     let checkDate = new Date(dateStr + " 00:00:00");
     let eventStartStr = event.date.split(' ')[0];
     let eventEndStr = (event.endDate || event.date).split(' ')[0];
-    
     let startBoundary = new Date(eventStartStr + " 00:00:00");
     let endBoundary = new Date(eventEndStr + " 23:59:59");
-    
     return (checkDate >= startBoundary && checkDate <= endBoundary);
 }
 
@@ -1296,7 +1276,7 @@ function addFamilyEvent() {
     let startVal = document.getElementById('eventTime').value.trim();
     let endVal = document.getElementById('eventEndTime').value.trim();
     let editKey = document.getElementById('editKey').value;
-    let assignee = document.getElementById('eventAssignee').value; // 直接獲取 Select 下拉清單選取的值
+    let assignee = document.getElementById('eventAssignee').value;
     let selectedRelations = [...document.getElementById('eventRelations').selectedOptions].map(opt => opt.value);
 
     if (!title || !startVal) { alert("請填寫活動名稱與開始時間！"); return; }
@@ -1323,7 +1303,6 @@ function addFamilyEvent() {
         ai_Tags: aiProps.ai_Tags,
         blocks: [{ type: "heading", content: `📝 ${title} 專屬頁面` }] 
     };
-
     if (!window.fbDb) return;
     if (editKey) {
         window.fbSet(window.fbRef(window.fbDb, `family_calendar_activities/${editKey}`), payload).then(() => pipelineRelationsAndFiles(editKey));
@@ -1339,10 +1318,10 @@ function addFamilyEvent() {
                 let p = new Promise((resolve) => {
                     fetch(`https://familycalender-a62ae-default-rtdb.firebaseio.com/family_calendar_activities/${relId}.json`).then(r => r.json()).then(targetData => {
                         if (targetData) {
-                            let relArray = targetData.relations || [];
+                             let relArray = targetData.relations || [];
                             if (!relArray.includes(currentEventId)) { relArray.push(currentEventId); window.fbUpdate(window.fbRef(window.fbDb, `family_calendar_activities/${relId}`), { relations: relArray }).then(resolve); } else resolve();
                         } else resolve();
-                    }).catch(resolve);
+                     }).catch(resolve);
                 });
                 asyncQueue.push(p);
             });
@@ -1354,7 +1333,7 @@ function addFamilyEvent() {
                 try {
                     const snapshot = await window.fbUploadBytes(window.fbSRef(window.fbStorage, `activities/${Date.now()}_${targetFormFileObject.name}`), targetFormFileObject);
                     formMediaURL = await window.fbGetDownloadURL(snapshot.ref);
-                } catch(e) { console.error(e); }
+                 } catch(e) { console.error(e); }
                 resolve();
             });
         }
@@ -1366,27 +1345,6 @@ function addFamilyEvent() {
             document.getElementById('eventTitle').value = ""; resetFormPhotoUpload(); closeEventPopup(); alert("🎉 行程同步成功！");
         });
     }
-}
-
-async function uploadMediaToAlbum() {
-    let title = document.getElementById('mediaTitle').value.trim();
-    let manualURL = document.getElementById('mediaURL').value.trim();
-    if (!title) { alert("請輸入描述！"); return; }
-    let finalURL = manualURL;
-
-    if (targetNativeFileObject && window.fbStorage) {
-        alert("正在將實體圖檔推往 Firebase Storage... 請稍候 ⚡");
-        try {
-            const snapshot = await window.fbUploadBytes(window.fbSRef(window.fbStorage, `album/${Date.now()}_${targetNativeFileObject.name}`), targetNativeFileObject);
-            finalURL = await window.fbGetDownloadURL(snapshot.ref);
-        } catch(e) { alert("上傳失敗: " + e.message); return; }
-    }
-    if (!finalURL) { alert("請拍照或輸入連結！"); return; }
-
-    let matchedTodayEvent = activities.find(a => isEventActiveOnDate(a, selectedDateStr));
-    window.fbSet(window.fbPush(window.fbRef(window.fbDb, "family_mutual_album")), { title: title, url: finalURL, type: document.getElementById('mediaType').value, date: selectedDateStr, eventId: matchedTodayEvent ? matchedTodayEvent.id : "無特定活動關聯" }).then(() => {
-        resetPhotoUploadForm(); alert("🎉 相片上傳成功！");
-    });
 }
 
 function deleteMediaFromAlbum(id) {
@@ -1404,7 +1362,7 @@ function initKanbanUXListeners() {
             let id = e.dataTransfer.setData ? e.dataTransfer.getData("text") : window._draggedId;
             let targetStatus = col === "todo" ? "待處理" : (col === "progress" ? "進行中" : "已完成");
             if(userRole !== 'admin') { alert("唯讀訪客模式不支援修改！"); return; }
-            window.fbUpdate(window.fbRef(window.fbDb, `family_calendar_activities/${id}`), { status: targetStatus });
+            window.fbUpdate(window.fbUpdate(window.fbRef(window.fbDb, `family_calendar_activities/${id}`), { status: targetStatus }));
         });
     });
 }
@@ -1417,7 +1375,7 @@ function renderKanbanBoard() {
         matched.forEach(c => {
             let badgePriority = c.isAI_Priority ? `<span style="background:#ff4d4f; color:white; font-size:10px; padding:1px 4px; border-radius:3px; font-weight:bold; margin-right:4px;">🔥高優先</span>` : '';
             let pColor = getAssigneeColor(c.assignee || '全員');
-            html += `<div class="kanban-card-item" draggable="true" ondragstart="drag(event, '${c.id}')" onclick="openEventPage('${c.id}')">
+             html += `<div class="kanban-card-item" draggable="true" ondragstart="drag(event, '${c.id}')" onclick="openEventPage('${c.id}')">
                 <div style="font-weight:bold; font-size:15px; margin-bottom:4px;">${badgePriority}${c.title}</div>
                 <div style="font-size:12px; color:gray;">⏰ ${c.time}</div>
                 <div style="margin-top:6px; display:flex; justify-content:space-between;">
@@ -1440,7 +1398,6 @@ function filterDatabaseEvents() {
 
 function renderDashboardBlocks() {
     let todayStr = new Date().toISOString().slice(0, 10);
-    
     let urgentActs = activities.filter(a => (a.category === "重要" || a.isAI_Priority) && (a.status || "待處理") !== "已完成");
     urgentActs.sort((a, b) => calcEventUrgencyScore(b) - calcEventUrgencyScore(a));
 
@@ -1486,7 +1443,7 @@ function openModifyEventForm(id) {
     document.getElementById('editKey').value = ev.id;
     document.getElementById('eventRepeat').value = ev.repeat || "不重複";
     document.getElementById('eventReminder').value = ev.reminder || "無"; 
-    document.getElementById('eventAssignee').value = ev.assignee || "全員"; // 精準匹配舊值
+    document.getElementById('eventAssignee').value = ev.assignee || "全員";
     document.getElementById('formSubmitBtn').innerText = "確認修改更新至雲端";
 }
 
@@ -1526,6 +1483,7 @@ function getLunarDayText(dateStr) {
     } catch(e) { return ""; }
 }
 
+/* ─── 🗓️ 核心渲染優化：日誌大日曆格同步負責人專屬色 (加強版) ─── */
 function renderCalendarWithData(dataset) {
     let y = current.getFullYear(); let m = current.getMonth();
     monthLabel.innerText = y + "年 " + (m + 1) + "月";
@@ -1540,9 +1498,12 @@ function renderCalendarWithData(dataset) {
         let dayActivities = dataset.filter(a => isEventActiveOnDate(a, dStr));
         let dayMediaItems = albumItems.filter(item => item.date === dStr);
         let eventsHtml = "";
+        
         dayActivities.forEach(act => { 
             let priorityMark = act.isAI_Priority ? '🔥 ' : '';
-            eventsHtml += `<span class="day-event-badge" style="background:${getCategoryColor(act.category)}; color:#37352f; border-left:3px solid #666;">${priorityMark}${act.time} ${act.title}</span>`; 
+            // 💡 關鍵變更：解析該行程負責人的莫蘭迪色彩，並直接覆蓋至月曆標籤背景
+            let pColor = getAssigneeColor(act.assignee || '全員');
+            eventsHtml += `<span class="day-event-badge" style="background:${pColor.bg}; color:${pColor.text}; border-left:3px solid ${pColor.text};">${priorityMark}${act.time} ${act.title}</span>`; 
         });
         dayMediaItems.forEach(media => { eventsHtml = `<span class="day-event-badge" style="background:#fff7e6; color:#d46b08; border-left:3px solid #f39c12; font-weight:bold;">🖼️ 附圖: ${media.title}</span>` + eventsHtml; });
         let hasMultiDayActive = dayActivities.some(a => a.date !== a.endDate);
