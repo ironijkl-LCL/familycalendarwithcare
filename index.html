@@ -146,6 +146,9 @@ header {
 .weekdays-container { display: flex; width: 100%; margin-bottom: 5px; }
 .weekday { flex: 1; text-align:center; color:gray; font-weight:bold; font-size:16px; }
 
+/* 🔴 星期天文字顏色直接同步高亮紅 */
+.weekdays-container .weekday:first-child { color: #ff4d4f; }
+
 .calendar { display: flex; flex-wrap: wrap; width: 100%; touch-action: pan-y; }
 .calendar-day {
     display: inline-block;
@@ -171,7 +174,7 @@ header {
 today { border:3px solid orange; }
 .selected-day { background: #d0f5db !important; border: 2px solid #25D366; }
 .multiday-pass-range { background: rgba(37, 211, 102, 0.08) !important; }
-.hk-holiday-pass-range { background: rgba(255, 77, 79, 0.06) !important; }
+.hk-holiday-pass-range { background: rgba(255, 77, 79, 0.05) !important; }
 
 .lunar { font-size:12px; color:#666; margin-top: 2px; }
 .holiday { font-size:11px; color:#ff4d4f; font-weight:bold; margin-top: 2px; }
@@ -255,7 +258,7 @@ button.pretty-edit-btn { background: linear-gradient(135deg, #1890ff, #40a9ff); 
 
 .popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); z-index: 1000; overflow-y: auto; }
 .popup-content-card { position: relative; background: white; width: 90%; max-width: 550px; margin: 50px auto; padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
-.popup-close-x { absolute; top: 15px; right: 18px; font-size: 24px; color: #8c8c8c; cursor: pointer; font-weight: bold; }
+.popup-close-x { position: absolute; top: 15px; right: 18px; font-size: 24px; color: #8c8c8c; cursor: pointer; font-weight: bold; }
 .password-lock-section { background: #fffbe6; border: 1px solid #ffe58f; padding: 15px; border-radius: 10px; margin-top: 10px; text-align: center; }
 .secure-form-fields { display: none; margin-top: 15px; }
 
@@ -760,7 +763,6 @@ function getAssigneeColor(assignee) {
     if (!name || name === "全員" || name === "所有人" || name === "全部人") {
         return { bg: "#f5f5f5", text: "#666666" };
     }
-    
     if (name.includes("鐵") || name.includes("tit")) {
         return { bg: "#e6f7ff", text: "#0050b3" };
     }
@@ -782,7 +784,6 @@ function getAssigneeColor(assignee) {
     if (name.includes("工作") || name.includes("admin")) {
         return { bg: "#fff1f0", text: "#cf1322" };
     }
-    
     return { bg: "#e6fffb", text: "#08979c" };
 }
 
@@ -827,16 +828,14 @@ function verifyGatePassword() {
             document.getElementById('eventRepeat').value = "不重複";
             document.getElementById('eventReminder').value = "無";
             
-            // 嘗試在下拉清單中尋找匹配當前登入者名字的項目
             let selectAssignee = document.getElementById('eventAssignee');
-            selectAssignee.value = "全員"; // 預設值
+            selectAssignee.value = "全員"; 
             for (let option of selectAssignee.options) {
                 if (normalize(currentUserMemberName).includes(normalize(option.value)) || normalize(option.value).includes(normalize(currentUserMemberName))) {
                     selectAssignee.value = option.value;
                     break;
                 }
             }
-            
             document.getElementById('eventCategory').value = "家庭";
             document.getElementById('eventStatus').value = "待處理";
             populateRelationSelectOptions();
@@ -1347,8 +1346,8 @@ function addFamilyEvent() {
     }
 }
 
-function deleteMediaFromAlbum(id) {
-    if (confirm("確定要刪除這張家庭相片嗎？")) window.fbRemove(window.fbRef(window.fbDb, `family_mutual_album/${id}`));
+function deleteEventFromPopup(id) {
+    if (confirm("確定要刪除這項活動嗎？")) window.fbRemove(window.fbRef(window.fbDb, `family_calendar_activities/${id}`)).then(() => closeEventPopup());
 }
 
 function initKanbanUXListeners() {
@@ -1362,7 +1361,7 @@ function initKanbanUXListeners() {
             let id = e.dataTransfer.setData ? e.dataTransfer.getData("text") : window._draggedId;
             let targetStatus = col === "todo" ? "待處理" : (col === "progress" ? "進行中" : "已完成");
             if(userRole !== 'admin') { alert("唯讀訪客模式不支援修改！"); return; }
-            window.fbUpdate(window.fbUpdate(window.fbRef(window.fbDb, `family_calendar_activities/${id}`), { status: targetStatus }));
+            window.fbUpdate(window.fbRef(window.fbDb, `family_calendar_activities/${id}`), { status: targetStatus });
         });
     });
 }
@@ -1447,10 +1446,6 @@ function openModifyEventForm(id) {
     document.getElementById('formSubmitBtn').innerText = "確認修改更新至雲端";
 }
 
-function deleteEventFromPopup(id) {
-    if (confirm("確定要刪除這項活動嗎？")) window.fbRemove(window.fbRef(window.fbDb, `family_calendar_activities/${id}`)).then(() => closeEventPopup());
-}
-
 function renderPopupWhatsApp_UI() {
     let container = document.getElementById('popupWhatsAppList'); let filtered = activities.filter(a => isEventActiveOnDate(a, selectedDateStr));
     if (filtered.length === 0) { container.innerHTML = `<p style="color:gray; text-align:center;">無項目可通知。</p>`; return; }
@@ -1483,39 +1478,85 @@ function getLunarDayText(dateStr) {
     } catch(e) { return ""; }
 }
 
-/* ─── 🗓️ 核心渲染優化：日誌大日曆格同步負責人專屬色 (加強版) ─── */
+/* ─── 🗓️ 核心深度渲染優化：跨日上色整合與星期天/假期聯動系統 ─── */
 function renderCalendarWithData(dataset) {
     let y = current.getFullYear(); let m = current.getMonth();
     monthLabel.innerText = y + "年 " + (m + 1) + "月";
-    let first = new Date(y, m, 1).getDay();
-    let days = new Date(y, m + 1, 0).getDate();
+    
+    let firstDayIndex = new Date(y, m, 1).getDay();
+    let daysCount = new Date(y, m + 1, 0).getDate();
     let fragment = document.createDocumentFragment();
-    for(let i=0; i<first; i++){ let cell = document.createElement('div'); cell.className = "calendar-day empty"; fragment.appendChild(cell); }
-    for(let i=1; i<=days; i++){
+    
+    // 渲染前導空格
+    for(let i=0; i<firstDayIndex; i++){ 
+        let cell = document.createElement('div'); 
+        cell.className = "calendar-day empty"; 
+        fragment.appendChild(cell); 
+    }
+    
+    // 開始按月逐日渲染
+    for(let i=1; i<=daysCount; i++){
         let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-        let isToday = new Date().toISOString().slice(0,10) === dStr; let isSelected = selectedDateStr === dStr;
+        let thisDateObj = new Date(y, m, i);
+        let currentDayOfWeek = thisDateObj.getDay(); // 獲取當前星期幾 (0 是星期天)
+        
+        let isToday = new Date().toISOString().slice(0,10) === dStr; 
+        let isSelected = selectedDateStr === dStr;
         
         let dayActivities = dataset.filter(a => isEventActiveOnDate(a, dStr));
         let dayMediaItems = albumItems.filter(item => item.date === dStr);
         let eventsHtml = "";
         
+        // 渲染每個活動的獨立代班顏色
         dayActivities.forEach(act => { 
             let priorityMark = act.isAI_Priority ? '🔥 ' : '';
-            // 💡 關鍵變更：解析該行程負責人的莫蘭迪色彩，並直接覆蓋至月曆標籤背景
             let pColor = getAssigneeColor(act.assignee || '全員');
             eventsHtml += `<span class="day-event-badge" style="background:${pColor.bg}; color:${pColor.text}; border-left:3px solid ${pColor.text};">${priorityMark}${act.time} ${act.title}</span>`; 
         });
-        dayMediaItems.forEach(media => { eventsHtml = `<span class="day-event-badge" style="background:#fff7e6; color:#d46b08; border-left:3px solid #f39c12; font-weight:bold;">🖼️ 附圖: ${media.title}</span>` + eventsHtml; });
+        
+        dayMediaItems.forEach(media => { 
+            eventsHtml = `<span class="day-event-badge" style="background:#fff7e6; color:#d46b08; border-left:3px solid #f39c12; font-weight:bold;">🖼️ 附圖: ${media.title}</span>` + eventsHtml; 
+        });
+        
         let hasMultiDayActive = dayActivities.some(a => a.date !== a.endDate);
+        let holidayName = getHKHoliday(m+1, i);
+        
+        // 🛠️ 判斷是否為公眾假期或星期日，若是，則一體化套用高亮背景色
+        let isHolidayOrSunday = (holidayName !== "") || (currentDayOfWeek === 0);
 
         let dayCell = document.createElement('div');
-        dayCell.className = "calendar-day" + (isToday?" today":"") + (isSelected?" selected-day":"") + (getHKHoliday(m+1, i)?" hk-holiday-pass-range":"") + (hasMultiDayActive ? " multiday-pass-range" : "");
-        dayCell.setAttribute('data-date', dStr); dayCell.onclick = () => selectDate(dStr);
-        dayCell.innerHTML = `<strong>${i}</strong><div class="lunar">${getLunarDayText(dStr)}</div>${getHKHoliday(m+1, i) ? `<div class="holiday">🔴 ${getHKHoliday(m+1, i)}</div>` : ""}<div class="day-events-container">${eventsHtml}</div>`;
+        dayCell.className = "calendar-day" + 
+                            (isToday ? " today" : "") + 
+                            (isSelected ? " selected-day" : "") + 
+                            (isHolidayOrSunday ? " hk-holiday-pass-range" : "") + 
+                            (hasMultiDayActive ? " multiday-pass-range" : "");
+                            
+        dayCell.setAttribute('data-date', dStr); 
+        dayCell.onclick = () => selectDate(dStr);
+        
+        // 如果是星期日且無特定節日名稱，標註“休”，若是法定假日則顯示假日名稱
+        let holidayLabelHtml = "";
+        if (holidayName !== "") {
+            holidayLabelHtml = `<div class="holiday">🔴 ${holidayName}</div>`;
+        } else if (currentDayOfWeek === 0) {
+            holidayLabelHtml = `<div class="holiday" style="color: #ff7875;">☕ 星期日</div>`;
+        }
+        
+        dayCell.innerHTML = `<strong>${i}</strong><div class="lunar">${getLunarDayText(dStr)}</div>${holidayLabelHtml}<div class="day-events-container">${eventsHtml}</div>`;
         fragment.appendChild(dayCell);
     }
-    while((first + days) % 7 !== 0){ let cell = document.createElement('div'); cell.className = "calendar-day empty"; fragment.appendChild(cell); days++; }
-    calendar.innerHTML = ""; calendar.appendChild(fragment); renderDayEvents();
+    
+    // 補齊尾部空格
+    while((firstDayIndex + daysCount) % 7 !== 0){ 
+        let cell = document.createElement('div'); 
+        cell.className = "calendar-day empty";
+        fragment.appendChild(cell); 
+        daysCount++; 
+    }
+    
+    calendar.innerHTML = ""; 
+    calendar.appendChild(fragment); 
+    renderDayEvents();
 }
 
 function selectDate(dateStr) { selectedDateStr = dateStr; document.getElementById('selectedDateLabel').innerText = selectedDateStr; renderCalendarWithData(activities); renderMainAlbumUI(); }
