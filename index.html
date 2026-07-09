@@ -2,62 +2,128 @@
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>🏠 Family OS - 麟李家庭智慧管理系統</title>
 
 <style>
-/* ─── 🎨 Notion 高質感核心美學 ─── */
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin:0; font-size:18px; background:#fbfbfa; color:#37352f; padding-bottom: 80px; }
+/* ─── 🍏 Apple Premium Design & Oasis Aesthetics Core ─── */
+:root {
+    --apple-bg: #f5f5f7;
+    --apple-card: rgba(255, 255, 255, 0.78);
+    --apple-text: #1d1d1f;
+    --apple-text-secondary: #86868b;
+    --apple-border: rgba(0, 0, 0, 0.08);
+    --apple-glow-border: rgba(255, 255, 255, 0.7);
+    
+    /* Oasis Premium Palette */
+    --oasis-primary: #0071e3;
+    --oasis-primary-glow: rgba(0, 113, 227, 0.15);
+    --oasis-success: #34c759;
+    --oasis-success-glow: rgba(52, 199, 89, 0.12);
+    --oasis-warning: #ff9500;
+    --oasis-danger: #ff3b30;
+    --oasis-ai-gradient: linear-gradient(135deg, rgba(232, 220, 255, 0.55), rgba(212, 235, 255, 0.55));
+    --oasis-ai-purple: #9842ef;
+}
 
+body { 
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    margin: 0; 
+    font-size: 17px; 
+    background-color: var(--apple-bg); 
+    color: var(--apple-text); 
+    padding-bottom: 100px;
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ─── 🪟 Blurry Top Header ─── */
 header {
-    background:#ffffff;
-    color:#37352f;
-    padding:15px 20px;
-    text-align:left;
-    font-size:22px;
-    font-weight:bold;
-    border-bottom: 1px solid #edece9;
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    color: var(--apple-text);
+    padding: 18px 24px;
+    text-align: left;
+    font-size: 20px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--apple-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
     position: sticky;
-    top:0;
-    z-index:100;
+    top: 0;
+    z-index: 1000;
+    letter-spacing: -0.02em;
 }
 
-.container { padding:10px; max-width: 1200px; margin: 0 auto; box-sizing: border-box; }
+.container { 
+    padding: 24px; 
+    max-width: 1140px;
+    margin: 0 auto; 
+    box-sizing: border-box; 
+}
 
-/* ─── 🔍 全域全文搜尋框 ─── */
+/* ─── 🗂️ Apple Style UI Components ─── */
+.card {
+    background: var(--apple-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 24px;
+    margin-bottom: 20px;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--apple-glow-border);
+    box-sizing: border-box;
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease;
+}
+.card:hover {
+    box-shadow: 0 6px 30px rgba(0, 0, 0, 0.06);
+}
+
+/* 🔍 全文搜尋框 */
 .search-filter-card {
-    background: white;
-    padding: 12px;
-    margin-bottom: 16px;
-    border-radius: 8px;
-    border: 1px solid #edece9;
+    background: var(--apple-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 14px;
+    margin-bottom: 20px;
+    border-radius: 14px;
+    border: 1px solid var(--apple-glow-border);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.02);
 }
 .search-box {
     width: 100%;
-    padding: 10px;
-    border: 1px solid #edece9;
-    border-radius: 6px;
+    padding: 12px 16px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
     font-size: 15px;
-    background: #faf9f6;
+    background: rgba(255, 255, 255, 0.5);
     box-sizing: border-box;
+    transition: all 0.2s ease;
+    outline: none;
+}
+.search-box:focus {
+    background: #ffffff;
+    border-color: var(--oasis-primary);
+    box-shadow: 0 0 0 4px var(--oasis-primary-glow);
 }
 
-/* ─── 🛠️ 頂部操作按鈕 5 鍵平排外觀 ─── */
+/* 🛠️ 頂部操作列 5 鍵平排外觀 */
 .top-action-card {
-    background: white;
-    padding: 10px;
-    margin-bottom: 12px;
-    border-radius: 12px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    background: var(--apple-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 12px;
+    margin-bottom: 20px;
+    border-radius: 16px;
     display: flex;
     flex-direction: row; 
-    gap: 6px;
+    gap: 8px;
     width: 100%;
     box-sizing: border-box;
-    border: 1px solid #edece9;
+    border: 1px solid var(--apple-glow-border);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
 }
 
 .top-action-card button.action-btn {
@@ -69,69 +135,72 @@ header {
     border: none;
     border-radius: 10px;
     color: white;
-    font-size: 15px;
-    padding: 12px 6px;
-    font-weight: bold;
+    font-size: 14px;
+    padding: 14px 8px;
+    font-weight: 600;
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
-.top-action-card button.action-btn:hover { opacity: 0.9; }
+.top-action-card button.action-btn:active { 
+    transform: scale(0.97);
+    opacity: 0.85; 
+}
 
 @media (max-width: 650px) {
-    .top-action-card { flex-wrap: wrap; gap: 6px; }
+    .top-action-card { flex-wrap: wrap; gap: 6px; padding: 8px; }
     .top-action-card button.action-btn {
         flex: 1 1 calc(33.33% - 6px);
         font-size: 13px !important;
-        padding: 10px 4px !important;
+        padding: 12px 4px !important;
     }
 }
 
-/* ─── 🗂️ Notion 視圖切換列 ─── */
+/* 🗂️ Notion 視圖切換列 (Apple式藥丸按鈕組設計) */
 .notion-view-selector {
-    display: flex;
-    gap: 4px;
-    border-bottom: 1px solid #edece9;
-    margin-bottom: 16px;
-    overflow-x: auto;
+    display: inline-flex;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 4px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    gap: 2px;
 }
 .view-tag-btn {
     background: transparent;
     border: none;
-    padding: 10px 16px;
-    font-size: 15px;
-    font-weight: bold;
-    color: #787774;
+    padding: 8px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--apple-text-secondary);
     cursor: pointer;
-    border-radius: 6px 6px 0 0;
+    border-radius: 9px;
     white-space: nowrap;
+    transition: all 0.2s ease;
 }
-.view-tag-btn:hover { background: #efeee8; color: #37352f; }
-.view-tag-btn.active { border-bottom: 2px solid #37352f; color: #37352f; }
-
-.card {
-    background:white;
-    padding:15px;
-    margin-bottom:12px;
-    border-radius:12px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    border: 1px solid #edece9;
+.view-tag-btn:hover { color: var(--apple-text); }
+.view-tag-btn.active { 
+    background: #ffffff; 
+    color: var(--apple-text); 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    font-weight: 600;
 }
 
 /* AI 智慧摘要特製樣式 */
 .ai-summary-box {
-    background: linear-gradient(135deg, #fdf6fb, #f3e5f5);
-    border-left: 5px solid #722ed1;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 16px;
+    background: var(--oasis-ai-gradient);
+    border-left: 5px solid var(--oasis-ai-purple);
+    padding: 20px;
+    border-radius: 16px;
+    margin-bottom: 24px;
     font-size: 15px;
+    line-height: 1.5;
+    box-shadow: 0 4px 20px rgba(152, 66, 239, 0.05);
 }
 
-/* ─── 📐 雙欄佈局結構 ─── */
+/* 📐 雙欄佈局結構 */
 .notion-grid-layout {
     display: grid;
-    grid-template-columns: 7fr 5fr;
-    gap: 16px;
+    grid-template-columns: 6.8fr 5.2fr;
+    gap: 24px;
 }
 @media (max-width: 900px) {
     .notion-grid-layout { grid-template-columns: 1fr; }
@@ -140,115 +209,256 @@ header {
 .view-panel { display: none; }
 .view-panel.active { display: block; }
 
-.calendar-header { display: flex; justify-content:space-between; align-items:center; margin-bottom: 15px; }
-.nav-btn { padding:10px; font-size:16px; background:#25D366; color:white; border:none; border-radius:10px; cursor:pointer; }
-.month-title { font-size:22px; font-weight:bold; }
-.weekdays-container { display: flex; width: 100%; margin-bottom: 5px; }
-.weekday { flex: 1; text-align:center; color:gray; font-weight:bold; font-size:16px; }
+/* ─── 🗓️ 月曆設計美學 ─── */
+.calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.nav-btn { 
+    padding: 10px 16px; 
+    font-size: 14px; 
+    background: rgba(0, 0, 0, 0.05); 
+    color: var(--apple-text); 
+    border: none; 
+    border-radius: 8px;
+    cursor: pointer; 
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+.nav-btn:hover { background: rgba(0, 0, 0, 0.08); }
+.month-title { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+.weekdays-container { display: flex; width: 100%; margin-bottom: 10px; }
+.weekday { flex: 1; text-align: center; color: var(--apple-text-secondary); font-weight: 600; font-size: 13px; text-transform: uppercase; }
 
 /* 🔴 星期天文字顏色直接同步高亮紅 */
-.weekdays-container .weekday:first-child { color: #ff4d4f; }
+.weekdays-container .weekday:first-child { color: var(--apple-danger); }
 
 .calendar { display: flex; flex-wrap: wrap; width: 100%; touch-action: pan-y; }
 .calendar-day {
     display: inline-block;
     width: 14.2857%;
-    padding:6px 2px;
-    text-align:center;
-    background:white;
-    border-radius:10px;
-    margin-bottom:6px;
-    min-height:115px;
-    font-size:18px;
+    padding: 8px 4px;
+    text-align: center;
+    background: #ffffff;
+    border-radius: 12px;
+    margin-bottom: 6px;
+    min-height: 120px;
+    font-size: 16px;
     vertical-align: top;
     box-sizing: border-box;
     cursor: pointer;
-    border: 1px solid #f0f0f0;
+    border: 1px solid rgba(0,0,0,0.03);
     overflow: hidden;
     position: relative;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
-.calendar-day:hover { background: #f7f6f3; }
-.calendar-day.highlight-sync { background: #fff1f0 !important; border: 2px solid #ff4d4f !important; transform: scale(1.02); }
+.calendar-day:hover { 
+    background: var(--apple-bg); 
+    transform: scale(1.02);
+    z-index: 2;
+}
+.calendar-day.highlight-sync { 
+    background: #fff1f0 !important; 
+    border: 2px solid var(--apple-danger) !important;
+    transform: scale(1.04); 
+    z-index: 5;
+}
 
-today { border:3px solid orange; }
-.selected-day { background: #d0f5db !important; border: 2px solid #25D366; }
-.multiday-pass-range { background: rgba(37, 211, 102, 0.08) !important; }
-.hk-holiday-pass-range { background: rgba(255, 77, 79, 0.05) !important; }
+today { border: 2.5px solid var(--oasis-warning); }
+.selected-day { background: #e2f7e9 !important; border: 2.5px solid var(--oasis-success); }
+.multiday-pass-range { background: rgba(52, 199, 89, 0.05) !important; }
+.hk-holiday-pass-range { background: rgba(255, 59, 48, 0.05) !important; }
 
-.lunar { font-size:12px; color:#666; margin-top: 2px; }
-.holiday { font-size:11px; color:#ff4d4f; font-weight:bold; margin-top: 2px; }
+.lunar { font-size: 11px; color: var(--apple-text-secondary); margin-top: 2px; }
+.holiday { font-size: 11px; color: var(--apple-danger); font-weight: 600; margin-top: 2px; }
 
 .day-event-badge {
     font-size: 11px;
-    background: #e6f7ff;
-    color: #1890ff;
-    border-left: 3px solid #1890ff;
-    padding: 2px 4px;
-    margin-top: 3px;
+    padding: 4px 6px;
+    margin-top: 4px;
     text-align: left;
-    border-radius: 2px;
+    border-radius: 4px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     display: block;
-    font-weight: bold;
+    font-weight: 600;
 }
 
 /* 🚀 Block 系統與拖拉排序樣式 ─── */
-.block-wrapper { display: flex; align-items: center; gap: 8px; margin: 8px 0; padding: 6px; border-radius: 6px; background: #ffffff; border: 1px solid #edece9; cursor: move; position: relative; }
-.block-wrapper.dragging { opacity: 0.4; background: #efeee8; }
-.block-handle { color: #ccc; font-size: 18px; cursor: move; padding: 0 4px; }
+.block-wrapper { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    margin: 10px 0; 
+    padding: 8px 12px;
+    border-radius: 10px; 
+    background: #ffffff; 
+    border: 1px solid var(--apple-border); 
+    cursor: move; 
+    position: relative; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.01);
+}
+.block-wrapper.dragging { opacity: 0.4; background: #f5f5f7; }
+.block-handle { color: #ccc; font-size: 16px; cursor: move; padding: 0 4px; }
 .block-content-area { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-.block-input-text { width: 100%; padding: 6px; border: 1px solid #edece9; border-radius: 4px; font-size: 14px; box-sizing: border-box; background: transparent; }
-.block-input-heading { width: 100%; padding: 6px; border: 1px solid #edece9; border-radius: 4px; font-size: 18px; font-weight: bold; box-sizing: border-box; background: transparent; }
+.block-input-text { width: 100%; padding: 8px; border: 1px solid transparent; border-radius: 6px; font-size: 14px; box-sizing: border-box; background: transparent; outline: none;}
+.block-input-text:focus { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.05); }
+.block-input-heading { width: 100%; padding: 8px; border: 1px solid transparent; border-radius: 6px; font-size: 18px; font-weight: 700; box-sizing: border-box; background: transparent; outline: none; letter-spacing: -0.01em;}
+.block-input-heading:focus { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.05); }
 
 /* 🚀 Slash Command 彈出清單樣式 */
 .slash-menu {
     position: absolute;
-    background: white;
-    border: 1px solid #edece9;
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
     z-index: 1010;
-    width: 180px;
+    width: 200px;
     display: none;
     flex-direction: column;
-    padding: 4px 0;
+    padding: 6px 0;
 }
 .slash-item {
-    padding: 8px 12px;
+    padding: 10px 14px;
     font-size: 14px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 8px;
-    color: #37352f;
+    gap: 10px;
+    color: var(--apple-text);
+    font-weight: 500;
 }
 .slash-item:hover, .slash-item.active {
-    background: #f1f0ee;
+    background: var(--oasis-primary);
+    color: white;
 }
 
-/* 📱 Kanban 樣式優化 ─── */
-.kanban-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+/* 📋 Kanban 狀態看板牆 ─── */
+.kanban-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 @media (max-width: 750px) { .kanban-board { grid-template-columns: 1fr; } }
-.kanban-column { background: #f7f6f3; padding: 12px; border-radius: 10px; border: 1px solid #edece9; min-height: 400px; transition: background 0.2s ease, border 0.2s ease; }
-.kanban-column.drag-over { background: #e6f7ff !important; border: 2px dashed #1890ff !important; }
-.kanban-col-title { font-weight: bold; padding-bottom: 8px; margin-bottom: 10px; border-bottom: 2px solid #edece9; display: flex; justify-content: space-between; }
-.kanban-card-item { background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #edece9; cursor: grab; transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.25, 1), box-shadow 0.2s ease; }
-.kanban-card-item:active { cursor: grabbing; transform: scale(0.98); }
+.kanban-column { 
+    background: rgba(0, 0, 0, 0.03); 
+    padding: 16px; 
+    border-radius: 16px;
+    border: 1px solid transparent; 
+    min-height: 450px; 
+    transition: all 0.2s ease; 
+}
+.kanban-column.drag-over { 
+    background: var(--oasis-primary-glow) !important;
+    border: 2px dashed var(--oasis-primary) !important; 
+}
+.kanban-col-title { 
+    font-weight: 700; 
+    font-size: 15px;
+    padding-bottom: 10px; 
+    margin-bottom: 14px; 
+    border-bottom: 1px solid rgba(0,0,0,0.05); 
+    display: flex;
+    justify-content: space-between; 
+}
+.kanban-card-item { 
+    background: #ffffff; 
+    padding: 16px; 
+    border-radius: 12px; 
+    margin-bottom: 10px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    border: 1px solid rgba(0,0,0,0.04); 
+    cursor: grab; 
+    transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.25, 1), box-shadow 0.2s ease; 
+}
+.kanban-card-item:active { cursor: grabbing; transform: scale(0.97); }
 
-.floating-add-btn { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: #25D366; color: white; border: none; border-radius: 50%; font-size: 28px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; z-index: 999; display: flex; align-items: center; justify-content: center; }
+/* ➕ 右下角懸浮按鈕 */
+.floating-add-btn { 
+    position: fixed; 
+    bottom: 30px; 
+    right: 30px; 
+    width: 56px; 
+    height: 56px; 
+    background: var(--oasis-primary); 
+    color: white; 
+    border: none;
+    border-radius: 50%; 
+    font-size: 26px; 
+    box-shadow: 0 8px 24px rgba(0, 113, 227, 0.3); 
+    cursor: pointer; 
+    z-index: 999; 
+    display: flex; 
+    align-items: center;
+    justify-content: center; 
+    transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.floating-add-btn:hover {
+    transform: scale(1.08) translateY(-2px);
+    box-shadow: 0 10px 28px rgba(0, 113, 227, 0.4);
+}
 
-button.pretty-whatsapp-btn { background: linear-gradient(135deg, #25D366, #20ba59); color: white; border: none; border-radius: 20px; padding: 8px 16px; font-size: 14px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
-.action-btn-group-row { display: flex; gap: 6px; }
-button.pretty-delete-btn { background: linear-gradient(135deg, #ff4d4f, #ff7875); color: white; border: none; border-radius: 6px; padding: 6px 12px; font-size: 14px; font-weight: bold; cursor: pointer; }
-button.pretty-edit-btn { background: linear-gradient(135deg, #1890ff, #40a9ff); color: white; border: none; border-radius: 6px; padding: 6px 12px; font-size: 14px; font-weight: bold; cursor: pointer; }
+/* 按鈕美學 */
+button.pretty-whatsapp-btn { 
+    background: #34c759; 
+    color: white; 
+    border: none; 
+    border-radius: 20px; 
+    padding: 8px 16px; 
+    font-size: 13px;
+    font-weight: 600; 
+    cursor: pointer; 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 4px; 
+}
+.action-btn-group-row { display: flex; gap: 8px; }
+button.pretty-delete-btn { 
+    background: rgba(255, 59, 48, 0.1); 
+    color: var(--apple-danger); 
+    border: none; 
+    border-radius: 8px; 
+    padding: 6px 14px; 
+    font-size: 13px; 
+    font-weight: 600;
+    cursor: pointer; 
+    transition: background 0.2s;
+}
+button.pretty-delete-btn:hover { background: rgba(255, 59, 48, 0.18); }
 
-.camera-upload-row { display: flex; gap: 8px; margin: 8px 0; }
-.camera-btn { flex: 1; background: linear-gradient(135deg, #e67e22, #d35400); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; }
-.camera-btn.video-mode { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
-.upload-preview-box { max-width: 100%; height: auto; max-height: 120px; border-radius: 8px; margin: 8px 0; display: none; object-fit: cover; border: 2px dashed #ccc; }
+button.pretty-edit-btn { 
+    background: rgba(0, 113, 227, 0.1); 
+    color: var(--oasis-primary); 
+    border: none; 
+    border-radius: 8px; 
+    padding: 6px 14px; 
+    font-size: 13px;
+    font-weight: 600; 
+    cursor: pointer; 
+    transition: background 0.2s;
+}
+button.pretty-edit-btn:hover { background: rgba(0, 113, 227, 0.18); }
+
+.camera-upload-row { display: flex; gap: 8px; margin: 12px 0; }
+.camera-btn { 
+    flex: 1;
+    background: rgba(0,0,0,0.05); 
+    color: var(--apple-text); 
+    border: none; 
+    padding: 12px; 
+    border-radius: 10px; 
+    font-size: 14px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    text-align: center;
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 6px; 
+    transition: background 0.2s;
+}
+.camera-btn:hover { background: rgba(0,0,0,0.08); }
+.camera-btn.video-mode { background: rgba(152, 66, 239, 0.1); color: var(--oasis-ai-purple); }
+.camera-btn.video-mode:hover { background: rgba(152, 66, 239, 0.16); }
+
+.upload-preview-box { max-width: 100%; height: auto; max-height: 140px; border-radius: 12px; margin: 10px 0; display: none; object-fit: cover; border: 2px dashed rgba(0,0,0,0.1); }
 
 .twin-input-wrapper { display: flex; align-items: center; position: relative; width: 100%; }
 .twin-input-wrapper input[type="text"] { flex: 1; cursor: pointer; background: #fff; }
@@ -256,51 +466,139 @@ button.pretty-edit-btn { background: linear-gradient(135deg, #1890ff, #40a9ff); 
 .wheel-btn { background: transparent !important; border: none !important; width: 44px; height: 100%; position: relative; pointer-events: auto; }
 .picker-overlay-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0 !important; cursor: pointer; z-index: 5; }
 
-.popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); z-index: 1000; overflow-y: auto; }
-.popup-content-card { position: relative; background: white; width: 90%; max-width: 550px; margin: 50px auto; padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
-.popup-close-x { position: absolute; top: 15px; right: 18px; font-size: 24px; color: #8c8c8c; cursor: pointer; font-weight: bold; }
-.password-lock-section { background: #fffbe6; border: 1px solid #ffe58f; padding: 15px; border-radius: 10px; margin-top: 10px; text-align: center; }
-.secure-form-fields { display: none; margin-top: 15px; }
+/* ─── 🎛️ Popups & Modals (Apple Center Sheet) ─── */
+.popup-overlay { 
+    display: none;
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(0, 0, 0, 0.4); 
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 2000; 
+    overflow-y: auto;
+}
+.popup-content-card { 
+    position: relative; 
+    background: rgba(255, 255, 255, 0.94); 
+    width: 92%; 
+    max-width: 540px; 
+    margin: 60px auto; 
+    padding: 30px; 
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.15); 
+    border: 1px solid rgba(255,255,255,0.7);
+    box-sizing: border-box;
+}
+.popup-close-x { position: absolute; top: 20px; right: 24px; font-size: 22px; color: var(--apple-text-secondary); cursor: pointer; font-weight: 500; }
+.password-lock-section { background: rgba(0,0,0,0.03); padding: 20px; border-radius: 14px; margin-top: 12px; text-align: center; }
+.secure-form-fields { display: none; margin-top: 20px; }
 
-button.action-btn-block { width:100%; padding:12px; margin-top:8px; background:#25D366; color:white; border:none; border-radius:10px; font-size:16px; font-weight:bold; cursor:pointer; }
-input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+button.action-btn-block { 
+    width: 100%; 
+    padding: 14px; 
+    margin-top: 12px; 
+    background: var(--oasis-primary); 
+    color: white; 
+    border: none; 
+    border-radius: 12px; 
+    font-size: 16px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    transition: opacity 0.2s;
+}
+button.action-btn-block:hover { opacity: 0.9; }
 
-.event-item { background: #f9f9f9; padding: 12px; border-left: 4px solid #25D366; margin-bottom: 8px; border-radius: 0 8px 8px 0; transition: transform 0.2s ease; cursor: pointer; }
-.event-item:hover { transform: scale(1.01); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-.event-time { font-weight: bold; color: #333; }
-.event-desc { margin-top: 4px; color: #555; }
-.event-meta-tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
-.meta-chip { font-size: 12px; padding: 3px 8px; border-radius: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 3px; }
+input, textarea, select { 
+    width: 100%; 
+    padding: 12px 16px; 
+    margin: 8px 0; 
+    border: 1px solid rgba(0,0,0,0.1); 
+    border-radius: 10px; 
+    box-sizing: border-box; 
+    font-size: 15px; 
+    background: rgba(255,255,255,0.8);
+    outline: none;
+    transition: all 0.2s;
+}
+input:focus, select:focus { border-color: var(--oasis-primary); background: #ffffff; }
+
+/* 📅 右側日程項目 */
+.event-item { 
+    background: #ffffff; 
+    padding: 16px; 
+    border-left: 4px solid var(--oasis-primary); 
+    margin-bottom: 12px; 
+    border-radius: 0 14px 14px 0;
+    transition: all 0.2s ease; 
+    cursor: pointer; 
+    border-top: 1px solid rgba(0,0,0,0.02);
+    border-right: 1px solid rgba(0,0,0,0.02);
+    border-bottom: 1px solid rgba(0,0,0,0.02);
+}
+.event-item:hover { transform: translateX(2px); box-shadow: 0 4px 14px rgba(0,0,0,0.04); }
+.event-time { font-weight: 700; color: var(--apple-text); font-size: 14px; }
+.event-desc { margin-top: 6px; color: #3a3a3c; font-size: 15px; }
+.event-meta-tags { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+.meta-chip { 
+    font-size: 11px; 
+    padding: 4px 10px; 
+    border-radius: 20px; 
+    font-weight: 600; 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 3px; 
+}
 .chip-member { background: #e8f5e9; color: #2e7d32; }
 .chip-repeat { background: #e1f5fe; color: #0288d1; }
-.chip-reminder { background: #fff3e0; color: #ef6c00; }
-.chip-ai { background: #f3e5f5; color: #7b1fa2; border: 1px dashed #ab47bc; }
+.chip-reminder { background: rgba(255, 149, 0, 0.1); color: var(--oasis-warning); }
+.chip-ai { background: rgba(152, 66, 239, 0.08); color: var(--oasis-ai-purple); border: 1px dashed rgba(152, 66, 239, 0.3); }
 
-.album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 10px; }
-.album-item { background: white; border-radius: 10px; overflow: hidden; padding: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); text-align: center; position: relative; border: 1px solid #eee; }
-.album-item img, .event-item img { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; cursor: zoom-in; }
-.album-item video, .event-item video { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; background: #000; cursor: zoom-in; }
-.album-title { font-size: 13px; font-weight: bold; margin-top: 6px; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.album-date-badge { font-size: 11px; color: #1890ff; background: #e6f7ff; padding: 1px 4px; border-radius: 4px; display: inline-block; margin-top: 2px; }
-.album-delete-tag { position: absolute; top: 4px; right: 4px; background: rgba(255,47,47,0.9); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 14px; font-weight: bold; cursor: pointer; z-index: 10; }
+/* 🖼️ 相簿結構 */
+.album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; margin-top: 14px; }
+.album-item { 
+    background: #ffffff; 
+    border-radius: 14px; 
+    overflow: hidden; 
+    padding: 8px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
+    text-align: center;
+    position: relative; 
+    border: 1px solid rgba(0,0,0,0.02); 
+}
+.album-item img, .event-item img { width: 100%; height: 110px; object-fit: cover; border-radius: 10px; cursor: zoom-in; }
+.album-item video, .event-item video { width: 100%; height: 110px; object-fit: cover; border-radius: 10px; background: #000; cursor: zoom-in; }
+.album-title { font-size: 13px; font-weight: 600; margin-top: 8px; color: var(--apple-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.album-date-badge { font-size: 11px; color: var(--oasis-primary); background: rgba(0, 113, 227, 0.06); padding: 2px 6px; border-radius: 6px; display: inline-block; margin-top: 4px; font-weight: 500; }
+.album-delete-tag { 
+    position: absolute; top: 6px; right: 6px; 
+    background: rgba(255, 59, 48, 0.9); color: white; border: none; border-radius: 50%; 
+    width: 22px; height: 22px; font-size: 13px; font-weight: bold; cursor: pointer; z-index: 10; 
+}
 
-.lightbox-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 2000; align-items: center; justify-content: center; cursor: zoom-out; }
-.lightbox-content { max-width: 95%; max-height: 85%; border-radius: 12px; box-shadow: 0 4px 25px rgba(255,255,255,0.1); cursor: default; animation: zoomInEffect 0.25s ease-out; }
-@keyframes zoomInEffect { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+/* 🖼️ Lightbox 燈箱 */
+.lightbox-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); z-index: 3000; align-items: center; justify-content: center; cursor: zoom-out; }
+.lightbox-content { max-width: 92%; max-height: 85%; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: zoomInEffect 0.2s cubic-bezier(0.25, 1, 0.5, 1); }
+@keyframes zoomInEffect { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
 .view-精簡 .day-event-badge { display: none !important; }
-.view-詳細資料 .calendar-day { min-height: 140px !important; }
+.view-詳細資料 .calendar-day { min-height: 145px !important; }
 .view-詳細資料 .day-event-badge { white-space: normal !important; word-break: break-all !important; }
-.view-option-group { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
-.view-radio-label { display: flex; align-items: center; background: #f5f5f5; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-.view-radio-label input { width: auto; margin: 0 10px 0 0; transform: scale(1.3); }
+.view-option-group { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+.view-radio-label { display: flex; align-items: center; background: rgba(0,0,0,0.03); padding: 14px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 15px; }
+.view-radio-label input { width: auto; margin: 0 12px 0 0; transform: scale(1.2); }
+
+.album-header-container { display: flex; justify-content: space-between; align-items: center; }
+.inline-upload-trigger-btn { background: rgba(0, 113, 227, 0.1); color: var(--oasis-primary); border: none; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
 </style>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getDatabase, ref, onValue, set, push, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
   import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-
+  
   const firebaseConfig = {
     databaseURL: "https://familycalender-a62ae-default-rtdb.firebaseio.com",
     storageBucket: "familycalender-a62ae.firebasestorage.app"
@@ -327,15 +625,15 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
 <body class="view-列表" id="bodyNode">
 
 <header>
-    <div>🏠 Family OS - 麟李家庭智慧管理系統 v8.2</div>
-    <div id="roleBadge" style="font-size:14px; background:#f5f5f5; padding:4px 10px; border-radius:12px; font-weight:bold; color:#666;">🔒 訪客模式 (Viewer)</div>
+    <div>🏠 Family OS - 麟李家庭智慧管理系統 v8.5</div>
+    <div id="roleBadge" style="font-size:13px; background:rgba(0,0,0,0.05); padding:6px 14px; border-radius:20px; font-weight:600; color:var(--apple-text-secondary);">🔒 訪客模式 (Viewer)</div>
 </header>
 
 <div class="container">
 
     <div class="ai-summary-box" id="aiSummaryPanel">
-        <strong style="color: #722ed1;">🔮 麟李 AI 智慧家庭日誌摘要：</strong>
-        <span id="aiSummaryText" style="color: #555;">正在分析今日行程節奏與分工佇列...</span>
+        <strong style="color: var(--oasis-ai-purple);">🔮 麟李 AI 智慧家庭日誌摘要：</strong>
+        <span id="aiSummaryText" style="color: #3a3a3c;">正在分析今日行程節奏與分工佇列...</span>
     </div>
 
     <div class="search-filter-card">
@@ -343,11 +641,11 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
     </div>
 
     <div class="top-action-card">
-        <button class="action-btn" style="background: #25D366;" onclick="openAddFormPopup('ADD')">➕ 活動</button>
-        <button class="action-btn" style="background: #1890ff;" onclick="openAddFormPopup('MANAGE')">⚙️ 修改/刪除</button>
-        <button class="action-btn" style="background: #f39c12;" onclick="openAddFormPopup('ALBUM')">🏡 互助相簿</button>
-        <button class="action-btn" style="background: #00c642;" onclick="openAddFormPopup('WHATSAPP')">💬 WHATSAPP 通知</button>
-        <button class="action-btn" style="background: #722ed1;" onclick="openAddFormPopup('SWITCH_VIEW')">👁️ 視覺</button>
+        <button class="action-btn" style="background: #34c759;" onclick="openAddFormPopup('ADD')">➕ 活動</button>
+        <button class="action-btn" style="background: #0071e3;" onclick="openAddFormPopup('MANAGE')">⚙️ 修改/刪除</button>
+        <button class="action-btn" style="background: #ff9500;" onclick="openAddFormPopup('ALBUM')">🏡 互助相簿</button>
+        <button class="action-btn" style="background: #30db5b;" onclick="openAddFormPopup('WHATSAPP')">💬 WHATSAPP</button>
+        <button class="action-btn" style="background: #af52de;" onclick="openAddFormPopup('SWITCH_VIEW')">👁️ 視覺</button>
     </div>
 
     <div class="notion-view-selector">
@@ -361,20 +659,21 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
         <div class="layout-main-column">
             
             <div id="panel-dashboard" class="view-panel active">
-                <div class="card" style="background: linear-gradient(135deg, #fff1f0, #fff); border-top: 4px solid #ff4d4f;">
-                    <h3 style="margin-top:0; color:#ff4d4f;">🔴 今日最重要任務（基於 AI 權重深度計算）</h3>
+                <div class="card" style="background: linear-gradient(135deg, rgba(255, 59, 48, 0.05), rgba(255, 255, 255, 0.8)); border-top: 4px solid var(--apple-danger);">
+                    <h3 style="margin-top:0; color:var(--apple-danger); font-size:18px; letter-spacing:-0.02em;">🔴 今日最重要任務（基於 AI 權重深度計算）</h3>
                     <div id="dashUrgentTasks"></div>
                 </div>
-                <div class="card" style="background: linear-gradient(135deg, #fffcf6, #fff); border-top: 4px solid #25D366;">
-                    <h3 style="margin-top:0; color:#37352f;">📅 今日常規行程安排</h3>
+            
+                <div class="card" style="background: linear-gradient(135deg, rgba(52, 199, 89, 0.03), rgba(255, 255, 255, 0.8)); border-top: 4px solid var(--oasis-success);">
+                    <h3 style="margin-top:0; color:var(--apple-text); font-size:18px; letter-spacing:-0.02em;">📅 今日常規行程安排</h3>
                     <div id="dashTodayEvents"></div>
                 </div>
-                <div class="card" style="border-top: 4px solid #ef6c00;">
-                    <h3 style="margin-top:0; color:#ef6c00;">⏳ 未完成高優先任務佇列 (最多5筆)</h3>
+                <div class="card" style="border-top: 4px solid var(--oasis-warning); background: var(--apple-card)">
+                    <h3 style="margin-top:0; color:var(--oasis-warning); font-size:18px; letter-spacing:-0.02em;">⏳ 未完成高優先任務佇列 (最多5筆)</h3>
                     <div id="dashUnfinishedTasks"></div>
                 </div>
                 <div class="card">
-                    <h3 style="margin-top:0; color:#f39c12;">🖼️ 最新生活共享快照</h3>
+                    <h3 style="margin-top:0; color:var(--oasis-warning); font-size:18px; letter-spacing:-0.02em;">🖼️ 最新生活共享快照</h3>
                     <div id="dashLatestMedia" class="album-grid"></div>
                 </div>
             </div>
@@ -389,21 +688,21 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
                     <div class="weekday">日</div><div class="weekday">一</div><div class="weekday">二</div><div class="weekday">三</div><div class="weekday">四</div><div class="weekday">五</div><div class="weekday">六</div>
                 </div>
                 <div id="calendar" class="calendar"></div>
-                <div style="text-align:center; color:gray; font-size:12px; margin-top:8px;">📱 行動端支援左右滑動切換月份</div>
+                <div style="text-align:center; color:var(--apple-text-secondary); font-size:12px; margin-top:12px;">📱 行動端支援左右滑動切換月份</div>
             </div>
 
             <div id="panel-kanban" class="view-panel">
                 <div class="kanban-board">
                     <div class="kanban-column" id="kanban-col-todo">
-                        <div class="kanban-col-title" style="color:#ef6c00;">⏳ 待處理</div>
+                        <div class="kanban-col-title" style="color:var(--oasis-warning);">⏳ 待處理</div>
                         <div id="kanban-todo-list"></div>
                     </div>
                     <div class="kanban-column" id="kanban-col-progress">
-                        <div class="kanban-col-title" style="color:#1890ff;">⚡ 進行中</div>
+                        <div class="kanban-col-title" style="color:var(--oasis-primary);">⚡ 進行中</div>
                         <div id="kanban-progress-list"></div>
                     </div>
                     <div class="kanban-column" id="kanban-col-done">
-                        <div class="kanban-col-title" style="color:#25D366;">✅ 已完成</div>
+                        <div class="kanban-col-title" style="color:var(--oasis-success);">✅ 已完成</div>
                         <div id="kanban-done-list"></div>
                     </div>
                 </div>
@@ -412,13 +711,13 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
         </div>
 
         <div class="layout-side-column">
-            <div class="card" style="border-top: 4px solid #25D366;">
-                <h3 style="margin-top:0; color:#333;">📋 <span id="selectedDateLabel"></span> 活動日程</h3>
+            <div class="card" style="border-top: 4px solid var(--oasis-success);">
+               <h3 style="margin-top:0; color:var(--apple-text); font-size:18px;">📋 <span id="selectedDateLabel"></span> 活動日程</h3>
                 <div id="dayEvents"></div>
             </div>
             <div class="card">
                 <div class="album-header-container">
-                    <h3 style="margin:0; color:#f39c12; font-size:16px;">🖼️ 本月互助共享牆</h3>
+                    <h3 style="margin:0; color:var(--apple-text); font-size:16px; font-weight:700;">🖼️ 本月互助共享牆</h3>
                     <button class="inline-upload-trigger-btn" onclick="openAddFormPopup('ALBUM')">➕ 上傳</button>
                 </div>
                 <div id="mainAlbumGrid" class="album-grid"></div>
@@ -440,18 +739,18 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
     <div class="popup-overlay" id="addEventPopupOverlay" onclick="closePopupOverlayOutside(event)">
         <div class="popup-content-card">
             <span class="popup-close-x" onclick="closeEventPopup()">&times;</span>
-            <h3 id="formTitle">➕ 新增家庭活動</h3>
+            <h3 id="formTitle" style="margin-top:0; font-size:20px; letter-spacing:-0.02em;">➕ 新增家庭活動</h3>
             <input type="hidden" id="editKey" value="">
 
             <div class="password-lock-section" id="lockSection">
                  <div style="display:flex; gap:8px;">
-                    <input type="password" id="popupPassword" placeholder="輸入個人專屬密碼..." style="margin:0; flex:1; padding:10px;">
-                    <button type="button" class="action-btn" style="margin:0; width:auto; padding:10px 20px; background:#1890ff; border:none; border-radius:8px; color:white; font-weight:bold; cursor:pointer;" onclick="verifyGatePassword()">辨識登入</button>
+                    <input type="password" id="popupPassword" placeholder="輸入個人專屬密碼..." style="margin:0; flex:1; padding:12px;">
+                    <button type="button" class="action-btn" style="margin:0; width:auto; padding:0 20px; background:var(--oasis-primary); border:none; border-radius:10px; color:white; font-weight:bold; cursor:pointer;" onclick="verifyGatePassword()">辨識登入</button>
                 </div>
             </div>
 
             <div class="secure-form-fields" id="secureFormPanel">
-                <label for="eventCategory">🏷️ 屬性類型分類 (Tag)：</label>
+                <label for="eventCategory" style="font-size:14px; font-weight:600; color:var(--apple-text-secondary)">🏷️ 屬性類型分類 (Tag)：</label>
                 <select id="eventCategory">
                     <option value="家庭">👨‍👩‍👧 家庭</option>
                     <option value="學校">🏫 學校</option>
@@ -459,41 +758,41 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
                     <option value="重要">❤️ 重要</option>
                 </select>
 
-                <label for="eventStatus">⚙️ 任務看版進度狀態：</label>
+                <label for="eventStatus" style="font-size:14px; font-weight:600; color:var(--apple-text-secondary)">⚙️ 任務看版進度狀態：</label>
                 <select id="eventStatus">
                     <option value="待處理">⏳ 待處理</option>
                     <option value="進行中">⚡ 進行中</option>
                     <option value="已完成">✅ 已完成</option>
                 </select>
 
-                <label for="eventTitle">活動名稱 / 地點：</label>
+                <label style="font-size:14px; font-weight:600; color:var(--apple-text-secondary)">活動名稱 / 地點：</label>
                 <input type="text" id="eventTitle" placeholder="例如：蓓 8:30 放學、二胡課">
          
-                <label for="eventTime">📅 開始日期時間：</label>
+                <label style="font-size:14px; font-weight:600; color:var(--apple-text-secondary)">📅 開始日期時間：</label>
                 <div class="twin-input-wrapper">
-                    <input type="text" id="eventTime" placeholder="點擊選取開始日期與時間" readOnly onclick="document.getElementById('nativeStartPicker').showPicker()">
+                     <input type="text" id="eventTime" placeholder="點擊選取開始日期與時間" readOnly onclick="document.getElementById('nativeStartPicker').showPicker()">
                     <div class="wheel-trigger-box">
                          <div class="wheel-btn">
                             <input type="datetime-local" id="nativeStartPicker" class="picker-overlay-input" onchange="syncFormComboPicker(this, 'eventTime')">
-                        </div>
+                         </div>
                     </div>
                 </div>
 
-                <label for="eventEndTime">📆 結束日期時間：</label>
+                <label style="font-size:14px; font-weight:600; color:var(--apple-text-secondary)">📆 結束日期時間：</label>
                 <div class="twin-input-wrapper">
-                    <input type="text" id="eventEndTime" placeholder="點擊選取結束日期與時間 (選填跨日結束)" readOnly onclick="document.getElementById('nativeEndPicker').showPicker()">
+                     <input type="text" id="eventEndTime" placeholder="點擊選取結束日期與時間 (選填跨日結束)" readOnly onclick="document.getElementById('nativeEndPicker').showPicker()">
                     <div class="wheel-trigger-box">
                          <div class="wheel-btn">
                             <input type="datetime-local" id="nativeEndPicker" class="picker-overlay-input" onchange="syncFormComboPicker(this, 'eventEndTime')">
-                        </div>
+                       </div>
                     </div>
                 </div>
 
-                <div style="background: #eef9ff; border: 1px solid #bae7ff; padding: 12px; border-radius: 8px; margin: 12px 0;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div style="background: rgba(0,113,227,0.04); border: 1px solid rgba(0,113,227,0.1); padding: 16px; border-radius: 12px; margin: 16px 0;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <div>
-                            <label for="eventRepeat" style="font-size:14px; color:#444; font-weight:bold;">🔁 重庫週期：</label>
-                            <select id="eventRepeat" style="padding:8px; margin:4px 0;">
+                            <label for="eventRepeat" style="font-size:13px; color:var(--apple-text-secondary); font-weight:600;">🔁 重複週期：</label>
+                            <select id="eventRepeat" style="padding:10px; margin:4px 0;">
                                 <option value="不重複">不重複</option>
                                 <option value="每日">每日</option>
                                 <option value="每週">每週</option>
@@ -501,8 +800,8 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
                             </select>
                         </div>
                         <div>
-                            <label for="eventReminder" style="font-size:14px; color:#444; font-weight:bold;">⏰ 提醒通知：</label>
-                            <select id="eventReminder" style="padding:8px; margin:4px 0;">
+                            <label for="eventReminder" style="font-size:13px; color:var(--apple-text-secondary); font-weight:600;">⏰ 提醒通知：</label>
+                            <select id="eventReminder" style="padding:10px; margin:4px 0;">
                                 <option value="無">無</option>
                                 <option value="10分鐘前">10分鐘前</option>
                                 <option value="1小時前">1小時前</option>
@@ -511,7 +810,7 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
                         </div>
                     </div>
 
-                    <label for="eventAssignee" style="font-size:14px; color:#444; font-weight:bold; margin-top:6px; display:block;">👥 執行分工 / 負責人：</label>
+                    <label for="eventAssignee" style="font-size:13px; color:var(--apple-text-secondary); font-weight:600; margin-top:8px; display:block;">👥 執行分工 / 負責人：</label>
                     <select id="eventAssignee" style="padding:12px; margin:4px 0; background-color:#ffffff;">
                         <option value="全員">👨‍👩‍👧‍👦 全員</option>
                         <option value="鐵">👦 鐵</option>
@@ -523,15 +822,15 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
                     </select>
                 </div>
                 
-                <label>🔗 關聯其他資料庫活動 (Relation)：</label>
-                <select id="eventRelations" multiple style="height: 100px; background:#fffdf6;">
+                <label style="font-size:14px; font-weight:600; color:var(--apple-text-secondary)">🔗 關聯其他資料庫活動 (Relation)：</label>
+                <select id="eventRelations" multiple style="height: 100px; background:#ffffff;">
                 </select>
 
-                <div style="background: #fffdf6; border: 1px dashed #f39c12; padding: 12px; border-radius: 8px; margin: 12px 0;">
-                    <label style="font-weight:bold; color:#e67e22; display:block; margin-bottom:4px;">🖼️ 隨附相片或短片 (選填)：</label>
+                <div style="background: rgba(255,149,0,0.03); border: 1px dashed rgba(255,149,0,0.2); padding: 16px; border-radius: 12px; margin: 16px 0;">
+                    <label style="font-weight:600; color:var(--oasis-warning); display:block; margin-bottom:6px; font-size:14px;">🖼️ 隨附相片或短片 (選填)：</label>
                     <div class="camera-upload-row">
-                        <button type="button" class="camera-btn" onclick="triggerFileInput('FormImage')">📷 拍照 / 選擇相片</button>
-                        <button type="button" class="camera-btn video-mode" onclick="triggerFileInput('FormVideo')">🎥 錄影 / 選擇短片</button>
+                        <button type="button" class="camera-btn" onclick="triggerFileInput('FormImage')">📷 拍照 / 相片</button>
+                        <button type="button" class="camera-btn video-mode" onclick="triggerFileInput('FormVideo')">🎥 錄影 / 短片</button>
                     </div>
                     <input type="file" id="formImageInput" accept="image/*" capture="environment" style="display:none;" onchange="handleFormFileLoad(this, 'image')">
                     <input type="file" id="formVideoInput" accept="video/*" capture="environment" style="display:none;" onchange="handleFormFileLoad(this, 'video')">
@@ -539,33 +838,33 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
                     <img id="formImagePreview" class="upload-preview-box">
                     <video id="formVideoPreview" class="upload-preview-box" controls></video>
                     
-                    <input type="text" id="formMediaURL" placeholder="或貼上現有的網路媒體網址 URL" style="margin-top:6px;">
+                    <input type="text" id="formMediaURL" placeholder="或貼上現有的網路媒體網址 URL" style="margin-top:8px;">
                     <select id="formMediaType">
                         <option value="image">🖼️ 圖片/相片模式</option>
                         <option value="video">🎥 短片模式 (.mp4)</option>
                     </select>
                 </div>
 
-                <button id="formSubmitBtn" class="action-btn-block" style="background:#25D366;" onclick="addFamilyEvent()">儲存至此日期</button>
+                <button id="formSubmitBtn" class="action-btn-block" onclick="addFamilyEvent()">儲存至此日期</button>
             </div>
 
             <div class="secure-form-fields" id="secureManagePanel">
-                <label style="font-weight:bold; color:#1890ff; display:block; margin-bottom:12px;">🛠️ 當日可操作的行程：</label>
+                <label style="font-weight:700; color:var(--oasis-primary); display:block; margin-bottom:14px;">🛠️ 當日可操作的行程：</label>
                 <div id="popupManageList"></div>
             </div>
 
             <div class="secure-form-fields" id="secureWhatsAppPanel">
-                <label style="font-weight:bold; color:#00c642; display:block; margin-bottom:12px;">💬 請選取欲發送 WhatsApp 通知的行程：</label>
+                <label style="font-weight:700; color:var(--oasis-success); display:block; margin-bottom:14px;">💬 請選取欲發送 WhatsApp 通知的行程：</label>
                 <div id="popupWhatsAppList"></div>
             </div>
 
             <div class="secure-form-fields" id="secureAlbumPanel">
-                <label style="font-weight:bold; color:#f39c12;">➕ 添加新相片或短片至家庭相簿</label>
+                <label style="font-weight:700; color:var(--oasis-warning); font-size:16px;">➕ 添加新快照至家庭相簿</label>
                 <input type="text" id="mediaTitle" placeholder="輸入相片描述或活動名稱">
                 
                 <div class="camera-upload-row">
-                    <button type="button" class="camera-btn" onclick="triggerFileInput('image')">📷 拍照 / 選擇相片</button>
-                    <button type="button" class="camera-btn video-mode" onclick="triggerFileInput('video')">🎥 錄影 / 選擇短片</button>
+                    <button type="button" class="camera-btn" onclick="triggerFileInput('image')">📷 拍照 / 相片</button>
+                    <button type="button" class="camera-btn video-mode" onclick="triggerFileInput('video')">🎥 錄影 / 短片</button>
                 </div>
                 
                 <input type="file" id="nativeImageInput" accept="image/*" capture="environment" style="display:none;" onchange="handleNativeFileLoad(this, 'image')">
@@ -574,18 +873,18 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
                 <img id="imageUploadPreview" class="upload-preview-box">
                 <video id="videoUploadPreview" class="upload-preview-box" controls></video>
 
-                <div style="text-align: center; margin: 5px 0; color: #8c8c8c; font-size: 14px;">─ 或手動輸入網路 URL ─</div>
+                <div style="text-align: center; margin: 8px 0; color: var(--apple-text-secondary); font-size: 13px;">─ 或手動輸入網路 URL ─</div>
                 <input type="text" id="mediaURL" placeholder="請貼上現有的相片或影片網址 (選填)">
                 
                 <select id="mediaType">
                     <option value="image">🖼️ 圖片/相片模式</option>
                     <option value="video">🎥 短片模式 (.mp4)</option>
                 </select>
-                <p style="font-size:14px; color:#666; margin: 4px 0;">* 系統會自動將相片綁定在您當前選取的日期 (<span id="albumBindDateLabel" style="color:#1890ff; font-weight:bold;"></span>)！</p>
-                <button class="action-btn-block" style="background:#f39c12;" onclick="uploadMediaToAlbum()">確認上傳添加至相簿</button>
+                <p style="font-size:13px; color:var(--apple-text-secondary); margin: 6px 0;">* 系統會自動將相片綁定在您當前選取的日期 (<span id="albumBindDateLabel" style="color:var(--oasis-primary); font-weight:700;"></span>)！</p>
+                <button class="action-btn-block" style="background:var(--oasis-warning);" onclick="uploadMediaToAlbum()">確認上傳添加至相簿</button>
                 
-                <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
-                <label style="font-weight:bold; color:#555;">🗑️ 管理/刪除當月相簿內容：</label>
+                <hr style="border:0; border-top:1px solid var(--apple-border); margin:20px 0;">
+                <label style="font-weight:700; color:var(--apple-text);">🗑️ 管理/刪除當月相簿內容：</label>
                 <div id="popupAlbumManageList" class="album-grid"></div>
             </div>
 
@@ -597,36 +896,36 @@ input, textarea, select { width:100%; padding:12px; margin:6px 0; border: 1px so
                     <label class="view-radio-label"><input type="radio" name="viewMode" value="列表" onclick="changeGlobalViewMode('列表')"> ✓ ☰ 列表</label>
                 </div>
             </div>
-            
-            <button class="action-btn-block" style="background:#8c8c8c; margin-top:15px;" onclick="closeEventPopup()">關閉面板</button>
+ 
+            <button class="action-btn-block" style="background:#8e8e93; margin-top:16px;" onclick="closeEventPopup()">關閉面板</button>
         </div>
     </div>
 
     <div id="eventPageModal" class="popup-overlay" onclick="closeEventPageOverlayOutside(event)">
-        <div class="popup-content-card" style="max-width: 680px; border-top: 6px solid #25D366;">
+        <div class="popup-content-card" style="max-width: 680px; border-top: 6px solid var(--oasis-success);">
             <span class="popup-close-x" onclick="closeEventPage()">&times;</span>
-            <h2 id="eventPageTitle" style="margin-top:5px; color:#37352f;"></h2>
+            <h2 id="eventPageTitle" style="margin-top:5px; color:var(--apple-text); letter-spacing:-0.02em;"></h2>
             
-            <div id="eventPageContent" style="background:#f7f6f3; padding:12px; border-radius:8px; margin:12px 0; font-size:15px;"></div>
-            <div id="eventPageRelationsBlock" style="margin: 10px 0; font-size: 14px; background: #e3f2fd; padding: 10px; border-radius: 6px; border-left: 4px solid #1890ff; display:none;"></div>
-            <h4 style="margin:15px 0 5px 0;">🖼️ 關聯相片 Relation 快照</h4>
-            <div id="eventPageRelatedMedia" class="album-grid" style="background:#fafafa; padding:8px; border-radius:8px; min-height:50px;"></div>
+            <div id="eventPageContent" style="background:rgba(0,0,0,0.03); padding:16px; border-radius:12px; margin:16px 0; font-size:15px; line-height:1.5;"></div>
+            <div id="eventPageRelationsBlock" style="margin: 12px 0; font-size: 14px; background: rgba(0,113,227,0.05); padding: 12px; border-radius: 8px; border-left: 4px solid var(--oasis-primary); display:none;"></div>
+            <h4 style="margin:20px 0 8px 0; font-size:15px;">🖼️ 關聯相片 Relation 快照</h4>
+            <div id="eventPageRelatedMedia" class="album-grid" style="background:rgba(0,0,0,0.01); padding:10px; border-radius:12px; min-height:50px;"></div>
 
-            <h4 style="margin:15px 0 5px 0;">🧱 Block 富文本陣列（⚡ Inline Save 雲端同步）</h4>
-            <div style="font-size: 13px; color: #8c8c8c; margin-bottom: 6px;">💡 提示：按 <b>Enter</b> 建立新區塊，輸入 <b>/</b> 喚出快捷指令選單</div>
-            <div id="blockEditorContainer" style="background:#ffffff; border:1px solid #edece9; padding:12px; border-radius:8px; min-height:15px;"></div>
+            <h4 style="margin:20px 0 8px 0; font-size:15px;">🧱 Block 富文本陣列（⚡ Inline Save 雲端同步）</h4>
+            <div style="font-size: 13px; color: var(--apple-text-secondary); margin-bottom: 8px;">💡 提示：按 <b>Enter</b> 建立新區塊，輸入 <b>/</b> 喚出快捷指令選單</div>
+            <div id="blockEditorContainer" style="background:#ffffff; border:1px solid var(--apple-border); padding:16px; border-radius:12px; min-height:20px;"></div>
             
-            <div style="display:flex; gap:4px; margin-top:10px; flex-wrap: wrap;">
-                <button onclick="addBlockToEditor('heading', '')" style="flex:1; padding:6px; font-size:12px; background:#f1f0ee; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">➕ 標題塊</button>
-                <button onclick="addBlockToEditor('text', '')" style="flex:1; padding:6px; font-size:12px; background:#f1f0ee; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">➕ 文字塊</button>
-                <button onclick="addBlockToEditor('todo', '', false)" style="flex:1; padding:6px; font-size:12px; background:#f1f0ee; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">✅ 待辦塊</button>
-                <button onclick="addBlockToEditor('divider', '')" style="flex:1; padding:6px; font-size:12px; background:#f1f0ee; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">― 分隔線</button>
-                <button onclick="addBlockToEditor('image', '')" style="flex:1; padding:6px; font-size:12px; background:#f1f0ee; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">🖼️ 圖片塊</button>
+            <div style="display:flex; gap:6px; margin-top:12px; flex-wrap: wrap;">
+                <button onclick="addBlockToEditor('heading', '')" style="flex:1; padding:8px; font-size:12px; background:rgba(0,0,0,0.04); border:none; border-radius:6px; font-weight:600; cursor:pointer; color:var(--apple-text)">➕ 標題塊</button>
+                <button onclick="addBlockToEditor('text', '')" style="flex:1; padding:8px; font-size:12px; background:rgba(0,0,0,0.04); border:none; border-radius:6px; font-weight:600; cursor:pointer; color:var(--apple-text)">➕ 文字塊</button>
+                <button onclick="addBlockToEditor('todo', '', false)" style="flex:1; padding:8px; font-size:12px; background:rgba(0,0,0,0.04); border:none; border-radius:6px; font-weight:600; cursor:pointer; color:var(--apple-text)">✅ 待辦塊</button>
+                <button onclick="addBlockToEditor('divider', '')" style="flex:1; padding:8px; font-size:12px; background:rgba(0,0,0,0.04); border:none; border-radius:6px; font-weight:600; cursor:pointer; color:var(--apple-text)">― 分隔線</button>
+                <button onclick="addBlockToEditor('image', '')" style="flex:1; padding:8px; font-size:12px; background:rgba(0,0,0,0.04); border:none; border-radius:6px; font-weight:600; cursor:pointer; color:var(--apple-text)">🖼️ 圖片塊</button>
             </div>
 
             <input type="hidden" id="eventPageCurrentId">
-            <div id="inlineSaveStatusLabel" style="text-align:right; font-size:12px; color:gray; margin-top:8px; font-style:italic;">✓ 所有 Block 已保持雲端即時同步</div>
-            <button class="action-btn-block" style="background:#37352f; margin-top:12px;" onclick="closeEventPage()">離開並完成編輯</button>
+            <div id="inlineSaveStatusLabel" style="text-align:right; font-size:12px; color:var(--apple-text-secondary); margin-top:10px; font-style:italic;">✓ 所有 Block 已保持雲端即時同步</div>
+            <button class="action-btn-block" style="background:var(--apple-text); margin-top:16px;" onclick="closeEventPage()">離開並完成編輯</button>
         </div>
     </div>
 
@@ -648,7 +947,6 @@ let currentGlobalMode = localStorage.getItem('family_日誌_view_mode') || "列�
 let currentViewMode = "dashboard"; 
 let userRole = "viewer";
 
-// Slash Menu 全域追蹤變數
 let currentActiveSlashInput = null;
 let currentSlashSelectedIndex = 0;
 
@@ -750,41 +1048,37 @@ function syncFormComboPicker(inputElement, targetInputId) {
 }
 
 function getCategoryColor(cat){
-    if(cat === "家庭") return "#e6f7ff";
-    if(cat === "學校") return "#f6ffed";
-    if(cat === "工作") return "#fff7e6";
-    if(cat === "重要") return "#fff1f0";
-    return "#f5f5f5";
+    if(cat === "家庭") return "rgba(0,113,227,0.06)";
+    if(cat === "學校") return "rgba(52,199,89,0.06)";
+    if(cat === "工作") return "rgba(255,149,0,0.06)";
+    if(cat === "重要") return "rgba(255,59,48,0.06)";
+    return "rgba(0,0,0,0.03)";
 }
 
-/* ─── 🎨 麟李家庭成員專屬顏色解算矩陣 ─── */
 function getAssigneeColor(assignee) {
     let name = normalize(assignee);
     if (!name || name === "全員" || name === "所有人" || name === "全部人") {
-        return { bg: "#f5f5f5", text: "#666666" };
+        return { bg: "rgba(0,0,0,0.04)", text: "#666666" };
     }
     if (name.includes("鐵") || name.includes("tit")) {
-        return { bg: "#e6f7ff", text: "#0050b3" };
+        return { bg: "rgba(0,113,227,0.08)", text: "#0071e3" };
     }
     if (name.includes("jolie") || name.includes("喬莉")) {
-        return { bg: "#f9f0ff", text: "#531dab" };
+        return { bg: "rgba(175,82,222,0.08)", text: "#af52de" };
     }
     if (name.includes("蓓") || name.includes("bei")) {
-        return { bg: "#fff0f6", text: "#c41d7f" };
+        return { bg: "rgba(255,45,85,0.08)", text: "#ff2d55" };
     }
     if (name.includes("熹") || name.includes("hei")) {
-        return { bg: "#f6ffed", text: "#389e0d" };
+        return { bg: "rgba(52,199,89,0.08)", text: "#34c759" };
     }
     if (name.includes("mummy") || name.includes("媽")) {
-        return { bg: "#fff7e6", text: "#d46b08" };
+        return { bg: "rgba(255,149,0,0.08)", text: "#ff9500" };
     }
     if (name.includes("daddy") || name.includes("爸")) {
-        return { bg: "#fcffe6", text: "#7cb305" };
+        return { bg: "rgba(162,132,94,0.08)", text: "#a2845e" };
     }
-    if (name.includes("工作") || name.includes("admin")) {
-        return { bg: "#fff1f0", text: "#cf1322" };
-    }
-    return { bg: "#e6fffb", text: "#08979c" };
+    return { bg: "rgba(90,200,250,0.08)", text: "#5ac8fa" };
 }
 
 function populateRelationSelectOptions() {
@@ -804,8 +1098,8 @@ function verifyGatePassword() {
         currentUserMemberName = passwordDb[inputPwd]; 
         userRole = "admin";
         document.getElementById('roleBadge').innerText = `👑 ${currentUserMemberName} (管理員)`;
-        document.getElementById('roleBadge').style.background = "#e2f7e9";
-        document.getElementById('roleBadge').style.color = "#2e7d32";
+        document.getElementById('roleBadge').style.background = "rgba(52,199,89,0.12)";
+        document.getElementById('roleBadge').style.color = "#34c759";
         document.getElementById('lockSection').style.display = 'none';
         if (currentPopupMode === "MANAGE") {
             document.getElementById('secureManagePanel').style.display = 'block';
@@ -829,13 +1123,14 @@ function verifyGatePassword() {
             document.getElementById('eventReminder').value = "無";
             
             let selectAssignee = document.getElementById('eventAssignee');
-            selectAssignee.value = "全員"; 
+            selectAssignee.value = "全員";
             for (let option of selectAssignee.options) {
                 if (normalize(currentUserMemberName).includes(normalize(option.value)) || normalize(option.value).includes(normalize(currentUserMemberName))) {
                     selectAssignee.value = option.value;
                     break;
                 }
             }
+            
             document.getElementById('eventCategory').value = "家庭";
             document.getElementById('eventStatus').value = "待處理";
             populateRelationSelectOptions();
@@ -880,7 +1175,6 @@ function changeGlobalViewMode(mode) {
     renderCalendarWithData(activities);
 }
 
-/* ─── 🚀 Block 區塊拖拉Reorder 引擎 ─── */
 let draggedBlockNode = null;
 function initBlockDragAndDropListeners() {
     let container = document.getElementById('blockEditorContainer');
@@ -927,7 +1221,7 @@ function openEventPage(id){
     document.getElementById('eventPageCurrentId').value = id;
     document.getElementById('eventPageTitle').innerText = ev.title;
     let aiTagsHtml = "";
-    if (ev.isAI_Priority) aiTagsHtml += `<span class="meta-chip" style="background:#ff4d4f; color:white; margin-right:4px;">🔥 高優先</span>`;
+    if (ev.isAI_Priority) aiTagsHtml += `<span class="meta-chip" style="background:var(--apple-danger); color:white; margin-right:4px;">🔥 高優先</span>`;
     if (ev.ai_Tags && ev.ai_Tags.length > 0) {
         ev.ai_Tags.forEach(t => {
             aiTagsHtml += `<span class="meta-chip chip-ai" style="margin-right:4px;">${t}</span>`;
@@ -938,7 +1232,7 @@ function openEventPage(id){
         <div style="margin-bottom:6px;">📅 <b>日期範圍：</b>${ev.date} ${ev.endDate && ev.endDate !== ev.date ? ' 至 ' + ev.endDate : ''}</div>
         <div style="margin-bottom:6px;">⏰ <b>時間：</b>${ev.time}</div>
         <div style="margin-bottom:6px;">👥 <b>負責人：</b>${ev.assignee || '未分配'}</div>
-        <div style="margin-bottom:6px;">🏷️ <b>分類標籤：</b><span style="background:${getCategoryColor(ev.category)}; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:13px;">${ev.category || '家庭'}</span></div>
+        <div style="margin-bottom:6px;">🏷️ <b>分類標籤：</b><span style="background:${getCategoryColor(ev.category)}; padding:4px 10px; border-radius:6px; font-weight:600; font-size:13px;">${ev.category || '家庭'}</span></div>
         <div style="margin-bottom:6px;">🤖 <b>AI 自動擴充屬性：</b> ${aiTagsHtml || '無'}</div>
         <div style="display:inline-block; margin-right:15px;" onmouseenter="highlightSyncEvent('${ev.date}')" onmouseleave="removeHighlightSyncEvent('${ev.date}')">🎯 <b>狀態項目：</b>${ev.status || '待處理'}</div>
     `;
@@ -947,7 +1241,7 @@ function openEventPage(id){
         let linksHtml = "<b>🔗 雙向鏈接關聯活動網絡：</b><br>";
         ev.relations.forEach(rId => {
             let targetAct = activities.find(a => a.id === rId);
-            if(targetAct) linksHtml += `<span style="cursor:pointer; text-decoration:underline; margin-right:12px; font-weight:bold; color:#1890ff;" onclick="openEventPage('${targetAct.id}')">▪️【${targetAct.date}】${targetAct.title}</span>`;
+            if(targetAct) linksHtml += `<span style="cursor:pointer; text-decoration:underline; margin-right:12px; font-weight:bold; color:var(--oasis-primary);" onclick="openEventPage('${targetAct.id}')">▪️【${targetAct.date}】${targetAct.title}</span>`;
         });
         relBlock.innerHTML = linksHtml; relBlock.style.display = "block";
     } else { relBlock.style.display = "none"; }
@@ -966,7 +1260,6 @@ function openEventPage(id){
     initBlockDragAndDropListeners();
 }
 
-/* ─── 🧱 智慧化 Notion-like 輸入引擎 ─── */
 function addBlockToEditor(type, content = "", done = false, url = "", targetSiblingNode = null) {
     let container = document.getElementById('blockEditorContainer');
     let wrapper = document.createElement('div');
@@ -976,10 +1269,10 @@ function addBlockToEditor(type, content = "", done = false, url = "", targetSibl
     else if (type === 'text') html += `<input type="text" class="block-input-text block-field-content" value="${content}" placeholder="輸入文字內容... (輸入 / 開啟指令選單)">`;
     else if (type === 'todo') {
         let chk = done ? "checked" : "";
-        html += `<div style="display:flex; align-items:center; gap:6px;"><input type="checkbox" class="block-field-done" ${chk} style="width:auto; margin:0;"><input type="text" class="block-input-text block-field-content" value="${content}" placeholder="待辦事項..."></div>`;
-    } else if (type === 'divider') html += `<hr style="width:100%; border:none; border-top:2px dashed #edece9; margin:10px 0;"><input type="hidden" class="block-field-content" value="---">`;
+        html += `<div style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="block-field-done" ${chk} style="width:auto; margin:0;"><input type="text" class="block-input-text block-field-content" value="${content}" placeholder="待辦事項..."></div>`;
+    } else if (type === 'divider') html += `<hr style="width:100%; border:none; border-top:2px dashed var(--apple-border); margin:10px 0;"><input type="hidden" class="block-field-content" value="---">`;
     else if (type === 'image') html += `<input type="text" class="block-input-text block-field-url" value="${url || ''}" placeholder="圖片 URL..." oninput="this.nextElementSibling.src=this.value; this.nextElementSibling.style.display='block';"><img src="${url || ''}" style="max-width:100%; height:80px; object-fit:cover; border-radius:4px; margin-top:4px; display:${url?'block':'none'};"><input type="hidden" class="block-field-content" value="img_block">`;
-    html += `</div><div style="display:flex; gap:2px; align-self:center; margin-left:4px;"><button onclick="duplicateBlockNode(this)" style="background:none; border:none; cursor:pointer;">📄</button><button onclick="insertInlineBlockNode(this)" style="background:none; border:none; cursor:pointer;">➕</button><button onclick="this.parentElement.parentElement.remove(); debounceAutoSaveBlocks();" style="background:none; border:none; color:red; font-size:18px; cursor:pointer;">×</button></div>`;
+    html += `</div><div style="display:flex; gap:2px; align-self:center; margin-left:4px;"><button onclick="duplicateBlockNode(this)" style="background:none; border:none; cursor:pointer;">📄</button><button onclick="insertInlineBlockNode(this)" style="background:none; border:none; cursor:pointer;">➕</button><button onclick="this.parentElement.parentElement.remove(); debounceAutoSaveBlocks();" style="background:none; border:none; color:var(--apple-danger); font-size:18px; cursor:pointer;">×</button></div>`;
     wrapper.innerHTML = html;
     
     if (targetSiblingNode) {
@@ -996,7 +1289,7 @@ function addBlockToEditor(type, content = "", done = false, url = "", targetSibl
             if (menu.style.display === 'flex') {
                 let items = menu.querySelectorAll('.slash-item');
                 if (e.key === 'ArrowDown') {
-                     e.preventDefault();
+                    e.preventDefault();
                     items[currentSlashSelectedIndex].classList.remove('active');
                     currentSlashSelectedIndex = (currentSlashSelectedIndex + 1) % items.length;
                     items[currentSlashSelectedIndex].classList.add('active');
@@ -1005,7 +1298,7 @@ function addBlockToEditor(type, content = "", done = false, url = "", targetSibl
                     e.preventDefault();
                     items[currentSlashSelectedIndex].classList.remove('active');
                     currentSlashSelectedIndex = (currentSlashSelectedIndex - 1 + items.length) % items.length;
-                     items[currentSlashSelectedIndex].classList.add('active');
+                    items[currentSlashSelectedIndex].classList.add('active');
                     return;
                 } else if (e.key === 'Enter') {
                     e.preventDefault();
@@ -1051,7 +1344,7 @@ function handleSlashCommandTrigger(inputNode) {
             if (query === "" || type.includes(query)) {
                 item.style.display = 'flex';
             } else {
-                 item.style.display = 'none';
+                item.style.display = 'none';
             }
         });
     } else {
@@ -1170,7 +1463,7 @@ function renderMainAlbumUI() {
     let currentMonthPrefix = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
     let currentMonthMediaItems = albumItems.filter(item => item.date && item.date.startsWith(currentMonthPrefix));
     if (currentMonthMediaItems.length === 0) {
-        let noDataHtml = `<p style="color:gray; font-size:14px; grid-column: 1/-1; text-align:center; padding: 25px 0;">本月份暫無分享快照。</p>`;
+        let noDataHtml = `<p style="color:var(--apple-text-secondary); font-size:14px; grid-column: 1/-1; text-align:center; padding: 25px 0;">本月份暫無分享快照。</p>`;
         mainGrid.innerHTML = noDataHtml; if(popGrid) popGrid.innerHTML = noDataHtml; return;
     }
     let mainHtml = ""; let popHtml = "";
@@ -1184,7 +1477,7 @@ function renderMainAlbumUI() {
         else if (normTitle.includes("二胡") || normTitle.includes("音樂") || normTitle.includes("課") || normTitle.includes("學")) aiLabel = "🤖 AI分類: 🏫 藝術培育與學習";
         else if (normTitle.includes("旅行") || normTitle.includes("酒店") || normTitle.includes("高鐵") || normTitle.includes("玩")) aiLabel = "🤖 AI分類: ✈️ 戶外旅遊記憶";
 
-        mainHtml += `<div class="album-item">${mediaTag}<div class="album-title">${item.title}</div><div style="font-size:11px; color:#7b1fa2; font-weight:bold; margin-bottom:4px;">${aiLabel}</div><div class="album-date-badge">📅 ${item.date}</div></div>`;
+        mainHtml += `<div class="album-item">${mediaTag}<div class="album-title">${item.title}</div><div style="font-size:11px; color:var(--oasis-ai-purple); font-weight:bold; margin-bottom:4px;">${aiLabel}</div><div class="album-date-badge">📅 ${item.date}</div></div>`;
         popHtml += `<div class="album-item"><button class="album-delete-tag" onclick="deleteMediaFromAlbum('${item.id}')">×</button>${popMediaTag}<div class="album-title">${item.title}</div><div class="album-date-badge">${item.date}</div></div>`;
     });
     mainGrid.innerHTML = mainHtml; if(popGrid) popGrid.innerHTML = popHtml;
@@ -1234,13 +1527,13 @@ function generateAI_Summary() {
     let healthCount = activities.filter(a => a.ai_Tags && a.ai_Tags.includes("💊 健康醫療") && (a.status || '待處理') !== '已完成').length;
     let stressScore = todayActs.length + (pendingHighCount * 2);
     let stressLabel = "🔵 節奏輕鬆舒緩";
-    let stressColor = "#2e7d32";
+    let stressColor = "var(--oasis-success)";
     if (stressScore >= 8) {
         stressLabel = "🔴 系統核心高載爆忙";
-        stressColor = "#ff4d4f";
+        stressColor = "var(--apple-danger)";
     } else if (stressScore >= 4) {
         stressLabel = "🟠 事務適中緊湊";
-        stressColor = "#ef6c00";
+        stressColor = "var(--oasis-warning)";
     }
 
     let summaryText = `<strong>【今日壓力解算】：</strong><span style="color:${stressColor}; font-weight:bold;">${stressLabel} (指標分數: ${stressScore})</span><br>`;
@@ -1317,10 +1610,10 @@ function addFamilyEvent() {
                 let p = new Promise((resolve) => {
                     fetch(`https://familycalender-a62ae-default-rtdb.firebaseio.com/family_calendar_activities/${relId}.json`).then(r => r.json()).then(targetData => {
                         if (targetData) {
-                             let relArray = targetData.relations || [];
+                            let relArray = targetData.relations || [];
                             if (!relArray.includes(currentEventId)) { relArray.push(currentEventId); window.fbUpdate(window.fbRef(window.fbDb, `family_calendar_activities/${relId}`), { relations: relArray }).then(resolve); } else resolve();
                         } else resolve();
-                     }).catch(resolve);
+                    }).catch(resolve);
                 });
                 asyncQueue.push(p);
             });
@@ -1332,7 +1625,7 @@ function addFamilyEvent() {
                 try {
                     const snapshot = await window.fbUploadBytes(window.fbSRef(window.fbStorage, `activities/${Date.now()}_${targetFormFileObject.name}`), targetFormFileObject);
                     formMediaURL = await window.fbGetDownloadURL(snapshot.ref);
-                 } catch(e) { console.error(e); }
+                } catch(e) { console.error(e); }
                 resolve();
             });
         }
@@ -1372,18 +1665,19 @@ function renderKanbanBoard() {
     ["待處理", "進行中", "已完成"].forEach(col => {
         let matched = activities.filter(a => (a.status || '待處理') === col); let html = "";
         matched.forEach(c => {
-            let badgePriority = c.isAI_Priority ? `<span style="background:#ff4d4f; color:white; font-size:10px; padding:1px 4px; border-radius:3px; font-weight:bold; margin-right:4px;">🔥高優先</span>` : '';
+            let badgePriority = c.isAI_Priority ? `<span style="background:var(--apple-danger); color:white; font-size:10px; padding:1px 4px; border-radius:3px; font-weight:bold; margin-right:4px;">🔥高優先</span>` : '';
             let pColor = getAssigneeColor(c.assignee || '全員');
-             html += `<div class="kanban-card-item" draggable="true" ondragstart="drag(event, '${c.id}')" onclick="openEventPage('${c.id}')">
-                <div style="font-weight:bold; font-size:15px; margin-bottom:4px;">${badgePriority}${c.title}</div>
-                <div style="font-size:12px; color:gray;">⏰ ${c.time}</div>
-                <div style="margin-top:6px; display:flex; justify-content:space-between;">
-                    <span style="background:${getCategoryColor(c.category)}; font-size:11px; padding:2px 6px; border-radius:4px; font-weight:bold;">${c.category}</span>
-                    <span style="background:${pColor.bg}; color:${pColor.text}; font-size:11px; padding:2px 6px; border-radius:4px; font-weight:bold;">👤 ${c.assignee || '全員'}</span>
+      
+            html += `<div class="kanban-card-item" draggable="true" ondragstart="drag(event, '${c.id}')" onclick="openEventPage('${c.id}')">
+                <div style="font-weight:700; font-size:15px; margin-bottom:4px; color:var(--apple-text);">${badgePriority}${c.title}</div>
+                <div style="font-size:12px; color:var(--apple-text-secondary);">⏰ ${c.time}</div>
+                <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="background:${getCategoryColor(c.category)}; color:var(--apple-text); font-size:11px; padding:3px 8px; border-radius:6px; font-weight:600;">${c.category}</span>
+                    <span style="background:${pColor.bg}; color:${pColor.text}; font-size:11px; padding:3px 8px; border-radius:6px; font-weight:600;">👤 ${c.assignee || '全員'}</span>
                 </div>
             </div>`;
         });
-        document.getElementById(`kanban-${col === "待處理"?"todo":col === "進行中"?"progress":"done"}-list`).innerHTML = html || `<p style="color:#ccc; text-align:center;">暫無項目</p>`;
+        document.getElementById(`kanban-${col === "待處理"?"todo":col === "進行中"?"progress":"done"}-list`).innerHTML = html || `<p style="color:#ccc; text-align:center; font-size:14px; padding:15px 0;">暫無項目</p>`;
     });
 }
 
@@ -1403,19 +1697,19 @@ function renderDashboardBlocks() {
     let urgentHtml = "";
     urgentActs.forEach(a => { 
         let score = calcEventUrgencyScore(a);
-        urgentHtml += `<div style="padding:10px; margin-bottom:6px; background:#fff1f0; border-radius:6px; font-size:14px; border-left: 5px solid #ff4d4f; cursor:pointer;" onclick="openEventPage('${a.id}')"><span style="background:#ff4d4f; color:white; font-size:11px; padding:1px 4px; border-radius:3px; font-weight:bold; margin-right:6px;">⚠️ 權重分數 ${score}</span><b>[${a.date}] ${a.time}</b> | ${a.title}</div>`; 
+        urgentHtml += `<div style="padding:12px; margin-bottom:8px; background:rgba(255,59,48,0.04); border-radius:8px; font-size:14px; border-left: 5px solid var(--apple-danger); cursor:pointer;" onclick="openEventPage('${a.id}')"><span style="background:var(--apple-danger); color:white; font-size:11px; padding:2px 6px; border-radius:4px; font-weight:700; margin-right:6px;">⚠️ 權重 ${score}</span><b>[${a.date}] ${a.time}</b> | ${a.title}</div>`; 
     });
-    document.getElementById('dashUrgentTasks').innerHTML = urgentHtml || "<p style='color:gray; font-size:14px;'>🎉 目前無任何未完成的重要特急任務。</p>";
+    document.getElementById('dashUrgentTasks').innerHTML = urgentHtml || "<p style='color:var(--apple-text-secondary); font-size:14px;'>🎉 目前無任何未完成的重要特急任務。</p>";
 
     let todayHtml = ""; 
     activities.filter(a => isEventActiveOnDate(a, todayStr)).forEach(a => { 
         let pColor = getAssigneeColor(a.assignee || '全員');
-        todayHtml += `<div style="padding:10px; margin-bottom:6px; background:${getCategoryColor(a.category)}; border-radius:6px; font-size:14px; cursor:pointer;" onclick="openEventPage('${a.id}')"><b>${a.time}</b> | ${a.title} <span style="float:right; font-weight:bold; background:${pColor.bg}; color:${pColor.text}; padding:2px 6px; border-radius:4px; font-size:12px;">👤 ${a.assignee || '全員'}</span></div>`; 
+        todayHtml += `<div style="padding:12px; margin-bottom:8px; background:${getCategoryColor(a.category)}; border-radius:8px; font-size:14px; cursor:pointer; border:1px solid rgba(0,0,0,0.01);" onclick="openEventPage('${a.id}')"><b>${a.time}</b> | ${a.title} <span style="float:right; font-weight:700; background:${pColor.bg}; color:${pColor.text}; padding:2px 6px; border-radius:4px; font-size:12px;">👤 ${a.assignee || '全員'}</span></div>`; 
     });
-    document.getElementById('dashTodayEvents').innerHTML = todayHtml || "<p style='color:gray; font-size:14px;'>今日無行程安排。</p>";
+    document.getElementById('dashTodayEvents').innerHTML = todayHtml || "<p style='color:var(--apple-text-secondary); font-size:14px;'>今日無行程安排。</p>";
 
-    let unfinishedHtml = ""; activities.filter(a => (a.status || '待處理') !== '已完成').slice(0, 5).forEach(a => { unfinishedHtml += `<div style="padding:8px; border-bottom:1px solid #eee; font-size:14px; cursor:pointer;" onclick="openEventPage('${a.id}')">📌 <span style="color:#ef6c00; font-weight:bold;">[${a.status || '待處理'}]</span> <b>${a.title}</b> <small style="color:gray;">(${a.date})</small></div>`; });
-    document.getElementById('dashUnfinishedTasks').innerHTML = unfinishedHtml || "<p style='color:gray; font-size:14px;'>所有任務皆已處理完成！</p>";
+    let unfinishedHtml = ""; activities.filter(a => (a.status || '待處理') !== '已完成').slice(0, 5).forEach(a => { unfinishedHtml += `<div style="padding:10px; border-bottom:1px solid var(--apple-border); font-size:14px; cursor:pointer;" onclick="openEventPage('${a.id}')">📌 <span style="color:var(--oasis-warning); font-weight:700;">[${a.status || '待處理'}]</span> <b>${a.title}</b> <small style="color:var(--apple-text-secondary);">(${a.date})</small></div>`; });
+    document.getElementById('dashUnfinishedTasks').innerHTML = unfinishedHtml || "<p style='color:var(--apple-text-secondary); font-size:14px;'>所有任務皆已處理完成！</p>";
 
     let latestMediaContainer = document.getElementById('dashLatestMedia'); latestMediaContainer.innerHTML = "";
     albumItems.slice(-4).forEach(m => {
@@ -1425,11 +1719,11 @@ function renderDashboardBlocks() {
 
 function renderPopupManageListUI() {
     let container = document.getElementById('popupManageList'); let filtered = activities.filter(a => isEventActiveOnDate(a, selectedDateStr));
-    if (filtered.length === 0) { container.innerHTML = `<p style="color:gray; text-align:center;">今日暫無行程。</p>`; return; }
+    if (filtered.length === 0) { container.innerHTML = `<p style="color:var(--apple-text-secondary); text-align:center; font-size:14px; padding:10px 0;">今日暫無行程。</p>`; return; }
     let html = "";
     filtered.forEach(ev => { 
         let pColor = getAssigneeColor(ev.assignee || '全員');
-        html += `<div class="manage-item-row" style="padding:12px; margin-bottom:10px; background:#fafafa; border-radius:8px; border:1px solid #eee;"><div style="font-size:16px; margin-bottom:8px;">⏰ <strong>${ev.time}</strong> - ${ev.title} <span style="background:${pColor.bg}; color:${pColor.text}; padding:2px 6px; border-radius:4px; font-size:13px; font-weight:bold;">[👤 ${ev.assignee || '全員'}]</span></div><div class="action-btn-group-row"><button class="pretty-delete-btn" onclick="deleteEventFromPopup('${ev.id}')">❌ 刪除</button><button class="pretty-edit-btn" onclick="openModifyEventForm('${ev.id}')">✏️ 修改</button></div></div>`; 
+        html += `<div class="manage-item-row" style="padding:14px; margin-bottom:10px; background:rgba(0,0,0,0.02); border-radius:10px; border:1px solid rgba(0,0,0,0.02);"><div style="font-size:15px; margin-bottom:10px; color:var(--apple-text);">⏰ <strong>${ev.time}</strong> - ${ev.title} <span style="background:${pColor.bg}; color:${pColor.text}; padding:2px 6px; border-radius:4px; font-size:12px; font-weight:700;">[👤 ${ev.assignee || '全員'}]</span></div><div class="action-btn-group-row"><button class="pretty-delete-btn" onclick="deleteEventFromPopup('${ev.id}')">❌ 刪除</button><button class="pretty-edit-btn" onclick="openModifyEventForm('${ev.id}')">✏️ 修改</button></div></div>`; 
     });
     container.innerHTML = html;
 }
@@ -1448,9 +1742,9 @@ function openModifyEventForm(id) {
 
 function renderPopupWhatsApp_UI() {
     let container = document.getElementById('popupWhatsAppList'); let filtered = activities.filter(a => isEventActiveOnDate(a, selectedDateStr));
-    if (filtered.length === 0) { container.innerHTML = `<p style="color:gray; text-align:center;">無項目可通知。</p>`; return; }
+    if (filtered.length === 0) { container.innerHTML = `<p style="color:var(--apple-text-secondary); text-align:center; font-size:14px; padding:10px 0;">無項目可通知。</p>`; return; }
     let html = "";
-    filtered.forEach(ev => { html += `<div class="manage-item-row" style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee;"><div style="flex:1; font-size:15px;"><strong>${ev.time}</strong> - ${ev.title}</div><div><button class="pretty-whatsapp-btn" onclick="sendWhatsAppNotification('${ev.id}')">💬 發送通知</button></div></div>`; });
+    filtered.forEach(ev => { html += `<div class="manage-item-row" style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--apple-border);"><div style="flex:1; font-size:14px; color:var(--apple-text);"><strong>${ev.time}</strong> - ${ev.title}</div><div><button class="pretty-whatsapp-btn" onclick="sendWhatsAppNotification('${ev.id}')">💬 發送通知</button></div></div>`; });
     container.innerHTML = html;
 }
 
@@ -1478,63 +1772,52 @@ function getLunarDayText(dateStr) {
     } catch(e) { return ""; }
 }
 
-/* ─── 🗓️ 核心深度渲染優化：跨日上色整合與星期天/假期聯動系統 ─── */
 function renderCalendarWithData(dataset) {
-    let y = current.getFullYear(); let m = current.getMonth();
+    let y = current.getFullYear();
+    let m = current.getMonth();
     monthLabel.innerText = y + "年 " + (m + 1) + "月";
-    
     let firstDayIndex = new Date(y, m, 1).getDay();
     let daysCount = new Date(y, m + 1, 0).getDate();
     let fragment = document.createDocumentFragment();
     
-    // 渲染前導空格
     for(let i=0; i<firstDayIndex; i++){ 
-        let cell = document.createElement('div'); 
+        let cell = document.createElement('div');
         cell.className = "calendar-day empty"; 
         fragment.appendChild(cell); 
     }
     
-    // 開始按月逐日渲染
     for(let i=1; i<=daysCount; i++){
         let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
         let thisDateObj = new Date(y, m, i);
-        let currentDayOfWeek = thisDateObj.getDay(); // 獲取當前星期幾 (0 是星期天)
+        let currentDayOfWeek = thisDateObj.getDay();
         
-        let isToday = new Date().toISOString().slice(0,10) === dStr; 
+        let isToday = new Date().toISOString().slice(0,10) === dStr;
         let isSelected = selectedDateStr === dStr;
         
         let dayActivities = dataset.filter(a => isEventActiveOnDate(a, dStr));
         let dayMediaItems = albumItems.filter(item => item.date === dStr);
         let eventsHtml = "";
         
-        // 渲染每個活動的獨立代班顏色
         dayActivities.forEach(act => { 
             let priorityMark = act.isAI_Priority ? '🔥 ' : '';
             let pColor = getAssigneeColor(act.assignee || '全員');
             eventsHtml += `<span class="day-event-badge" style="background:${pColor.bg}; color:${pColor.text}; border-left:3px solid ${pColor.text};">${priorityMark}${act.time} ${act.title}</span>`; 
         });
-        
         dayMediaItems.forEach(media => { 
-            eventsHtml = `<span class="day-event-badge" style="background:#fff7e6; color:#d46b08; border-left:3px solid #f39c12; font-weight:bold;">🖼️ 附圖: ${media.title}</span>` + eventsHtml; 
+            eventsHtml = `<span class="day-event-badge" style="background:rgba(255,149,0,0.08); color:var(--oasis-warning); border-left:3px solid var(--oasis-warning); font-weight:bold;">🖼️ 附圖: ${media.title}</span>` + eventsHtml; 
         });
-        
         let hasMultiDayActive = dayActivities.some(a => a.date !== a.endDate);
         let holidayName = getHKHoliday(m+1, i);
-        
-        // 🛠️ 判斷是否為公眾假期或星期日，若是，則一體化套用高亮背景色
         let isHolidayOrSunday = (holidayName !== "") || (currentDayOfWeek === 0);
-
         let dayCell = document.createElement('div');
         dayCell.className = "calendar-day" + 
                             (isToday ? " today" : "") + 
                             (isSelected ? " selected-day" : "") + 
                             (isHolidayOrSunday ? " hk-holiday-pass-range" : "") + 
                             (hasMultiDayActive ? " multiday-pass-range" : "");
-                            
         dayCell.setAttribute('data-date', dStr); 
         dayCell.onclick = () => selectDate(dStr);
         
-        // 如果是星期日且無特定節日名稱，標註“休”，若是法定假日則顯示假日名稱
         let holidayLabelHtml = "";
         if (holidayName !== "") {
             holidayLabelHtml = `<div class="holiday">🔴 ${holidayName}</div>`;
@@ -1546,9 +1829,8 @@ function renderCalendarWithData(dataset) {
         fragment.appendChild(dayCell);
     }
     
-    // 補齊尾部空格
     while((firstDayIndex + daysCount) % 7 !== 0){ 
-        let cell = document.createElement('div'); 
+        let cell = document.createElement('div');
         cell.className = "calendar-day empty";
         fragment.appendChild(cell); 
         daysCount++; 
@@ -1563,16 +1845,16 @@ function selectDate(dateStr) { selectedDateStr = dateStr; document.getElementByI
 
 function renderDayEvents() {
     let container = document.getElementById('dayEvents'); let filtered = activities.filter(a => isEventActiveOnDate(a, selectedDateStr));
-    if (filtered.length === 0) { container.innerHTML = `<p style="color:gray; text-align:center; padding:15px 0;">今日無任何排定活動。</p>`; return; }
+    if (filtered.length === 0) { container.innerHTML = `<p style="color:var(--apple-text-secondary); text-align:center; padding:15px 0; font-size:14px;">今日無任何排定活動。</p>`; return; }
     let html = "";
     filtered.forEach(ev => { 
         let aiChipsHtml = "";
-        if(ev.isAI_Priority) aiChipsHtml += `<span class="meta-chip" style="background:#ff4d4f; color:white;">🔥 高優先</span>`;
+        if(ev.isAI_Priority) aiChipsHtml += `<span class="meta-chip" style="background:var(--apple-danger); color:white;">🔥 高優先</span>`;
         if(ev.ai_Tags) {
             ev.ai_Tags.forEach(t => { aiChipsHtml += `<span class="meta-chip chip-ai">${t}</span>`; });
         }
         let pColor = getAssigneeColor(ev.assignee || '全員');
-        html += `<div class="event-item" style="border-left-color:#333;" onclick="openEventPage('${ev.id}')"><div class="event-time">⏰ 時間：${ev.time}</div><div class="event-desc">📌 項目：<strong>${ev.title}</strong></div><div class="event-meta-tags"><span class="meta-chip" style="background:${getCategoryColor(ev.category)};">${ev.category}</span><span class="meta-chip" style="background:${pColor.bg}; color:${pColor.text}; font-weight:bold;">👤 ${ev.assignee || '全員'}</span><span class="meta-chip chip-reminder">${ev.status || '待處理'}</span>${aiChipsHtml}</div></div>`; 
+        html += `<div class="event-item" style="border-left-color:var(--oasis-primary);" onclick="openEventPage('${ev.id}')"><div class="event-time">⏰ 時間：${ev.time}</div><div class="event-desc">📌 項目：<strong>${ev.title}</strong></div><div class="event-meta-tags"><span class="meta-chip" style="background:${getCategoryColor(ev.category)}; color:var(--apple-text);">${ev.category}</span><span class="meta-chip" style="background:${pColor.bg}; color:${pColor.text};">${ev.assignee || '全員'}</span><span class="meta-chip chip-reminder">${ev.status || '待處理'}</span>${aiChipsHtml}</div></div>`; 
     });
     container.innerHTML = html;
 }
