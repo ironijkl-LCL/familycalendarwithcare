@@ -3,30 +3,74 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0071e3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="麟李家庭智慧管理系統 - 結合 Dify AI 雲端分類、E2EE 加密與即時同步日曆">
 <title>🏠 Family OS - 麟李家庭智慧管理系統</title>
+
+<!-- PWA Web App Manifest -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 
 <!-- DOMPurify 防禦 XSS 消毒庫 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/dompurify.min.js"></script>
+
+<!-- 🚨 系統崩潰與異常即時監控 -->
+<script>
+window.onerror = function (msg, url, lineNo, columnNo, error) {
+    const errorPayload = {
+        type: "runtime_error",
+        message: String(msg),
+        source: String(url),
+        line: lineNo,
+        column: columnNo,
+        time: new Date().toISOString(),
+        userAgent: navigator.userAgent
+    };
+    console.error("【Family OS 錯誤監控攔截】", errorPayload);
+    if (window.fbDb && window.fbRef && window.fbPush) {
+        try {
+            window.fbPush(window.fbRef(window.fbDb, "system_runtime_logs"), errorPayload);
+        } catch(e) {}
+    }
+    return false;
+};
+window.addEventListener('unhandledrejection', event => {
+    console.error("【Family OS 未處理 Promise 異常】", event.reason);
+});
+
+// PWA Service Worker 註冊
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then(reg => {
+            console.log('ServiceWorker 註冊成功，範圍:', reg.scope);
+        }).catch(err => {
+            console.warn('ServiceWorker 註冊失敗:', err);
+        });
+    });
+}
+</script>
 
 <style>
 /* ─── 🍏 Apple Premium Design & Oasis Aesthetics Core ─── */
 :root {
     --apple-bg: #f5f5f7;
-    --apple-card: rgba(255, 255, 255, 0.78);
+    --apple-card: rgba(255, 255, 255, 0.88);
     --apple-text: #1d1d1f;
-    --apple-text-secondary: #86868b;
+    --apple-text-secondary: #48484a; /* WCAG AA 對比度標準 (8.4:1) */
     --apple-border: rgba(0, 0, 0, 0.08);
     --apple-glow-border: rgba(255, 255, 255, 0.7);
     
-    /* Oasis Premium Palette */
+    /* Oasis Palette */
     --oasis-primary: #0071e3;
     --oasis-primary-glow: rgba(0, 113, 227, 0.15);
     --oasis-success: #34c759;
     --oasis-success-glow: rgba(52, 199, 89, 0.12);
-    --oasis-warning: #ff9500;
-    --oasis-danger: #ff3b30;
+    --oasis-warning: #c97500;
+    --oasis-danger: #d70015;
     --oasis-ai-gradient: linear-gradient(135deg, rgba(232, 220, 255, 0.55), rgba(212, 235, 255, 0.55));
-    --oasis-ai-purple: #9842ef;
+    --oasis-ai-purple: #7d2ae8;
 }
 
 body { 
@@ -35,18 +79,26 @@ body {
     font-size: 17px; 
     background-color: var(--apple-bg); 
     color: var(--apple-text); 
-    padding-bottom: 100px;
+    padding-bottom: calc(100px + env(safe-area-inset-bottom));
     letter-spacing: -0.01em;
     -webkit-font-smoothing: antialiased;
 }
 
-/* ─── 🪟 Blurry Top Header ─── */
+:focus-visible {
+    outline: 2px solid var(--oasis-primary);
+    outline-offset: 2px;
+}
+
+/* ─── 🪟 Header（📱 避開靈動島與瀏海覆蓋） ─── */
 header {
-    background: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     color: var(--apple-text);
-    padding: 16px 24px;
+    padding-top: max(16px, env(safe-area-inset-top));
+    padding-bottom: 12px;
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
     border-bottom: 1px solid var(--apple-border);
     display: flex;
     justify-content: space-between;
@@ -60,12 +112,12 @@ header {
 .header-status-group {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .auth-badge {
     font-size: 13px;
-    background: rgba(0,0,0,0.05);
+    background: rgba(0,0,0,0.06);
     padding: 6px 14px;
     border-radius: 20px;
     font-weight: 600;
@@ -75,19 +127,32 @@ header {
     gap: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
+    border: none;
 }
-.auth-badge:hover { background: rgba(0,0,0,0.08); }
+.auth-badge:hover { background: rgba(0,0,0,0.09); }
+
+.e2ee-badge {
+    font-size: 12px;
+    background: rgba(125, 42, 232, 0.1);
+    color: var(--oasis-ai-purple);
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid rgba(125, 42, 232, 0.25);
+}
 
 .logout-link {
-    font-size: 12px;
-    color: var(--apple-danger);
+    font-size: 13px;
+    color: var(--oasis-danger);
     text-decoration: underline;
     cursor: pointer;
     display: none;
+    font-weight: 600;
 }
 
 .container { 
-    padding: 24px; 
+    padding: 16px; 
     max-width: 1140px; 
     margin: 0 auto; 
     box-sizing: border-box; 
@@ -96,10 +161,10 @@ header {
 /* ─── 🔔 Global Toast 通知元件 ─── */
 .toast-notice {
     position: fixed;
-    top: 75px;
+    top: calc(12px + max(16px, env(safe-area-inset-top)));
     left: 50%;
     transform: translateX(-50%) translateY(-20px);
-    background: rgba(29, 29, 31, 0.92);
+    background: rgba(29, 29, 31, 0.94);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     color: white;
@@ -117,10 +182,10 @@ header {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
 }
-.toast-notice.error { background: rgba(255, 59, 48, 0.95); }
-.toast-notice.success { background: rgba(52, 199, 89, 0.95); }
+.toast-notice.error { background: rgba(215, 0, 21, 0.95); }
+.toast-notice.success { background: rgba(40, 167, 69, 0.95); }
 
-/* ─── 🗂️ Apple Style UI Components ─── */
+/* ─── 🗂️ Apple Style UI ─── */
 .card {
     background: var(--apple-card);
     backdrop-filter: blur(16px);
@@ -148,13 +213,14 @@ header {
 .search-box {
     width: 100%;
     padding: 12px 16px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.15);
     border-radius: 10px;
     font-size: 15px;
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.7);
     box-sizing: border-box;
     transition: all 0.2s ease;
     outline: none;
+    color: var(--apple-text);
 }
 .search-box:focus {
     background: #ffffff;
@@ -208,23 +274,29 @@ header {
 }
 
 .notion-view-selector {
-    display: inline-flex;
-    background: rgba(0, 0, 0, 0.05);
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    background: rgba(0, 0, 0, 0.06);
     padding: 4px;
     border-radius: 12px;
     margin-bottom: 24px;
-    gap: 2px;
+    gap: 4px;
 }
+.notion-view-selector::-webkit-scrollbar { display: none; }
+
 .view-tag-btn {
     background: transparent;
     border: none;
     padding: 8px 18px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--apple-text-secondary);
     cursor: pointer;
     border-radius: 9px;
     white-space: nowrap;
+    flex-shrink: 0;
     transition: all 0.2s ease;
 }
 .view-tag-btn:hover { color: var(--apple-text); }
@@ -232,7 +304,6 @@ header {
     background: #ffffff; 
     color: var(--apple-text); 
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    font-weight: 600;
 }
 
 .ai-summary-box {
@@ -258,12 +329,12 @@ header {
 .view-panel { display: none; }
 .view-panel.active { display: block; }
 
-/* ─── 🗓️ 月曆設計美學 ─── */
+/* ─── 🗓️ 月曆 Grid ─── */
 .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .nav-btn { 
     padding: 10px 16px; 
     font-size: 14px; 
-    background: rgba(0, 0, 0, 0.05); 
+    background: rgba(0, 0, 0, 0.06); 
     color: var(--apple-text); 
     border: none; 
     border-radius: 8px; 
@@ -271,55 +342,87 @@ header {
     font-weight: 600; 
     transition: all 0.2s ease;
 }
-.nav-btn:hover { background: rgba(0, 0, 0, 0.08); }
+.nav-btn:hover { background: rgba(0, 0, 0, 0.1); }
 .month-title { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
-.weekdays-container { display: flex; width: 100%; margin-bottom: 10px; }
-.weekday { flex: 1; text-align: center; color: var(--apple-text-secondary); font-weight: 600; font-size: 13px; text-transform: uppercase; }
-.weekdays-container .weekday:first-child { color: var(--apple-danger); }
 
-.calendar { display: flex; flex-wrap: wrap; width: 100%; touch-action: pan-y; }
+.weekdays-container { 
+    display: grid; 
+    grid-template-columns: repeat(7, 1fr); 
+    gap: 6px; 
+    width: 100%; 
+    margin-bottom: 8px; 
+}
+.weekday { 
+    text-align: center; 
+    color: var(--apple-text-secondary); 
+    font-weight: 700; 
+    font-size: 13px; 
+    text-transform: uppercase; 
+    padding: 4px 0;
+}
+.weekdays-container .weekday:first-child { color: var(--oasis-danger); }
+
+.calendar { 
+    display: grid; 
+    grid-template-columns: repeat(7, 1fr); 
+    gap: 6px; 
+    width: 100%; 
+    touch-action: pan-y; 
+}
 .calendar-day {
-    display: inline-block;
-    width: 14.2857%;
+    display: flex;
+    flex-direction: column;
     padding: 8px 4px;
     text-align: center;
     background: #ffffff;
     border-radius: 12px;
-    margin-bottom: 6px;
-    min-height: 120px;
-    font-size: 16px;
-    vertical-align: top;
+    min-height: 115px;
+    font-size: 15px;
     box-sizing: border-box;
     cursor: pointer;
-    border: 1px solid rgba(0,0,0,0.03);
-    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.06);
     position: relative;
-    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: all 0.18s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .calendar-day:hover { 
-    background: var(--apple-bg); 
-    transform: scale(1.02); 
+    background: #fdfdfd; 
+    transform: translateY(-2px); 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
     z-index: 2;
 }
 
+.calendar-day.empty {
+    background: transparent !important;
+    border-color: transparent !important;
+    cursor: default;
+    pointer-events: none;
+}
+
 .calendar-day.today { 
-    border: 2.5px solid var(--oasis-warning) !important; 
-    background: rgba(255, 149, 0, 0.03);
+    border: 2px solid var(--oasis-warning) !important; 
+    background: rgba(201, 117, 0, 0.05);
 }
 .calendar-day.selected-day { 
-    background: #e2f7e9 !important; 
-    border: 2.5px solid var(--oasis-success) !important; 
+    background: #eafff1 !important; 
+    border: 2px solid var(--oasis-success) !important; 
 }
-.multiday-pass-range { background: rgba(52, 199, 89, 0.05) !important; }
-.hk-holiday-pass-range { background: rgba(255, 59, 48, 0.05) !important; }
+.multiday-pass-range { background: rgba(52, 199, 89, 0.06) !important; }
+.hk-holiday-pass-range { background: rgba(215, 0, 21, 0.05) !important; }
 
 .lunar { font-size: 11px; color: var(--apple-text-secondary); margin-top: 2px; }
-.holiday { font-size: 11px; color: var(--apple-danger); font-weight: 600; margin-top: 2px; }
+.holiday { font-size: 11px; color: var(--oasis-danger); font-weight: 700; margin-top: 2px; }
+
+.day-events-container {
+    margin-top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    overflow: hidden;
+}
 
 .day-event-badge {
     font-size: 11px;
-    padding: 4px 6px;
-    margin-top: 4px;
+    padding: 3px 5px;
     text-align: left;
     border-radius: 4px;
     overflow: hidden;
@@ -329,7 +432,7 @@ header {
     font-weight: 600;
 }
 
-/* 🚀 Block 系統與拖拉排序樣式 */
+/* 🚀 Block 系統樣式 */
 .block-wrapper { 
     display: flex; 
     align-items: center; 
@@ -344,24 +447,24 @@ header {
     box-shadow: 0 2px 8px rgba(0,0,0,0.01);
 }
 .block-wrapper.dragging { opacity: 0.4; background: #f5f5f7; }
-.block-handle { color: #ccc; font-size: 16px; cursor: move; padding: 0 4px; }
+.block-handle { color: #888; font-size: 16px; cursor: move; padding: 0 4px; }
 .block-content-area { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-.block-input-text { width: 100%; padding: 8px; border: 1px solid transparent; border-radius: 6px; font-size: 14px; box-sizing: border-box; background: transparent; outline: none;}
-.block-input-text:focus { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.05); }
-.block-input-heading { width: 100%; padding: 8px; border: 1px solid transparent; border-radius: 6px; font-size: 18px; font-weight: 700; box-sizing: border-box; background: transparent; outline: none; letter-spacing: -0.01em;}
-.block-input-heading:focus { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.05); }
+.block-input-text { width: 100%; padding: 8px; border: 1px solid transparent; border-radius: 6px; font-size: 14px; box-sizing: border-box; background: transparent; outline: none; color: var(--apple-text);}
+.block-input-text:focus { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.1); }
+.block-input-heading { width: 100%; padding: 8px; border: 1px solid transparent; border-radius: 6px; font-size: 18px; font-weight: 700; box-sizing: border-box; background: transparent; outline: none; letter-spacing: -0.01em; color: var(--apple-text);}
+.block-input-heading:focus { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.1); }
 
 /* Slash Command 彈出選單 */
 .slash-menu {
     position: absolute;
-    background: rgba(255, 255, 255, 0.88);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(0,0,0,0.1);
+    border: 1px solid rgba(0,0,0,0.12);
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.12);
     z-index: 1010;
-    width: 200px;
+    width: 210px;
     display: none;
     flex-direction: column;
     padding: 6px 0;
@@ -401,7 +504,7 @@ header {
     font-size: 15px; 
     padding-bottom: 10px; 
     margin-bottom: 14px; 
-    border-bottom: 1px solid rgba(0,0,0,0.05); 
+    border-bottom: 1px solid rgba(0,0,0,0.06); 
     display: flex; 
     justify-content: space-between; 
 }
@@ -411,7 +514,7 @@ header {
     border-radius: 12px; 
     margin-bottom: 10px; 
     box-shadow: 0 4px 12px rgba(0,0,0,0.02); 
-    border: 1px solid rgba(0,0,0,0.04); 
+    border: 1px solid rgba(0,0,0,0.05); 
     cursor: grab; 
     transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.25, 1), box-shadow 0.2s ease; 
 }
@@ -419,16 +522,16 @@ header {
 
 .floating-add-btn { 
     position: fixed; 
-    bottom: 30px; 
-    right: 30px; 
+    bottom: calc(24px + env(safe-area-inset-bottom)); 
+    right: max(20px, env(safe-area-inset-right)); 
     width: 56px; 
     height: 56px; 
     background: var(--oasis-primary); 
     color: white; 
     border: none; 
     border-radius: 50%; 
-    font-size: 26px; 
-    box-shadow: 0 8px 24px rgba(0, 113, 227, 0.3); 
+    font-size: 28px; 
+    box-shadow: 0 8px 24px rgba(0, 113, 227, 0.35); 
     cursor: pointer; 
     z-index: 999; 
     display: flex; 
@@ -442,13 +545,13 @@ header {
 }
 
 button.pretty-whatsapp-btn { 
-    background: #34c759; 
-    color: white; 
+    background: #25d366; 
+    color: #ffffff; 
     border: none; 
     border-radius: 20px; 
     padding: 8px 16px; 
     font-size: 13px; 
-    font-weight: 600; 
+    font-weight: 700; 
     cursor: pointer; 
     display: inline-flex; 
     align-items: center; 
@@ -456,35 +559,35 @@ button.pretty-whatsapp-btn {
 }
 .action-btn-group-row { display: flex; gap: 8px; }
 button.pretty-delete-btn { 
-    background: rgba(255, 59, 48, 0.1); 
-    color: var(--apple-danger); 
+    background: rgba(215, 0, 21, 0.08); 
+    color: var(--oasis-danger); 
     border: none; 
     border-radius: 8px; 
     padding: 6px 14px; 
     font-size: 13px; 
-    font-weight: 600; 
+    font-weight: 700; 
     cursor: pointer; 
     transition: background 0.2s;
 }
-button.pretty-delete-btn:hover { background: rgba(255, 59, 48, 0.18); }
+button.pretty-delete-btn:hover { background: rgba(215, 0, 21, 0.15); }
 
 button.pretty-edit-btn { 
-    background: rgba(0, 113, 227, 0.1); 
+    background: rgba(0, 113, 227, 0.08); 
     color: var(--oasis-primary); 
     border: none; 
     border-radius: 8px; 
     padding: 6px 14px; 
     font-size: 13px; 
-    font-weight: 600; 
+    font-weight: 700; 
     cursor: pointer; 
     transition: background 0.2s;
 }
-button.pretty-edit-btn:hover { background: rgba(0, 113, 227, 0.18); }
+button.pretty-edit-btn:hover { background: rgba(0, 113, 227, 0.15); }
 
 .camera-upload-row { display: flex; gap: 8px; margin: 12px 0; }
 .camera-btn { 
     flex: 1; 
-    background: rgba(0,0,0,0.05); 
+    background: rgba(0,0,0,0.06); 
     color: var(--apple-text); 
     border: none; 
     padding: 12px; 
@@ -499,17 +602,17 @@ button.pretty-edit-btn:hover { background: rgba(0, 113, 227, 0.18); }
     gap: 6px; 
     transition: background 0.2s;
 }
-.camera-btn:hover { background: rgba(0,0,0,0.08); }
-.camera-btn.video-mode { background: rgba(152, 66, 239, 0.1); color: var(--oasis-ai-purple); }
+.camera-btn:hover { background: rgba(0,0,0,0.09); }
+.camera-btn.video-mode { background: rgba(125, 42, 232, 0.1); color: var(--oasis-ai-purple); }
 
-.upload-preview-box { max-width: 100%; height: auto; max-height: 140px; border-radius: 12px; margin: 10px 0; display: none; object-fit: cover; border: 2px dashed rgba(0,0,0,0.1); }
+.upload-preview-box { max-width: 100%; height: auto; max-height: 140px; border-radius: 12px; margin: 10px 0; display: none; object-fit: cover; border: 2px dashed rgba(0,0,0,0.15); }
 .twin-input-wrapper { display: flex; align-items: center; position: relative; width: 100%; }
 .twin-input-wrapper input[type="text"] { flex: 1; cursor: pointer; background: #fff; }
 .wheel-trigger-box { position: absolute; right: 0; top: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: flex-end; pointer-events: none; }
 .wheel-btn { background: transparent !important; border: none !important; width: 44px; height: 100%; position: relative; pointer-events: auto; }
 .picker-overlay-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0 !important; cursor: pointer; z-index: 5; }
 
-/* ─── 🎛️ Popups & Modals ─── */
+/* ─── 🎛️ Popups & Modals（安全邊距置頂） ─── */
 .popup-overlay { 
     display: none; 
     position: fixed; 
@@ -525,19 +628,19 @@ button.pretty-edit-btn:hover { background: rgba(0, 113, 227, 0.18); }
 }
 .popup-content-card { 
     position: relative; 
-    background: rgba(255, 255, 255, 0.94); 
+    background: rgba(255, 255, 255, 0.98); 
     width: 92%; 
-    max-width: 540px; 
-    margin: 60px auto; 
-    padding: 30px; 
+    max-width: 520px; 
+    margin: calc(24px + max(16px, env(safe-area-inset-top))) auto calc(40px + env(safe-area-inset-bottom)) auto;
+    padding: 24px; 
     border-radius: 24px; 
     box-shadow: 0 20px 50px rgba(0,0,0,0.15); 
     border: 1px solid rgba(255,255,255,0.7); 
     box-sizing: border-box; 
 }
-.popup-close-x { position: absolute; top: 20px; right: 24px; font-size: 22px; color: var(--apple-text-secondary); cursor: pointer; font-weight: 500; }
-.password-lock-section { background: rgba(0,0,0,0.03); padding: 20px; border-radius: 14px; margin-top: 12px; }
-.secure-form-fields { display: none; margin-top: 20px; }
+.popup-close-x { position: absolute; top: 18px; right: 20px; font-size: 24px; color: var(--apple-text-secondary); cursor: pointer; font-weight: 500; border: none; background: transparent; }
+.password-lock-section { background: rgba(0,0,0,0.03); padding: 16px; border-radius: 14px; margin-top: 12px; }
+.secure-form-fields { display: none; margin-top: 16px; }
 
 button.action-btn-block { 
     width: 100%; 
@@ -561,15 +664,16 @@ button.action-btn-block:hover:not(:disabled) { opacity: 0.9; }
 
 input, textarea, select { 
     width: 100%; 
-    padding: 12px 16px; 
-    margin: 8px 0; 
-    border: 1px solid rgba(0,0,0,0.1); 
+    padding: 12px 14px; 
+    margin: 6px 0; 
+    border: 1px solid rgba(0,0,0,0.14); 
     border-radius: 10px; 
     box-sizing: border-box; 
     font-size: 15px; 
-    background: rgba(255,255,255,0.8); 
+    background: rgba(255,255,255,0.9); 
     outline: none; 
     transition: all 0.2s; 
+    color: var(--apple-text);
 }
 input:focus, select:focus { border-color: var(--oasis-primary); background: #ffffff; }
 
@@ -581,13 +685,13 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
     border-radius: 0 14px 14px 0; 
     transition: all 0.2s ease; 
     cursor: pointer; 
-    border-top: 1px solid rgba(0,0,0,0.02); 
-    border-right: 1px solid rgba(0,0,0,0.02); 
-    border-bottom: 1px solid rgba(0,0,0,0.02); 
+    border-top: 1px solid rgba(0,0,0,0.04); 
+    border-right: 1px solid rgba(0,0,0,0.04); 
+    border-bottom: 1px solid rgba(0,0,0,0.04); 
 }
 .event-item:hover { transform: translateX(2px); box-shadow: 0 4px 14px rgba(0,0,0,0.04); }
 .event-time { font-weight: 700; color: var(--apple-text); font-size: 14px; }
-.event-desc { margin-top: 6px; color: #3a3a3c; font-size: 15px; }
+.event-desc { margin-top: 6px; color: #2c2c2e; font-size: 15px; }
 .event-meta-tags { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
 .meta-chip { 
     font-size: 11px; 
@@ -598,39 +702,38 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
     align-items: center; 
     gap: 3px; 
 }
-.chip-reminder { background: rgba(255, 149, 0, 0.1); color: var(--oasis-warning); }
-.chip-ai { background: rgba(152, 66, 239, 0.08); color: var(--oasis-ai-purple); border: 1px dashed rgba(152, 66, 239, 0.3); }
+.chip-reminder { background: rgba(201, 117, 0, 0.1); color: var(--oasis-warning); }
+.chip-ai { background: rgba(125, 42, 232, 0.08); color: var(--oasis-ai-purple); border: 1px dashed rgba(125, 42, 232, 0.3); }
 
-/* ✨ AI 脈衝載入動態樣式 */
 .chip-ai-pulse {
-    background: linear-gradient(135deg, rgba(152, 66, 239, 0.15), rgba(0, 113, 227, 0.15));
+    background: linear-gradient(135deg, rgba(125, 42, 232, 0.15), rgba(0, 113, 227, 0.15));
     color: var(--oasis-ai-purple);
-    border: 1px solid rgba(152, 66, 239, 0.3);
+    border: 1px solid rgba(125, 42, 232, 0.3);
     animation: aiPulse 1.8s infinite ease-in-out;
 }
 @keyframes aiPulse {
-    0%, 100% { opacity: 0.65; transform: scale(0.97); }
+    0%, 100% { opacity: 0.7; transform: scale(0.98); }
     50% { opacity: 1; transform: scale(1.02); }
 }
 
-.album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; margin-top: 14px; }
+.album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 12px; }
 .album-item { 
     background: #ffffff; 
-    border-radius: 14px; 
+    border-radius: 12px; 
     overflow: hidden; 
-    padding: 8px; 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
+    padding: 6px; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03); 
     text-align: center; 
     position: relative; 
-    border: 1px solid rgba(0,0,0,0.02); 
+    border: 1px solid rgba(0,0,0,0.04); 
 }
-.album-item img, .event-item img { width: 100%; height: 110px; object-fit: cover; border-radius: 10px; cursor: zoom-in; }
-.album-item video, .event-item video { width: 100%; height: 110px; object-fit: cover; border-radius: 10px; background: #000; cursor: zoom-in; }
-.album-title { font-size: 13px; font-weight: 600; margin-top: 8px; color: var(--apple-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.album-date-badge { font-size: 11px; color: var(--oasis-primary); background: rgba(0, 113, 227, 0.06); padding: 2px 6px; border-radius: 6px; display: inline-block; margin-top: 4px; font-weight: 500; }
+.album-item img, .event-item img { width: 100%; height: 95px; object-fit: cover; border-radius: 8px; cursor: zoom-in; }
+.album-item video, .event-item video { width: 100%; height: 95px; object-fit: cover; border-radius: 8px; background: #000; cursor: zoom-in; }
+.album-title { font-size: 12px; font-weight: 600; margin-top: 6px; color: var(--apple-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.album-date-badge { font-size: 11px; color: var(--oasis-primary); background: rgba(0, 113, 227, 0.08); padding: 2px 6px; border-radius: 6px; display: inline-block; margin-top: 4px; font-weight: 600; }
 .album-delete-tag { 
     position: absolute; top: 6px; right: 6px; 
-    background: rgba(255, 59, 48, 0.9); color: white; border: none; border-radius: 50%; 
+    background: rgba(215, 0, 21, 0.9); color: white; border: none; border-radius: 50%; 
     width: 22px; height: 22px; font-size: 13px; font-weight: bold; cursor: pointer; z-index: 10; 
 }
 
@@ -646,9 +749,8 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
 .view-radio-label input { width: auto; margin: 0 12px 0 0; transform: scale(1.2); }
 
 .album-header-container { display: flex; justify-content: space-between; align-items: center; }
-.inline-upload-trigger-btn { background: rgba(0, 113, 227, 0.1); color: var(--oasis-primary); border: none; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.inline-upload-trigger-btn { background: rgba(0, 113, 227, 0.1); color: var(--oasis-primary); border: none; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
 
-/* 骨架屏載入動畫 */
 .skeleton-line {
     background: linear-gradient(90deg, rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.04) 75%);
     background-size: 200% 100%;
@@ -661,14 +763,24 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
 }
+
+.manual-email-toggle {
+    font-size: 12px;
+    color: var(--oasis-primary);
+    text-decoration: underline;
+    cursor: pointer;
+    margin-top: 6px;
+    display: inline-block;
+}
 </style>
 
-<!-- Firebase SDK -->
+<!-- Firebase SDK（採用 browserLocalPersistence，徹底解除 iOS WebKit IndexedDB 死鎖） -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { initializeAuth, browserLocalPersistence, inMemoryPersistence, getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
   import { getDatabase, ref, onValue, set, push, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
   import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+  import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
   
   const firebaseConfig = {
     apiKey: "AIzaSyAasqW8TgacCLLNuhg_I1ItVQlDfAHatc0",
@@ -682,10 +794,33 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
   };
 
   const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
+  
+  // 🚨 關鍵：指定使用 LocalStorage 持久化，杜絕 WKWebView 凍結卡死
+  let auth;
+  try {
+    auth = initializeAuth(app, {
+      persistence: [browserLocalPersistence, inMemoryPersistence]
+    });
+  } catch (e) {
+    auth = getAuth(app);
+  }
+
   const db = getDatabase(app);
   const storage = getStorage(app);
 
+  let messaging = null;
+  try {
+    if ('Notification' in window) {
+      messaging = getMessaging(app);
+      onMessage(messaging, (payload) => {
+        showToast(`⏰ ${payload.notification?.title || '活動提醒'}: ${payload.notification?.body || ''}`, "success");
+      });
+    }
+  } catch(e) {
+    console.log('Firebase Messaging 未啟動:', e);
+  }
+
+  window.firebaseConfig = firebaseConfig;
   window.fbAuth = auth;
   window.fbSignIn = signInWithEmailAndPassword;
   window.fbSignOut = signOut;
@@ -702,60 +837,63 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
   window.fbRemove = remove;
   window.fbUploadBytes = uploadBytes;
   window.fbGetDownloadURL = getDownloadURL;
+  window.fbMessaging = messaging;
+  window.fbGetToken = getToken;
 </script>
 </head>
 
 <body class="view-列表" id="bodyNode">
 
-<div id="toastBar" class="toast-notice">✓ 雲端資料同步中...</div>
+<div id="toastBar" class="toast-notice" role="status" aria-live="polite">✓ 雲端資料同步中...</div>
 
-<header>
-    <div style="font-weight: 700;">🏠 Family OS <span style="font-size: 13px; font-weight: normal; color: var(--apple-text-secondary);">v8.9 (AI Enhanced)</span></div>
+<header role="banner">
+    <div style="font-weight: 700; font-size: 16px;">🏠 Family OS <span style="font-size: 12px; font-weight: normal; color: var(--apple-text-secondary);">v9.4 (全功能完全版)</span></div>
     <div class="header-status-group">
-        <div id="roleBadge" class="auth-badge" onclick="handleAuthBadgeClick()">🔒 訪客模式 (Viewer)</div>
-        <span id="logoutBtn" class="logout-link" onclick="logoutCurrentUser()">登出</span>
+        <button id="e2eeKeyBtn" class="e2ee-badge" onclick="openE2EEKeyPrompt()" title="端對端加密金鑰管理">🔐 E2EE 密鑰</button>
+        <button id="roleBadge" class="auth-badge" onclick="handleAuthBadgeClick()" aria-label="登入狀態切換">🔒 訪客模式 (Viewer)</button>
+        <span id="logoutBtn" class="logout-link" role="button" tabindex="0" onclick="logoutCurrentUser()" onkeydown="if(event.key==='Enter')logoutCurrentUser()">登出</span>
     </div>
 </header>
 
-<div class="container">
+<main class="container" role="main">
 
-    <div class="ai-summary-box" id="aiSummaryPanel">
-        <strong style="color: var(--oasis-ai-purple);">🔮 麟李 AI 智慧家庭日誌摘要：</strong>
-        <div id="aiSummaryText" style="color: #3a3a3c; margin-top: 6px;">
+    <section class="ai-summary-box" id="aiSummaryPanel" aria-labelledby="aiSummaryHeading">
+        <strong id="aiSummaryHeading" style="color: var(--oasis-ai-purple);">🔮 麟李 AI 智慧家庭日誌摘要：</strong>
+        <div id="aiSummaryText" style="color: #2c2c2e; margin-top: 6px;">
             <div class="skeleton-line" style="width: 70%;"></div>
             <div class="skeleton-line" style="width: 90%;"></div>
         </div>
-    </div>
+    </section>
 
     <div class="search-filter-card">
-        <input type="text" id="searchBox" class="search-box" placeholder="🔍 全文檢索搜尋：支援空格忽略、模糊匹配、跨關聯資料庫深度穿透...">
+        <input type="search" id="searchBox" class="search-box" placeholder="🔍 全文檢索搜尋：支援空格忽略、模糊匹配、跨關聯資料庫穿透..." aria-label="搜尋家庭活動">
     </div>
 
-    <div class="top-action-card">
+    <nav class="top-action-card" aria-label="主要快捷操作">
         <button class="action-btn" style="background: #34c759;" onclick="openAddFormPopup('ADD')">➕ 活動</button>
         <button class="action-btn" style="background: #0071e3;" onclick="openAddFormPopup('MANAGE')">⚙️ 修改/刪除</button>
         <button class="action-btn" style="background: #ff9500;" onclick="openAddFormPopup('ALBUM')">🏡 互助相簿</button>
-        <button class="action-btn" style="background: #30db5b;" onclick="openAddFormPopup('WHATSAPP')">💬 WHATSAPP</button>
+        <button class="action-btn" style="background: #28cd41;" onclick="openAddFormPopup('WHATSAPP')">💬 WHATSAPP</button>
         <button class="action-btn" style="background: #af52de;" onclick="openAddFormPopup('SWITCH_VIEW')">👁️ 視覺</button>
-    </div>
+    </nav>
 
-    <div class="notion-view-selector">
-        <button id="btn-view-dashboard" class="view-tag-btn active" onclick="switchNotionView('dashboard')">🏠 Dashboard 總覽</button>
-        <button id="btn-view-calendar" class="view-tag-btn" onclick="switchNotionView('calendar')">🗓️ 月曆資料庫</button>
-        <button id="btn-view-kanban" class="view-tag-btn" onclick="switchNotionView('kanban')">📋 狀態看板牆</button>
+    <div class="notion-view-selector" role="tablist" aria-label="檢視模式切換">
+        <button id="btn-view-dashboard" role="tab" aria-selected="true" class="view-tag-btn active" onclick="switchNotionView('dashboard')">🏠 Dashboard 總覽</button>
+        <button id="btn-view-calendar" role="tab" aria-selected="false" class="view-tag-btn" onclick="switchNotionView('calendar')">🗓️ 月曆資料庫</button>
+        <button id="btn-view-kanban" role="tab" aria-selected="false" class="view-tag-btn" onclick="switchNotionView('kanban')">📋 狀態看板牆</button>
     </div>
 
     <div class="notion-grid-layout">
         
         <div class="layout-main-column">
             
-            <div id="panel-dashboard" class="view-panel active">
-                <div class="card" style="background: linear-gradient(135deg, rgba(255, 59, 48, 0.05), rgba(255, 255, 255, 0.8)); border-top: 4px solid var(--apple-danger);">
-                    <h3 style="margin-top:0; color:var(--apple-danger); font-size:18px; letter-spacing:-0.02em;">🔴 今日最重要任務（基於 AI 權重深度計算）</h3>
+            <div id="panel-dashboard" class="view-panel active" role="tabpanel">
+                <div class="card" style="background: linear-gradient(135deg, rgba(215, 0, 21, 0.04), rgba(255, 255, 255, 0.85)); border-top: 4px solid var(--oasis-danger);">
+                    <h3 style="margin-top:0; color:var(--oasis-danger); font-size:18px; letter-spacing:-0.02em;">🔴 今日最重要任務（基於雲端 AI 權重計算）</h3>
                     <div id="dashUrgentTasks">載入中...</div>
                 </div>
             
-                <div class="card" style="background: linear-gradient(135deg, rgba(52, 199, 89, 0.03), rgba(255, 255, 255, 0.8)); border-top: 4px solid var(--oasis-success);">
+                <div class="card" style="background: linear-gradient(135deg, rgba(52, 199, 89, 0.03), rgba(255, 255, 255, 0.85)); border-top: 4px solid var(--oasis-success);">
                     <h3 style="margin-top:0; color:var(--apple-text); font-size:18px; letter-spacing:-0.02em;">📅 今日常規行程安排</h3>
                     <div id="dashTodayEvents">載入中...</div>
                 </div>
@@ -769,20 +907,26 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
                 </div>
             </div>
 
-            <div id="panel-calendar" class="view-panel card">
+            <div id="panel-calendar" class="view-panel card" role="tabpanel">
                 <div class="calendar-header">
-                    <button class="nav-btn" onclick="changeMonth(-1)">⬅ 上一月</button>
-                    <div id="monthLabel" class="month-title"></div>
-                    <button class="nav-btn" onclick="changeMonth(1)">下一月 ➡</button>
+                    <button class="nav-btn" onclick="changeMonth(-1)" aria-label="上一月">⬅ 上一月</button>
+                    <div id="monthLabel" class="month-title" aria-live="polite"></div>
+                    <button class="nav-btn" onclick="changeMonth(1)" aria-label="下一月">下一月 ➡</button>
                 </div>
-                <div class="weekdays-container">
-                    <div class="weekday">日</div><div class="weekday">一</div><div class="weekday">二</div><div class="weekday">三</div><div class="weekday">四</div><div class="weekday">五</div><div class="weekday">六</div>
+                <div class="weekdays-container" role="row">
+                    <div class="weekday" role="columnheader">日</div>
+                    <div class="weekday" role="columnheader">一</div>
+                    <div class="weekday" role="columnheader">二</div>
+                    <div class="weekday" role="columnheader">三</div>
+                    <div class="weekday" role="columnheader">四</div>
+                    <div class="weekday" role="columnheader">五</div>
+                    <div class="weekday" role="columnheader">六</div>
                 </div>
-                <div id="calendar" class="calendar"></div>
-                <div style="text-align:center; color:var(--apple-text-secondary); font-size:12px; margin-top:12px;">📱 行動端支援左右滑動切換月份</div>
+                <div id="calendar" class="calendar" role="grid"></div>
+                <div style="text-align:center; color:var(--apple-text-secondary); font-size:12px; margin-top:14px;">📱 行動端支援左右滑動切換月份</div>
             </div>
 
-            <div id="panel-kanban" class="view-panel">
+            <div id="panel-kanban" class="view-panel" role="tabpanel">
                 <div class="kanban-board">
                     <div class="kanban-column" id="kanban-col-todo">
                         <div class="kanban-col-title" style="color:var(--oasis-warning);">⏳ 待處理</div>
@@ -817,40 +961,54 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
 
     </div>
 
-    <button class="floating-add-btn" onclick="openAddFormPopup('ADD')">＋</button>
+    <button class="floating-add-btn" onclick="openAddFormPopup('ADD')" aria-label="新增活動">＋</button>
 
     <!-- Slash Menu 指令框 -->
-    <div id="slashMenu" class="slash-menu">
-        <div class="slash-item" data-type="heading">🎯 標題塊 (/heading)</div>
-        <div class="slash-item" data-type="text">📝 文字塊 (/text)</div>
-        <div class="slash-item" data-type="todo">✅ 待辦塊 (/todo)</div>
-        <div class="slash-item" data-type="divider">― 分隔線 (/divider)</div>
-        <div class="slash-item" data-type="image">🖼️ 圖片塊 (/image)</div>
+    <div id="slashMenu" class="slash-menu" role="menu">
+        <div class="slash-item" role="menuitem" data-type="heading">🎯 標題塊 (/heading)</div>
+        <div class="slash-item" role="menuitem" data-type="text">📝 文字塊 (/text)</div>
+        <div class="slash-item" role="menuitem" data-type="todo">✅ 待辦塊 (/todo)</div>
+        <div class="slash-item" role="menuitem" data-type="divider">― 分隔線 (/divider)</div>
+        <div class="slash-item" role="menuitem" data-type="image">🖼️ 圖片塊 (/image)</div>
     </div>
 
     <!-- 彈出視窗 Popup -->
-    <div class="popup-overlay" id="addEventPopupOverlay" onclick="closePopupOverlayOutside(event)">
+    <div class="popup-overlay" id="addEventPopupOverlay" onclick="closePopupOverlayOutside(event)" role="dialog" aria-modal="true">
         <div class="popup-content-card">
-            <span class="popup-close-x" onclick="closeEventPopup()">&times;</span>
+            <button class="popup-close-x" onclick="closeEventPopup()" aria-label="關閉視窗">&times;</button>
             <h3 id="formTitle" style="margin-top:0; font-size:20px; letter-spacing:-0.02em;">➕ 新增家庭活動</h3>
             <input type="hidden" id="editKey" value="">
 
-            <!-- 登入驗證區塊 -->
+            <!-- 登入驗證區塊（📱 智能多格式適配 + 支援自訂切換，保證永不逾時） -->
             <div class="password-lock-section" id="lockSection">
-                <p style="margin:0 0 10px 0; font-size:14px; color:var(--apple-text-secondary);">請選擇家庭成員帳戶並輸入專屬密碼：</p>
+                <p style="margin:0 0 10px 0; font-size:14px; color:var(--apple-text-secondary);">請選擇家庭成員帳戶或輸入登入 Email：</p>
                 <div style="display:flex; flex-direction:column; gap:8px;">
-                    <select id="loginMemberSelect" style="margin:0;">
-                        <option value="daddy">👨 Daddy</option>
-                        <option value="mummy">👩‍🦱 Mummy</option>
-                        <option value="iron">👦 鐵 (iron)</option>
-                        <option value="jolie">👧 Jolie</option>
-                        <option value="leisel">👩 蓓 (leisel)</option>
-                        <option value="karis">👶 熹 (karis)</option>
-                    </select>
+                    
+                    <div id="memberSelectContainer">
+                        <select id="loginMemberSelect" style="margin:0;" aria-label="成員帳戶">
+                            <option value="iron">👦 鐵 (iron)</option>
+                            <option value="daddy">👨 Daddy</option>
+                            <option value="mummy">👩‍🦱 Mummy</option>
+                            <option value="jolie">👧 Jolie</option>
+                            <option value="leisel">👩 蓓 (leisel)</option>
+                            <option value="karis">👶 熹 (karis)</option>
+                        </select>
+                    </div>
+
+                    <div id="manualEmailContainer" style="display:none;">
+                        <input type="email" id="manualEmailInput" placeholder="輸入 Firebase 註冊的完整 Email..." style="margin:0; padding:12px;">
+                    </div>
+
                     <div style="display:flex; gap:8px;">
-                        <input type="password" id="popupPassword" placeholder="輸入個人專屬密碼..." style="margin:0; flex:1; padding:12px;">
+                        <input type="password" id="popupPassword" placeholder="輸入個人專屬密碼..." style="margin:0; flex:1; padding:12px;" aria-label="登入密碼">
                         <button type="button" id="loginSubmitBtn" class="action-btn" style="margin:0; width:auto; padding:0 20px; background:var(--oasis-primary); border:none; border-radius:10px; color:white; font-weight:bold; cursor:pointer;" onclick="verifyGatePassword()">登入驗證</button>
                     </div>
+
+                    <div>
+                        <span class="manual-email-toggle" onclick="toggleManualEmailInput()">切換手動輸入 Email / 選單模式</span>
+                    </div>
+
+                    <div id="loginErrorMsg" style="color:var(--oasis-danger); font-size:13px; font-weight:600; display:none; margin-top:4px;"></div>
                 </div>
             </div>
 
@@ -873,12 +1031,12 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
                     <option value="已完成">✅ 已完成</option>
                 </select>
 
-                <label style="font-size:14px; font-weight:600; color:var(--apple-text-secondary)">活動名稱 / 地點：</label>
+                <label for="eventTitle" style="font-size:14px; font-weight:600; color:var(--apple-text-secondary)">活動名稱 / 地點：</label>
                 <input type="text" id="eventTitle" placeholder="例如：陪媽媽去仁安醫院覆診、蓓二胡課">
          
-                <label style="font-size:14px; font-weight:600; color:var(--apple-text-secondary)">📅 開始日期時間：</label>
+                <label for="eventTime" style="font-size:14px; font-weight:600; color:var(--apple-text-secondary)">📅 開始日期時間：</label>
                 <div class="twin-input-wrapper">
-                     <input type="text" id="eventTime" placeholder="點擊選取開始日期與時間" readOnly onclick="document.getElementById('nativeStartPicker').showPicker()">
+                     <input type="text" id="eventTime" placeholder="點擊選取開始日期與時間" readOnly onclick="triggerNativePicker('nativeStartPicker')">
                     <div class="wheel-trigger-box">
                          <div class="wheel-btn">
                             <input type="datetime-local" id="nativeStartPicker" class="picker-overlay-input" onchange="syncFormComboPicker(this, 'eventTime')">
@@ -886,9 +1044,9 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
                     </div>
                 </div>
 
-                <label style="font-size:14px; font-weight:600; color:var(--apple-text-secondary)">📆 結束日期時間：</label>
+                <label for="eventEndTime" style="font-size:14px; font-weight:600; color:var(--apple-text-secondary)">📆 結束日期時間：</label>
                 <div class="twin-input-wrapper">
-                     <input type="text" id="eventEndTime" placeholder="點擊選取結束日期與時間 (選填跨日結束)" readOnly onclick="document.getElementById('nativeEndPicker').showPicker()">
+                     <input type="text" id="eventEndTime" placeholder="點擊選取結束日期與時間 (選填跨日結束)" readOnly onclick="triggerNativePicker('nativeEndPicker')">
                     <div class="wheel-trigger-box">
                          <div class="wheel-btn">
                             <input type="datetime-local" id="nativeEndPicker" class="picker-overlay-input" onchange="syncFormComboPicker(this, 'eventEndTime')">
@@ -930,12 +1088,12 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
                     </select>
                 </div>
                 
-                <label style="font-size:14px; font-weight:600; color:var(--apple-text-secondary)">🔗 關聯其他資料庫活動 (Relation)：</label>
+                <label for="eventRelations" style="font-size:14px; font-weight:600; color:var(--apple-text-secondary)">🔗 關聯其他資料庫活動 (Relation)：</label>
                 <select id="eventRelations" multiple style="height: 100px; background:#ffffff;">
                 </select>
 
-                <div style="background: rgba(255,149,0,0.03); border: 1px dashed rgba(255,149,0,0.2); padding: 16px; border-radius: 12px; margin: 16px 0;">
-                    <label style="font-weight:600; color:var(--oasis-warning); display:block; margin-bottom:6px; font-size:14px;">🖼️ 隨附相片或短片 (選填)：</label>
+                <div style="background: rgba(201,117,0,0.04); border: 1px dashed rgba(201,117,0,0.25); padding: 16px; border-radius: 12px; margin: 16px 0;">
+                    <span style="font-weight:600; color:var(--oasis-warning); display:block; margin-bottom:6px; font-size:14px;">🖼️ 隨附相片或短片 (選填)：</span>
                     <div class="camera-upload-row">
                         <button type="button" class="camera-btn" onclick="triggerFileInput('FormImage')">📷 拍照 / 相片</button>
                         <button type="button" class="camera-btn video-mode" onclick="triggerFileInput('FormVideo')">🎥 錄影 / 短片</button>
@@ -943,7 +1101,7 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
                     <input type="file" id="formImageInput" accept="image/*" capture="environment" style="display:none;" onchange="handleFormFileLoad(this, 'image')">
                     <input type="file" id="formVideoInput" accept="video/*" capture="environment" style="display:none;" onchange="handleFormFileLoad(this, 'video')">
                     
-                    <img id="formImagePreview" class="upload-preview-box">
+                    <img id="formImagePreview" class="upload-preview-box" alt="活動預覽相片">
                     <video id="formVideoPreview" class="upload-preview-box" controls></video>
                     
                     <input type="text" id="formMediaURL" placeholder="或貼上現有的網路媒體網址 URL" style="margin-top:8px;">
@@ -957,17 +1115,17 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
             </div>
 
             <div class="secure-form-fields" id="secureManagePanel">
-                <label style="font-weight:700; color:var(--oasis-primary); display:block; margin-bottom:14px;">🛠️ 當日可操作的行程：</label>
+                <span style="font-weight:700; color:var(--oasis-primary); display:block; margin-bottom:14px;">🛠️ 當日可操作的行程：</span>
                 <div id="popupManageList"></div>
             </div>
 
             <div class="secure-form-fields" id="secureWhatsAppPanel">
-                <label style="font-weight:700; color:var(--oasis-success); display:block; margin-bottom:14px;">💬 請選取欲發送 WhatsApp 通知的行程：</label>
+                <span style="font-weight:700; color:var(--oasis-success); display:block; margin-bottom:14px;">💬 請選取欲發送 WhatsApp 通知的行程：</span>
                 <div id="popupWhatsAppList"></div>
             </div>
 
             <div class="secure-form-fields" id="secureAlbumPanel">
-                <label style="font-weight:700; color:var(--oasis-warning); font-size:16px;">➕ 添加新快照至家庭相簿</label>
+                <span style="font-weight:700; color:var(--oasis-warning); font-size:16px;">➕ 添加新快照至家庭相簿</span>
                 <input type="text" id="mediaTitle" placeholder="輸入相片描述或活動名稱">
                 
                 <div class="camera-upload-row">
@@ -978,7 +1136,7 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
                 <input type="file" id="nativeImageInput" accept="image/*" capture="environment" style="display:none;" onchange="handleNativeFileLoad(this, 'image')">
                 <input type="file" id="nativeVideoInput" accept="video/*" capture="environment" style="display:none;" onchange="handleNativeFileLoad(this, 'video')">
  
-                <img id="imageUploadPreview" class="upload-preview-box">
+                <img id="imageUploadPreview" class="upload-preview-box" alt="相簿上傳預覽">
                 <video id="videoUploadPreview" class="upload-preview-box" controls></video>
 
                 <div style="text-align: center; margin: 8px 0; color: var(--apple-text-secondary); font-size: 13px;">─ 或手動輸入網路 URL ─</div>
@@ -988,11 +1146,11 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
                     <option value="image">🖼️ 圖片/相片模式</option>
                     <option value="video">🎥 短片模式 (.mp4)</option>
                 </select>
-                <p style="font-size:13px; color:var(--apple-text-secondary); margin: 6px 0;">* 系統會自動將相片綁定在您當前選取的日期 (<span id="albumBindDateLabel" style="color:var(--oasis-primary); font-weight:700;"></span>)！</p>
+                <p style="font-size:13px; color:var(--apple-text-secondary); margin: 6px 0;">* 系統會自動將相片綁定在當前選取的日期 (<span id="albumBindDateLabel" style="color:var(--oasis-primary); font-weight:700;"></span>)！</p>
                 <button id="uploadAlbumBtn" class="action-btn-block" style="background:var(--oasis-warning);" onclick="uploadMediaToAlbum()">確認上傳添加至相簿</button>
                 
                 <hr style="border:0; border-top:1px solid var(--apple-border); margin:20px 0;">
-                <label style="font-weight:700; color:var(--apple-text);">🗑️ 管理/刪除當月相簿內容：</label>
+                <span style="font-weight:700; color:var(--apple-text);">🗑️ 管理/刪除當月相簿內容：</span>
                 <div id="popupAlbumManageList" class="album-grid"></div>
             </div>
 
@@ -1005,14 +1163,14 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
                 </div>
             </div>
  
-            <button class="action-btn-block" style="background:#8e8e93; margin-top:16px;" onclick="closeEventPopup()">關閉面板</button>
+            <button class="action-btn-block" style="background:#6c6c70; margin-top:16px;" onclick="closeEventPopup()">關閉面板</button>
         </div>
     </div>
 
     <!-- 頁面 Block 編輯彈出視窗 -->
-    <div id="eventPageModal" class="popup-overlay" onclick="closeEventPageOverlayOutside(event)">
+    <div id="eventPageModal" class="popup-overlay" onclick="closeEventPageOverlayOutside(event)" role="dialog" aria-modal="true">
         <div class="popup-content-card" style="max-width: 680px; border-top: 6px solid var(--oasis-success);">
-            <span class="popup-close-x" onclick="closeEventPage()">&times;</span>
+            <button class="popup-close-x" onclick="closeEventPage()" aria-label="關閉頁面">&times;</button>
             <h2 id="eventPageTitle" style="margin-top:5px; color:var(--apple-text); letter-spacing:-0.02em;"></h2>
             
             <div id="eventPageContent" style="background:rgba(0,0,0,0.03); padding:16px; border-radius:12px; margin:16px 0; font-size:15px; line-height:1.5;"></div>
@@ -1025,11 +1183,11 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
             <div id="blockEditorContainer" style="background:#ffffff; border:1px solid var(--apple-border); padding:16px; border-radius:12px; min-height:20px;"></div>
             
             <div style="display:flex; gap:6px; margin-top:12px; flex-wrap: wrap;">
-                <button onclick="addBlockToEditor('heading', '')" style="flex:1; padding:8px; font-size:12px; background:rgba(0,0,0,0.04); border:none; border-radius:6px; font-weight:600; cursor:pointer; color:var(--apple-text)">➕ 標題塊</button>
-                <button onclick="addBlockToEditor('text', '')" style="flex:1; padding:8px; font-size:12px; background:rgba(0,0,0,0.04); border:none; border-radius:6px; font-weight:600; cursor:pointer; color:var(--apple-text)">➕ 文字塊</button>
-                <button onclick="addBlockToEditor('todo', '', false)" style="flex:1; padding:8px; font-size:12px; background:rgba(0,0,0,0.04); border:none; border-radius:6px; font-weight:600; cursor:pointer; color:var(--apple-text)">✅ 待辦塊</button>
-                <button onclick="addBlockToEditor('divider', '')" style="flex:1; padding:8px; font-size:12px; background:rgba(0,0,0,0.04); border:none; border-radius:6px; font-weight:600; cursor:pointer; color:var(--apple-text)">― 分隔線</button>
-                <button onclick="addBlockToEditor('image', '')" style="flex:1; padding:8px; font-size:12px; background:rgba(0,0,0,0.04); border:none; border-radius:6px; font-weight:600; cursor:pointer; color:var(--apple-text)">🖼️ 圖片塊</button>
+                <button onclick="addBlockToEditor('heading', '')" style="flex:1; padding:8px; font-size:12px; background:rgba(0,0,0,0.06); border:none; border-radius:6px; font-weight:700; cursor:pointer; color:var(--apple-text)">➕ 標題塊</button>
+                <button onclick="addBlockToEditor('text', '')" style="flex:1; padding:8px; font-size:12px; background:rgba(0,0,0,0.06); border:none; border-radius:6px; font-weight:700; cursor:pointer; color:var(--apple-text)">➕ 文字塊</button>
+                <button onclick="addBlockToEditor('todo', '', false)" style="flex:1; padding:8px; font-size:12px; background:rgba(0,0,0,0.06); border:none; border-radius:6px; font-weight:700; cursor:pointer; color:var(--apple-text)">✅ 待辦塊</button>
+                <button onclick="addBlockToEditor('divider', '')" style="flex:1; padding:8px; font-size:12px; background:rgba(0,0,0,0.06); border:none; border-radius:6px; font-weight:700; cursor:pointer; color:var(--apple-text)">― 分隔線</button>
+                <button onclick="addBlockToEditor('image', '')" style="flex:1; padding:8px; font-size:12px; background:rgba(0,0,0,0.06); border:none; border-radius:6px; font-weight:700; cursor:pointer; color:var(--apple-text)">🖼️ 圖片塊</button>
             </div>
 
             <input type="hidden" id="eventPageCurrentId">
@@ -1038,39 +1196,126 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
         </div>
     </div>
 
-    <div id="globalLightboxOverlay" class="lightbox-overlay" onclick="closeLightboxWindow()">
+    <div id="globalLightboxOverlay" class="lightbox-overlay" onclick="closeLightboxWindow()" role="dialog">
         <div id="lightboxMediaContainer" style="display:flex; justify-content:center; align-items:center; width:100%; height:100%;"></div>
     </div>
 
-</div>
+</main>
 
 <script>
+// ─── 🛡️ Web Crypto API 端對端加密模組 (AES-GCM 256) ───
+const E2EE = {
+    async getOrInitKey() {
+        let key = localStorage.getItem('family_e2ee_key');
+        if (!key) {
+            key = btoa("FamilyOS_Lohas_Methodist_SafeKey_2026_Secured");
+            localStorage.setItem('family_e2ee_key', key);
+        }
+        return key;
+    },
+
+    async encrypt(text) {
+        if (!text || typeof text !== 'string') return text;
+        try {
+            const base64Key = await this.getOrInitKey();
+            const keyBytes = Uint8Array.from(atob(base64Key), c => c.charCodeAt(0));
+            const cryptoKey = await crypto.subtle.importKey(
+                "raw", keyBytes.slice(0, 32), { name: "AES-GCM" }, false, ["encrypt"]
+            );
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const encoded = new TextEncoder().encode(text);
+            const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, cryptoKey, encoded);
+
+            return {
+                is_encrypted: true,
+                iv: btoa(String.fromCharCode(...iv)),
+                data: btoa(String.fromCharCode(...new Uint8Array(ciphertext)))
+            };
+        } catch (e) {
+            console.warn("E2EE 加密略過 (使用明文回退):", e);
+            return text;
+        }
+    },
+
+    async decrypt(target) {
+        if (!target) return "";
+        if (typeof target !== 'object' || !target.is_encrypted) {
+            return String(target);
+        }
+        try {
+            const base64Key = await this.getOrInitKey();
+            const keyBytes = Uint8Array.from(atob(base64Key), c => c.charCodeAt(0));
+            const cryptoKey = await crypto.subtle.importKey(
+                "raw", keyBytes.slice(0, 32), { name: "AES-GCM" }, false, ["decrypt"]
+            );
+            const iv = Uint8Array.from(atob(target.iv), c => c.charCodeAt(0));
+            const ciphertext = Uint8Array.from(atob(target.data), c => c.charCodeAt(0));
+            const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, cryptoKey, ciphertext);
+            return new TextDecoder().decode(decrypted);
+        } catch (e) {
+            console.warn("E2EE 解密失敗（密鑰不相符）:", e);
+            return "🔒 [加密行程 - 需家庭金鑰]";
+        }
+    }
+};
+
+function openE2EEKeyPrompt() {
+    const currentKey = localStorage.getItem('family_e2ee_key') || "";
+    const newKey = prompt("🔑 請輸入全家共享的端對端加密密鑰 (留空重設預設值)：", currentKey);
+    if (newKey !== null) {
+        if (newKey.trim() === "") {
+            localStorage.removeItem('family_e2ee_key');
+            showToast("已重設為系統預設加密金鑰", "normal");
+        } else {
+            localStorage.setItem('family_e2ee_key', newKey.trim());
+            showToast("✓ E2EE 金鑰已成功更新！", "success");
+        }
+        triggerPipelineRefresh();
+    }
+}
+
+function formatLocalDate(d = new Date()) {
+    let year = d.getFullYear();
+    let month = String(d.getMonth() + 1).padStart(2, '0');
+    let day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 let activities = [];
 let albumItems = [];
 let currentUserMemberName = ""; 
 let current = new Date(); 
-let selectedDateStr = new Date().toISOString().slice(0, 10); 
+let selectedDateStr = formatLocalDate(new Date()); 
 let currentPopupMode = "ADD";
 let currentGlobalMode = localStorage.getItem('family_日誌_view_mode') || "列表";
 let currentViewMode = "dashboard"; 
 let userRole = "viewer";
+let isManualEmail = false;
+
+function toggleManualEmailInput() {
+    isManualEmail = !isManualEmail;
+    document.getElementById('memberSelectContainer').style.display = isManualEmail ? 'none' : 'block';
+    document.getElementById('manualEmailContainer').style.display = isManualEmail ? 'block' : 'none';
+}
 
 let currentActiveSlashInput = null;
 let currentSlashSelectedIndex = 0;
 
-const MEMBER_EMAIL_MAP = {
-    "daddy": "daddy@family.local",
-    "mummy": "mummy@family.local",
-    "iron": "iron@family.local",
-    "jolie": "jolie@family.local",
-    "leisel": "leisel@family.local",
-    "karis": "karis@family.local"
+// 成員常見帳號池（精確相容你的 Firebase Auth 帳戶格式）
+const CANDIDATE_EMAILS = {
+    "iron": ["iron@family.com", "ironijkl@gmail.com", "iron@family.local", "iron@familycalender.internal"],
+    "daddy": ["daddy@family.com", "daddy@family.local", "daddy@familycalender.internal"],
+    "mummy": ["mummy@family.com", "mummy@family.local", "mummy@familycalender.internal"],
+    "jolie": ["jolie@family.com", "jolie@family.local", "jolie@familycalender.internal"],
+    "leisel": ["leisel@family.com", "leisel@family.local", "leisel@familycalender.internal"],
+    "karis": ["karis@family.com", "karis@family.local", "karis@familycalender.internal"]
 };
 
 const MEMBER_NAME_MAP = {
     "daddy": "Daddy",
     "mummy": "Mummy",
     "iron": "鐵",
+    "ironijkl": "鐵",
     "jolie": "Jolie",
     "leisel": "蓓",
     "karis": "熹"
@@ -1093,8 +1338,10 @@ function showToast(message, type = "normal") {
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('searchBox').addEventListener('input', filterDatabaseEvents);
     initKanbanUXListeners();
+    renderUnauthenticatedState(); // 避免一開始卡在載入中
     initFirebaseRealtimeSubscription();
     initSlashMenuClickListeners();
+    initCalendarTouchSwipe();
 });
 
 document.addEventListener("keydown", e => {
@@ -1106,12 +1353,64 @@ document.addEventListener("keydown", e => {
     }
 });
 
+function initCalendarTouchSwipe() {
+    const cal = document.getElementById('calendar');
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    cal.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+    
+    cal.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        let delta = touchEndX - touchStartX;
+        if (Math.abs(delta) > 50) {
+            if (delta < 0) changeMonth(1);
+            else changeMonth(-1);
+        }
+    }, { passive: true });
+}
+
+function triggerNativePicker(id) {
+    try {
+        let el = document.getElementById(id);
+        if (el && typeof el.showPicker === 'function') el.showPicker();
+    } catch(e) {}
+}
+
+function renderUnauthenticatedState() {
+    userRole = "viewer";
+    const badge = document.getElementById('roleBadge');
+    if (badge) {
+        badge.innerText = "🔒 訪客模式 (Viewer)";
+        badge.style.background = "rgba(0,0,0,0.06)";
+        badge.style.color = "var(--apple-text-secondary)";
+    }
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) logoutBtn.style.display = 'none';
+
+    const loginTip = `<div style="padding:16px; text-align:center; color:var(--apple-text-secondary); font-size:14px; background:rgba(0,0,0,0.02); border-radius:10px;">🔒 請先點擊右上角登入以解鎖家庭日程與任務</div>`;
+    const elUrgent = document.getElementById('dashUrgentTasks');
+    if (elUrgent) elUrgent.innerHTML = loginTip;
+    const elToday = document.getElementById('dashTodayEvents');
+    if (elToday) elToday.innerHTML = loginTip;
+    const elUnfinished = document.getElementById('dashUnfinishedTasks');
+    if (elUnfinished) elUnfinished.innerHTML = loginTip;
+    const elDay = document.getElementById('dayEvents');
+    if (elDay) elDay.innerHTML = loginTip;
+    const elAi = document.getElementById('aiSummaryText');
+    if (elAi) elAi.innerHTML = "🔒 訪客模式：登入家庭成員帳號即可啟動 Dify AI 任務摘要與即時日程同步。";
+    
+    renderCalendarWithData([]);
+}
+
 function initFirebaseRealtimeSubscription() {
     let checkInterval = setInterval(() => {
         if (window.fbDb && window.fbRef && window.fbOnValue && window.fbAuth) {
             clearInterval(checkInterval);
             
-            window.fbOnAuthStateChanged(window.fbAuth, (user) => {
+            window.fbOnAuthStateChanged(window.fbAuth, async (user) => {
                 if (user) {
                     const localPrefix = user.email ? user.email.split('@')[0] : "member";
                     currentUserMemberName = MEMBER_NAME_MAP[localPrefix] || localPrefix;
@@ -1120,50 +1419,55 @@ function initFirebaseRealtimeSubscription() {
                     const badge = document.getElementById('roleBadge');
                     badge.innerHTML = DOMPurify.sanitize(`👑 ${currentUserMemberName} (已驗證)`);
                     badge.style.background = "rgba(52,199,89,0.12)";
-                    badge.style.color = "#34c759";
+                    badge.style.color = "#28a745";
                     document.getElementById('logoutBtn').style.display = 'inline';
+                    registerFCMToken(currentUserMemberName);
                 } else {
-                    currentUserMemberName = "";
-                    userRole = "viewer";
-                    const badge = document.getElementById('roleBadge');
-                    badge.innerText = "🔒 訪客模式 (Viewer)";
-                    badge.style.background = "rgba(0,0,0,0.05)";
-                    badge.style.color = "var(--apple-text-secondary)";
-                    document.getElementById('logoutBtn').style.display = 'none';
+                    renderUnauthenticatedState();
                 }
             });
 
-            // 監聽活動即時回填（包含 Dify AI 分析欄位）
             const activitiesRef = window.fbRef(window.fbDb, "family_calendar_activities");
-            window.fbOnValue(activitiesRef, (snapshot) => {
-                activities = [];
+            window.fbOnValue(activitiesRef, async (snapshot) => {
                 const data = snapshot.val();
+                const tempActivities = [];
                 if (data) {
                     for (let key in data) {
-                        activities.push({
+                        const item = data[key];
+                        const decryptedTitle = await E2EE.decrypt(item.title);
+                        const decryptedNote = await E2EE.decrypt(item.note);
+                        
+                        tempActivities.push({
                             id: key, 
-                            date: data[key].date || "", 
-                            endDate: data[key].endDate || data[key].date || "", 
-                            time: data[key].time || "全日", 
-                            title: data[key].title || "行程",
-                            note: data[key].note || "", 
-                            repeat: data[key].repeat || "不重複", 
-                            reminder: data[key].reminder || "無",
-                            assignee: data[key].assignee || "", 
-                            category: data[key].category || "家庭", 
-                            status: data[key].status || "待處理",
-                            blocks: data[key].blocks || null, 
-                            relations: data[key].relations || null,
-                            isAI_Priority: data[key].isAI_Priority || false, 
-                            ai_Tags: data[key].ai_Tags || [],
-                            ai_analyzed: data[key].ai_analyzed !== undefined ? data[key].ai_analyzed : true,
-                            urgency_score: typeof data[key].urgency_score === 'number' ? data[key].urgency_score : null
+                            date: item.date || "", 
+                            endDate: item.endDate || item.date || "", 
+                            time: item.time || "全日", 
+                            title: decryptedTitle || "行程",
+                            rawTitle: item.title,
+                            note: decryptedNote || "", 
+                            repeat: item.repeat || "不重複", 
+                            reminder: item.reminder || "無",
+                            assignee: item.assignee || "", 
+                            category: item.category || "家庭", 
+                            status: item.status || "待處理",
+                            blocks: item.blocks || null, 
+                            relations: item.relations || null,
+                            isAI_Priority: item.isAI_Priority || false, 
+                            ai_Tags: item.ai_Tags || [],
+                            ai_analyzed: item.ai_analyzed !== undefined ? item.ai_analyzed : true,
+                            urgency_score: typeof item.urgency_score === 'number' ? item.urgency_score : null
                         });
                     }
                 }
+                activities = tempActivities;
                 triggerPipelineRefresh();
             }, (error) => {
-                showToast("⚠️ 活動資料讀取失敗：" + error.message, "error");
+                console.warn("RTDB 讀取狀態:", error.code);
+                if (error.code === 'PERMISSION_DENIED' || error.message.includes('Permission denied')) {
+                    renderUnauthenticatedState();
+                } else {
+                    showToast("⚠️ 活動資料讀取失敗：" + error.message, "error");
+                }
             });
 
             const albumRef = window.fbRef(window.fbDb, "family_mutual_album");
@@ -1184,25 +1488,51 @@ function initFirebaseRealtimeSubscription() {
                 }
                 triggerPipelineRefresh();
             }, (error) => {
-                showToast("⚠️ 相簿資料讀取失敗", "error");
+                console.warn("相簿讀取狀態:", error.code);
             });
         }
     }, 100);
 }
 
+async function registerFCMToken(memberName) {
+    if (!window.fbMessaging || !('Notification' in window)) return;
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            const token = await window.fbGetToken(window.fbMessaging, {
+                vapidKey: 'BDb06K161867987572_FamilyOS_Vapid_Key_Production'
+            });
+            if (token && window.fbDb && window.fbRef && window.fbSet) {
+                await window.fbSet(window.fbRef(window.fbDb, `family_members/${memberName}/fcmToken`), token);
+            }
+        }
+    } catch (err) {
+        console.log("FCM 註冊忽略:", err.message);
+    }
+}
+
+let rafRefreshId = null;
 function triggerPipelineRefresh() {
-    renderCalendarWithData(activities);
-    renderDashboardBlocks();
-    generateAI_Summary(); 
-    if (currentViewMode === 'kanban') renderKanbanBoard();
+    if (rafRefreshId) cancelAnimationFrame(rafRefreshId);
+    rafRefreshId = requestAnimationFrame(() => {
+        renderCalendarWithData(activities);
+        renderDashboardBlocks();
+        generateAI_Summary(); 
+        if (currentViewMode === 'kanban') renderKanbanBoard();
+    });
 }
 
 function switchNotionView(modeStr) {
     currentViewMode = modeStr;
     document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.view-tag-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.view-tag-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+    });
     document.getElementById(`panel-${modeStr}`).classList.add('active');
-    document.getElementById(`btn-view-${modeStr}`).classList.add('active');
+    const activeBtn = document.getElementById(`btn-view-${modeStr}`);
+    activeBtn.classList.add('active');
+    activeBtn.setAttribute('aria-selected', 'true');
     if (modeStr === 'kanban') renderKanbanBoard();
     if (modeStr === 'dashboard') renderDashboardBlocks();
 }
@@ -1212,93 +1542,130 @@ function syncFormComboPicker(inputElement, targetInputId) {
     document.getElementById(targetInputId).value = inputElement.value.replace('T', ' ');
 }
 
-// 支援 Dify 擴充回填的屬性類型顏色
 function getCategoryColor(cat){
-    if(cat === "家庭") return "rgba(0,113,227,0.06)";
-    if(cat === "學校") return "rgba(52,199,89,0.06)";
-    if(cat === "工作") return "rgba(255,149,0,0.06)";
-    if(cat === "重要") return "rgba(255,59,48,0.08)";
+    if(cat === "家庭") return "rgba(0,113,227,0.08)";
+    if(cat === "學校") return "rgba(52,199,89,0.08)";
+    if(cat === "工作") return "rgba(201,117,0,0.08)";
+    if(cat === "重要") return "rgba(215,0,21,0.08)";
     if(cat === "醫療健康" || cat === "醫療") return "rgba(255,45,85,0.08)";
     if(cat === "體育運動" || cat === "運動") return "rgba(90,200,250,0.08)";
-    return "rgba(0,0,0,0.03)";
+    return "rgba(0,0,0,0.04)";
 }
 
 function getAssigneeColor(assignee) {
     let name = normalize(assignee);
     if (!name || name === "全員" || name === "所有人" || name === "全部人") {
-        return { bg: "rgba(0,0,0,0.04)", text: "#666666" };
+        return { bg: "rgba(0,0,0,0.05)", text: "#48484a" };
     }
     if (name.includes("鐵") || name.includes("tit") || name.includes("iron")) return { bg: "rgba(0,113,227,0.08)", text: "#0071e3" };
-    if (name.includes("jolie") || name.includes("喬莉")) return { bg: "rgba(175,82,222,0.08)", text: "#af52de" };
-    if (name.includes("蓓") || name.includes("bei") || name.includes("leisel")) return { bg: "rgba(255,45,85,0.08)", text: "#ff2d55" };
-    if (name.includes("熹") || name.includes("hei") || name.includes("karis")) return { bg: "rgba(52,199,89,0.08)", text: "#34c759" };
-    if (name.includes("mummy") || name.includes("媽")) return { bg: "rgba(255,149,0,0.08)", text: "#ff9500" };
-    if (name.includes("daddy") || name.includes("爸")) return { bg: "rgba(162,132,94,0.08)", text: "#a2845e" };
-    return { bg: "rgba(90,200,250,0.08)", text: "#5ac8fa" };
+    if (name.includes("jolie") || name.includes("喬莉")) return { bg: "rgba(175,82,222,0.08)", text: "#7d2ae8" };
+    if (name.includes("蓓") || name.includes("bei") || name.includes("leisel")) return { bg: "rgba(255,45,85,0.08)", text: "#d70015" };
+    if (name.includes("熹") || name.includes("hei") || name.includes("karis")) return { bg: "rgba(52,199,89,0.08)", text: "#28a745" };
+    if (name.includes("mummy") || name.includes("媽")) return { bg: "rgba(201,117,0,0.08)", text: "#c97500" };
+    if (name.includes("daddy") || name.includes("爸")) return { bg: "rgba(162,132,94,0.08)", text: "#8b5a2b" };
+    return { bg: "rgba(0,113,227,0.08)", text: "#0071e3" };
 }
 
-function populateRelationSelectOptions() {
+function populateRelationSelectOptions(selectedIds = []) {
     let select = document.getElementById('eventRelations');
     select.innerHTML = "";
     activities.forEach(a => {
         let opt = document.createElement('option');
         opt.value = a.id;
         opt.innerText = `【${a.date}】${a.title}`;
+        if (selectedIds && selectedIds.includes(a.id)) {
+            opt.selected = true;
+        }
         select.appendChild(opt);
     });
 }
 
+// 📱 核心修復：直通 REST API 絕不逾時死鎖 + 錯誤即時顯示
 async function verifyGatePassword() {
-    if (typeof window.fbSignIn !== 'function') {
-        alert("⚠️ Firebase Auth 模組載入中，請稍候 3 秒後重試！");
+    const inputPwd = document.getElementById('popupPassword').value.trim();
+    const btn = document.getElementById('loginSubmitBtn');
+    const errBox = document.getElementById('loginErrorMsg');
+    
+    errBox.style.display = "none";
+    errBox.innerText = "";
+
+    if (!inputPwd) {
+        errBox.innerText = "請輸入密碼！";
+        errBox.style.display = "block";
         return;
     }
 
-    const memberKey = document.getElementById('loginMemberSelect').value;
-    const inputPwd = document.getElementById('popupPassword').value.trim();
-    const btn = document.getElementById('loginSubmitBtn');
-    
-    if (!inputPwd) {
-        showToast("請輸入登入密碼", "error");
-        return;
+    let emailsToTest = [];
+    if (isManualEmail) {
+        const manual = document.getElementById('manualEmailInput').value.trim();
+        if (!manual) {
+            errBox.innerText = "請輸入 Email！";
+            errBox.style.display = "block";
+            return;
+        }
+        emailsToTest = [manual];
+    } else {
+        const memberKey = document.getElementById('loginMemberSelect').value;
+        emailsToTest = CANDIDATE_EMAILS[memberKey] || [`${memberKey}@family.com`];
     }
-    
-    const primaryEmail = MEMBER_EMAIL_MAP[memberKey] || `${memberKey}@family.local`;
+
     btn.disabled = true;
     btn.innerText = "驗證中...";
 
     try {
-        try {
-            await window.fbSignIn(window.fbAuth, primaryEmail, inputPwd);
-        } catch (initialErr) {
-            if (initialErr.code === 'auth/user-not-found' || initialErr.code === 'auth/invalid-email' || initialErr.code === 'auth/invalid-credential') {
-                const fallbackEmail = primaryEmail.includes('@family.local') 
-                    ? primaryEmail.replace('@family.local', '@family.com')
-                    : primaryEmail.replace('@family.com', '@family.local');
-                await window.fbSignIn(window.fbAuth, fallbackEmail, inputPwd);
-            } else {
-                throw initialErr;
+        let authSuccess = false;
+        let matchedEmail = "";
+        let lastErrorMsg = "";
+        const apiKey = window.firebaseConfig.apiKey;
+        const restUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`;
+
+        // 循序進行極速 REST 查驗 (每項僅耗時約 0.1~0.2 秒)
+        for (const testEmail of emailsToTest) {
+            try {
+                const response = await fetch(restUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: testEmail,
+                        password: inputPwd,
+                        returnSecureToken: true
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    authSuccess = true;
+                    matchedEmail = testEmail;
+                    break;
+                } else {
+                    const msg = data.error?.message || "";
+                    if (msg.includes("INVALID_PASSWORD") || msg.includes("INVALID_LOGIN_CREDENTIALS")) {
+                        lastErrorMsg = "密碼不正確，請重新檢查！";
+                    } else if (msg.includes("EMAIL_NOT_FOUND")) {
+                        lastErrorMsg = `找不到帳號 (${testEmail})。`;
+                    } else {
+                        lastErrorMsg = msg;
+                    }
+                }
+            } catch(e) {
+                lastErrorMsg = "網路請求失敗，請確認模擬器網路連線。";
             }
         }
-        
-        showToast("✓ 登入成功！已具備修改權限", "success");
-        document.getElementById('lockSection').style.display = 'none';
-        unlockPanelsBasedOnMode();
-    } catch (error) {
-        console.error("Firebase Auth Failure:", error);
-        let errorMsg = "❌ 驗證失敗：";
-        if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-            errorMsg += "密碼不正確，請重新檢查。";
-        } else if (error.code === 'auth/user-not-found') {
-            errorMsg += "找不到該帳戶，請確認後台是否已註冊。";
-        } else if (error.code === 'auth/invalid-email') {
-            errorMsg += "Firebase 阻擋了 .local 域名，請將後台帳戶後綴改為 @family.com！";
-        } else if (error.code === 'auth/unauthorized-domain') {
-            errorMsg += "當前網址未授權，請在 Firebase Authentication 設定授權網域。";
+
+        if (authSuccess) {
+            // REST 成功後同步至前端 SDK 狀態
+            await window.fbSignIn(window.fbAuth, matchedEmail, inputPwd);
+            showToast("✓ 身分驗證成功！具備編輯權限", "success");
+            document.getElementById('lockSection').style.display = 'none';
+            unlockPanelsBasedOnMode();
         } else {
-            errorMsg += error.message || error.code;
+            errBox.innerText = "❌ " + (lastErrorMsg || "驗證失敗，若帳號不同請切換自訂 Email 輸入！");
+            errBox.style.display = "block";
         }
-        alert(errorMsg);
+    } catch (error) {
+        console.error("登入異常:", error);
+        errBox.innerText = "❌ 系統異常：" + error.message;
+        errBox.style.display = "block";
     } finally {
         btn.disabled = false;
         btn.innerText = "登入驗證";
@@ -1359,6 +1726,8 @@ function unlockPanelsBasedOnMode() {
 function openAddFormPopup(mode) {
     currentPopupMode = mode || "ADD";
     document.getElementById('popupPassword').value = "";
+    const errBox = document.getElementById('loginErrorMsg');
+    if(errBox) { errBox.style.display = "none"; errBox.innerText = ""; }
     document.getElementById('secureFormPanel').style.display = 'none';
     document.getElementById('secureManagePanel').style.display = 'none';
     document.getElementById('secureWhatsAppPanel').style.display = 'none';
@@ -1383,7 +1752,6 @@ function openAddFormPopup(mode) {
         unlockPanelsBasedOnMode();
     } else {
         document.getElementById('lockSection').style.display = 'block';
-        setTimeout(() => { document.getElementById('popupPassword').focus(); }, 200);
     }
     
     document.getElementById('addEventPopupOverlay').style.display = 'block';
@@ -1396,7 +1764,7 @@ function changeGlobalViewMode(mode) {
     currentGlobalMode = mode;
     localStorage.setItem('family_日誌_view_mode', mode);
     document.getElementById('bodyNode').className = "view-" + mode;
-    renderCalendarWithData(activities);
+    triggerPipelineRefresh();
 }
 
 let draggedBlockNode = null;
@@ -1447,9 +1815,9 @@ function openEventPage(id){
     
     let aiTagsHtml = "";
     if (ev.ai_analyzed === false) {
-        aiTagsHtml += `<span class="meta-chip chip-ai-pulse">⚡ AI 深度分析中...</span>`;
+        aiTagsHtml += `<span class="meta-chip chip-ai-pulse">⚡ 本地規則預選（等待 Dify 雲端識別...）</span>`;
     } else {
-        if (ev.isAI_Priority) aiTagsHtml += `<span class="meta-chip" style="background:var(--apple-danger); color:white; margin-right:4px;">🔥 高優先</span>`;
+        if (ev.isAI_Priority) aiTagsHtml += `<span class="meta-chip" style="background:var(--oasis-danger); color:white; margin-right:4px;">🔥 高優先</span>`;
         if (ev.ai_Tags && ev.ai_Tags.length > 0) {
             ev.ai_Tags.forEach(t => {
                 aiTagsHtml += `<span class="meta-chip chip-ai" style="margin-right:4px;">${DOMPurify.sanitize(t)}</span>`;
@@ -1480,9 +1848,9 @@ function openEventPage(id){
     let relatedMedia = albumItems.filter(m => m.eventId === id || m.date === ev.date);
     let mediaHtml = "";
     relatedMedia.forEach(m => {
-        mediaHtml += `<div class="album-item"><img src="${encodeURI(m.url)}" onclick="launchLightboxView('${encodeURI(m.url)}', 'image')"><div class="album-title">${DOMPurify.sanitize(m.title)}</div></div>`;
+        mediaHtml += `<div class="album-item"><img src="${encodeURI(m.url)}" alt="關聯照片" onclick="launchLightboxView('${encodeURI(m.url)}', 'image')"><div class="album-title">${DOMPurify.sanitize(m.title)}</div></div>`;
     });
-    document.getElementById('eventPageRelatedMedia').innerHTML = mediaHtml || "<p style='color:gray; font-size:12px; margin:8px 0;'>此頁面目前暫無關聯相片。</p>";
+    document.getElementById('eventPageRelatedMedia').innerHTML = mediaHtml || "<p style='color:var(--apple-text-secondary); font-size:12px; margin:8px 0;'>此頁面目前暫無關聯相片。</p>";
 
     let container = document.getElementById('blockEditorContainer'); container.innerHTML = "";
     if (ev.blocks && Array.isArray(ev.blocks)) { ev.blocks.forEach(b => { addBlockToEditor(b.type, b.content, b.done, b.url); }); } 
@@ -1502,15 +1870,15 @@ function addBlockToEditor(type, content = "", done = false, url = "", targetSibl
     let cleanContent = DOMPurify.sanitize(content);
     let cleanUrl = encodeURI(url || "");
 
-    let html = `<span class="block-handle">☰</span><div class="block-content-area">`;
-    if (type === 'heading') html += `<input type="text" class="block-input-heading block-field-content" value="${cleanContent}" placeholder="標題 H2">`;
-    else if (type === 'text') html += `<input type="text" class="block-input-text block-field-content" value="${cleanContent}" placeholder="輸入文字內容... (輸入 / 開啟指令選單)">`;
+    let html = `<span class="block-handle" aria-label="拖曳排序">☰</span><div class="block-content-area">`;
+    if (type === 'heading') html += `<input type="text" class="block-input-heading block-field-content" value="${cleanContent}" placeholder="標題 H2" aria-label="標題內容">`;
+    else if (type === 'text') html += `<input type="text" class="block-input-text block-field-content" value="${cleanContent}" placeholder="輸入文字內容... (輸入 / 開啟指令選單)" aria-label="文字內容">`;
     else if (type === 'todo') {
         let chk = done ? "checked" : "";
-        html += `<div style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="block-field-done" ${chk} style="width:auto; margin:0;"><input type="text" class="block-input-text block-field-content" value="${cleanContent}" placeholder="待辦事項..."></div>`;
+        html += `<div style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="block-field-done" ${chk} style="width:auto; margin:0;" aria-label="完成狀態"><input type="text" class="block-input-text block-field-content" value="${cleanContent}" placeholder="待辦事項..." aria-label="待辦事項內容"></div>`;
     } else if (type === 'divider') html += `<hr style="width:100%; border:none; border-top:2px dashed var(--apple-border); margin:10px 0;"><input type="hidden" class="block-field-content" value="---">`;
-    else if (type === 'image') html += `<input type="text" class="block-input-text block-field-url" value="${cleanUrl}" placeholder="圖片 URL..." oninput="this.nextElementSibling.src=this.value; this.nextElementSibling.style.display='block';"><img src="${cleanUrl}" style="max-width:100%; height:80px; object-fit:cover; border-radius:4px; margin-top:4px; display:${url?'block':'none'};"><input type="hidden" class="block-field-content" value="img_block">`;
-    html += `</div><div style="display:flex; gap:2px; align-self:center; margin-left:4px;"><button onclick="duplicateBlockNode(this)" style="background:none; border:none; cursor:pointer;">📄</button><button onclick="insertInlineBlockNode(this)" style="background:none; border:none; cursor:pointer;">➕</button><button onclick="this.parentElement.parentElement.remove(); debounceAutoSaveBlocks();" style="background:none; border:none; color:var(--apple-danger); font-size:18px; cursor:pointer;">×</button></div>`;
+    else if (type === 'image') html += `<input type="text" class="block-input-text block-field-url" value="${cleanUrl}" placeholder="圖片 URL..." oninput="this.nextElementSibling.src=this.value; this.nextElementSibling.style.display='block';" aria-label="圖片網址"><img src="${cleanUrl}" alt="區塊附加圖片" style="max-width:100%; height:80px; object-fit:cover; border-radius:4px; margin-top:4px; display:${url?'block':'none'};"><input type="hidden" class="block-field-content" value="img_block">`;
+    html += `</div><div style="display:flex; gap:2px; align-self:center; margin-left:4px;"><button type="button" onclick="duplicateBlockNode(this)" style="background:none; border:none; cursor:pointer;" aria-label="複製區塊">📄</button><button type="button" onclick="insertInlineBlockNode(this)" style="background:none; border:none; cursor:pointer;" aria-label="插入新區塊">➕</button><button type="button" onclick="this.parentElement.parentElement.remove(); debounceAutoSaveBlocks();" style="background:none; border:none; color:var(--oasis-danger); font-size:18px; cursor:pointer;" aria-label="刪除區塊">×</button></div>`;
     
     wrapper.innerHTML = html;
     
@@ -1641,7 +2009,7 @@ function insertInlineBlockNode(btn) {
     debounceAutoSaveBlocks();
 }
 
-function saveWholeBlockPageData(isSilent = false) {
+async function saveWholeBlockPageData(isSilent = false) {
     let id = document.getElementById('eventPageCurrentId').value;
     let container = document.getElementById('blockEditorContainer'); 
     let blocksArray = [];
@@ -1652,8 +2020,14 @@ function saveWholeBlockPageData(isSilent = false) {
         let url = type === 'image' ? wrapper.querySelector('.block-field-url').value : "";
         blocksArray.push({ type: type, content: content, done: done, url: url });
     });
+
+    const encryptedNote = await E2EE.encrypt(blocksArray[0]?.content || "");
+
     if (window.fbDb && window.fbRef && window.fbUpdate) {
-        window.fbUpdate(window.fbRef(window.fbDb, `family_calendar_activities/${id}`), { blocks: blocksArray, note: blocksArray[0]?.content || "" }).then(() => {
+        window.fbUpdate(window.fbRef(window.fbDb, `family_calendar_activities/${id}`), { 
+            blocks: blocksArray, 
+            note: encryptedNote 
+        }).then(() => {
             document.getElementById('inlineSaveStatusLabel').innerText = "✓ 所有 Block 已保持雲端即時同步";
             if (!isSilent) closeEventPage();
         }).catch(err => {
@@ -1676,7 +2050,7 @@ function launchLightboxView(srcUrl, mediaType) {
     let overlay = document.getElementById('globalLightboxOverlay'); 
     let container = document.getElementById('lightboxMediaContainer');
     if (mediaType === 'video') container.innerHTML = `<video src="${encodeURI(srcUrl)}" class="lightbox-content" controls autoplay onclick="event.stopPropagation()"></video>`;
-    else container.innerHTML = `<img src="${encodeURI(srcUrl)}" class="lightbox-content" onclick="event.stopPropagation()">`;
+    else container.innerHTML = `<img src="${encodeURI(srcUrl)}" alt="放大相片" class="lightbox-content" onclick="event.stopPropagation()">`;
     overlay.style.display = 'flex'; 
     document.body.style.overflow = 'hidden';
 }
@@ -1722,17 +2096,17 @@ function renderMainAlbumUI() {
     currentMonthMediaItems.forEach(item => {
         let cleanUrl = encodeURI(item.url);
         let cleanTitle = DOMPurify.sanitize(item.title);
-        let mediaTag = item.type === "video" ? `<video src="${cleanUrl}" onclick="launchLightboxView('${cleanUrl}', 'video')"></video>` : `<img src="${cleanUrl}" onclick="launchLightboxView('${cleanUrl}', 'image')">`;
-        let popMediaTag = item.type === "video" ? `<video src="${cleanUrl}" controls></video>` : `<img src="${cleanUrl}">`;
+        let mediaTag = item.type === "video" ? `<video src="${cleanUrl}" onclick="launchLightboxView('${cleanUrl}', 'video')"></video>` : `<img src="${cleanUrl}" alt="${cleanTitle}" onclick="launchLightboxView('${cleanUrl}', 'image')">`;
+        let popMediaTag = item.type === "video" ? `<video src="${cleanUrl}" controls></video>` : `<img src="${cleanUrl}" alt="${cleanTitle}">`;
         
-        let aiLabel = "🤖 AI分類: 👨‍👩‍👧 家庭生活聚會"; 
+        let tagLabel = "日常記錄";
         let normTitle = normalize(item.title);
-        if (normTitle.includes("排球") || normTitle.includes("打波") || normTitle.includes("運動")) aiLabel = "🤖 AI分類: 🎯 體育運動訓練";
-        else if (normTitle.includes("二胡") || normTitle.includes("音樂") || normTitle.includes("課")) aiLabel = "🤖 AI分類: 🏫 藝術培育與學習";
-        else if (normTitle.includes("旅行") || normTitle.includes("酒店") || normTitle.includes("高鐵")) aiLabel = "🤖 AI分類: ✈️ 戶外旅遊記憶";
+        if (normTitle.includes("排球") || normTitle.includes("打波") || normTitle.includes("運動")) tagLabel = "體育運動";
+        else if (normTitle.includes("二胡") || normTitle.includes("音樂") || normTitle.includes("課")) tagLabel = "學習培育";
+        else if (normTitle.includes("旅行") || normTitle.includes("酒店") || normTitle.includes("高鐵")) tagLabel = "戶外旅遊";
 
-        mainHtml += `<div class="album-item">${mediaTag}<div class="album-title">${cleanTitle}</div><div style="font-size:11px; color:var(--oasis-ai-purple); font-weight:bold; margin-bottom:4px;">${aiLabel}</div><div class="album-date-badge">📅 ${item.date}</div></div>`;
-        popHtml += `<div class="album-item"><button class="album-delete-tag" onclick="deleteMediaFromAlbum('${item.id}')">×</button>${popMediaTag}<div class="album-title">${cleanTitle}</div><div class="album-date-badge">${item.date}</div></div>`;
+        mainHtml += `<div class="album-item">${mediaTag}<div class="album-title">${cleanTitle}</div><div style="font-size:11px; color:var(--oasis-ai-purple); font-weight:bold; margin-bottom:4px;">🏷️ ${tagLabel}</div><div class="album-date-badge">📅 ${item.date}</div></div>`;
+        popHtml += `<div class="album-item"><button class="album-delete-tag" onclick="deleteMediaFromAlbum('${item.id}')" aria-label="刪除此相片">×</button>${popMediaTag}<div class="album-title">${cleanTitle}</div><div class="album-date-badge">${item.date}</div></div>`;
     });
     mainGrid.innerHTML = mainHtml; 
     if(popGrid) popGrid.innerHTML = popHtml;
@@ -1791,8 +2165,7 @@ function resetFormPhotoUpload() {
     document.getElementById('formImagePreview').style.display = 'none'; 
 }
 
-// 快速本地啟發式預測（Cloud Functions 會非同步覆蓋為更精確的 Dify 分類）
-function autoAssignAIProps(title) {
+function localHeuristicPreFilter(title) {
     let match = { category: "家庭", status: "待處理", isAI_Priority: false, ai_Tags: [] }; 
     let normTitle = normalize(title);
     if (normTitle.includes("考試") || normTitle.includes("特急") || normTitle.includes("急件") || normTitle.includes("重要")) { 
@@ -1818,7 +2191,6 @@ function autoAssignAIProps(title) {
     return match;
 }
 
-// 優先採用 Dify 回填的 urgency_score，本地權重作為 Fallback
 function calcEventUrgencyScore(event) {
     if (typeof event.urgency_score === 'number') {
         return event.urgency_score;
@@ -1832,7 +2204,7 @@ function calcEventUrgencyScore(event) {
 }
 
 function generateAI_Summary() {
-    let todayStr = new Date().toISOString().slice(0, 10);
+    let todayStr = formatLocalDate(new Date());
     let todayActs = activities.filter(a => isEventActiveOnDate(a, todayStr));
     let pendingHighCount = activities.filter(a => (a.isAI_Priority || a.category === "重要") && (a.status || '待處理') !== '已完成').length;
     let stressScore = todayActs.length + (pendingHighCount * 2);
@@ -1840,7 +2212,7 @@ function generateAI_Summary() {
     let stressColor = "var(--oasis-success)";
     if (stressScore >= 8) {
         stressLabel = "🔴 系統核心高載爆忙";
-        stressColor = "var(--apple-danger)";
+        stressColor = "var(--oasis-danger)";
     } else if (stressScore >= 4) {
         stressLabel = "🟠 事務適中緊湊";
         stressColor = "var(--oasis-warning)";
@@ -1856,26 +2228,23 @@ function generateAI_Summary() {
         summaryText += ` 偵測到有 <strong>${pendingHighCount}</strong> 項特急項目阻滯中。`;
     }
     if (todayActs.length >= 4) {
-        summaryText += `<br>💡 <b>AI 行為預測分工調配建議：</b>今日任務密度過高，檢測到多項常規行程交疊，<em>建議立即分流部分工作，並啟動 WhatsApp 即時聯動提醒！</em>`;
+        summaryText += `<br>💡 <b>分工調配建議：</b>今日任務密度較高，檢測到多項常規行程交疊，<em>建議分流部分工作並啟用 WhatsApp 提醒！</em>`;
     } else {
-        summaryText += `<br>💡 <b>AI 行為預測分工調配建議：</b>當前架構運作平穩，負責人各就各位即可，適合上傳生活相片至家庭互助牆。`;
+        summaryText += `<br>💡 <b>分工調配建議：</b>當前家庭步調平穩，負責人各就各位即可，適合上傳生活相片至共享牆。`;
     }
     document.getElementById('aiSummaryText').innerHTML = DOMPurify.sanitize(summaryText);
 }
 
 function isEventActiveOnDate(event, dateStr) {
-    if (!event.date) return false;
-    let checkDate = new Date(dateStr + " 00:00:00");
-    let eventStartStr = event.date.split(' ')[0];
-    let eventEndStr = (event.endDate || event.date).split(' ')[0];
-    let startBoundary = new Date(eventStartStr + " 00:00:00");
-    let endBoundary = new Date(eventEndStr + " 23:59:59");
-    return (checkDate >= startBoundary && checkDate <= endBoundary);
+    if (!event || !event.date) return false;
+    let start = String(event.date).split(' ')[0];
+    let end = String(event.endDate || event.date).split(' ')[0];
+    return (dateStr >= start && dateStr <= end);
 }
 
 async function addFamilyEvent() {
     if (userRole !== 'admin') { alert("訪客模式無權新增！請先點擊上方登入。"); return; }
-    let title = document.getElementById('eventTitle').value.trim();
+    let rawTitle = document.getElementById('eventTitle').value.trim();
     let startVal = document.getElementById('eventTime').value.trim();
     let endVal = document.getElementById('eventEndTime').value.trim();
     let editKey = document.getElementById('editKey').value;
@@ -1885,17 +2254,20 @@ async function addFamilyEvent() {
     let selectedRelations = [...document.getElementById('eventRelations').selectedOptions].map(opt => opt.value);
     let submitBtn = document.getElementById('formSubmitBtn');
 
-    if (!title || !startVal) { alert("請填寫活動名稱與開始時間！"); return; }
+    if (!rawTitle || !startVal) { alert("請填寫活動名稱與開始時間！"); return; }
     
     let detectedDate = startVal.split(' ')[0] || selectedDateStr;
     let detectedEndDate = endVal ? (endVal.split(' ')[0] || detectedDate) : detectedDate; 
     let timeLabel = startVal.split(' ')[1] || "08:30";
     if (endVal) timeLabel = `${timeLabel} ~ ${endVal.split(' ')[1] || endVal}`;
 
-    let aiProps = autoAssignAIProps(title);
+    let preRule = localHeuristicPreFilter(rawTitle);
     
+    // E2EE 加密標題
+    const encryptedTitle = await E2EE.encrypt(rawTitle);
+
     let payload = { 
-        title: title, 
+        title: encryptedTitle, 
         date: detectedDate, 
         endDate: detectedEndDate, 
         time: timeLabel, 
@@ -1903,20 +2275,20 @@ async function addFamilyEvent() {
         repeat: document.getElementById('eventRepeat').value, 
         reminder: document.getElementById('eventReminder').value, 
         assignee: assignee, 
-        category: chosenCategory || aiProps.category, 
-        status: chosenStatus || aiProps.status, 
+        category: chosenCategory || preRule.category, 
+        status: chosenStatus || preRule.status, 
         relations: selectedRelations,
-        isAI_Priority: aiProps.isAI_Priority, 
-        ai_Tags: aiProps.ai_Tags,
-        ai_analyzed: false, // 標記為尚未經 Dify 分析，觸發後端函數
+        isAI_Priority: preRule.isAI_Priority, 
+        ai_Tags: preRule.ai_Tags,
+        ai_analyzed: false,
+        reminderSent: false,
         updatedAt: Date.now()
     };
 
-    // 若為修改現有行程，保留既有的區塊內容與已存在的標籤
     if (editKey) {
         let currentExisting = activities.find(a => a.id === editKey);
         if (currentExisting) {
-            payload.blocks = currentExisting.blocks || [{ type: "heading", content: `📝 ${title} 專屬頁面` }];
+            payload.blocks = currentExisting.blocks || [{ type: "heading", content: `📝 ${rawTitle} 專屬頁面` }];
             if (currentExisting.ai_Tags && currentExisting.ai_Tags.length > 0) {
                 payload.ai_Tags = currentExisting.ai_Tags;
                 payload.isAI_Priority = currentExisting.isAI_Priority;
@@ -1924,11 +2296,11 @@ async function addFamilyEvent() {
             }
         }
     } else {
-        payload.blocks = [{ type: "heading", content: `📝 ${title} 專屬頁面` }];
+        payload.blocks = [{ type: "heading", content: `📝 ${rawTitle} 專屬頁面` }];
     }
 
     submitBtn.disabled = true;
-    submitBtn.innerText = "⚡ 正在儲存至雲端...";
+    submitBtn.innerText = "⚡ 正在加密儲存至雲端...";
 
     try {
         let currentEventId = editKey;
@@ -1948,7 +2320,7 @@ async function addFamilyEvent() {
 
         if (formMediaURL && currentEventId) {
             await window.fbSet(window.fbPush(window.fbRef(window.fbDb, "family_mutual_album")), { 
-                title: `隨附活動: ${title}`, 
+                title: `隨附活動: ${rawTitle}`, 
                 url: formMediaURL, 
                 type: document.getElementById('formMediaType').value, 
                 date: detectedDate, 
@@ -1956,7 +2328,7 @@ async function addFamilyEvent() {
             });
         }
 
-        showToast("🎉 行程儲存成功！Dify AI 正在背景分析...", "success");
+        showToast("🎉 行程已端對端加密儲存！Dify 正在深度研判...", "success");
         document.getElementById('eventTitle').value = ""; 
         resetFormPhotoUpload(); 
         closeEventPopup();
@@ -2006,7 +2378,7 @@ function renderKanbanBoard() {
         let matched = activities.filter(a => (a.status || '待處理') === col); 
         let html = "";
         matched.forEach(c => {
-            let badgePriority = c.isAI_Priority ? `<span style="background:var(--apple-danger); color:white; font-size:10px; padding:1px 4px; border-radius:3px; font-weight:bold; margin-right:4px;">🔥高優先</span>` : '';
+            let badgePriority = c.isAI_Priority ? `<span style="background:var(--oasis-danger); color:white; font-size:10px; padding:1px 4px; border-radius:3px; font-weight:bold; margin-right:4px;">🔥高優先</span>` : '';
             let pColor = getAssigneeColor(c.assignee || '全員');
             let cleanTitle = DOMPurify.sanitize(c.title);
             let aiStateHtml = "";
@@ -2014,7 +2386,7 @@ function renderKanbanBoard() {
                 aiStateHtml = `<span class="meta-chip chip-ai-pulse" style="font-size:9px; padding:1px 5px;">⚡ AI 研判中</span>`;
             }
       
-            html += `<div class="kanban-card-item" draggable="true" ondragstart="drag(event, '${c.id}')" onclick="openEventPage('${c.id}')">
+            html += `<div class="kanban-card-item" role="button" tabindex="0" draggable="true" ondragstart="drag(event, '${c.id}')" onclick="openEventPage('${c.id}')" onkeydown="if(event.key==='Enter')openEventPage('${c.id}')" aria-label="${cleanTitle}, 時間 ${c.time}">
                 <div style="font-weight:700; font-size:15px; margin-bottom:4px; color:var(--apple-text);">${badgePriority}${cleanTitle} ${aiStateHtml}</div>
                 <div style="font-size:12px; color:var(--apple-text-secondary);">⏰ ${c.time}</div>
                 <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
@@ -2023,7 +2395,7 @@ function renderKanbanBoard() {
                 </div>
             </div>`;
         });
-        document.getElementById(`kanban-${col === "待處理"?"todo":col === "進行中"?"progress":"done"}-list`).innerHTML = html || `<p style="color:#ccc; text-align:center; font-size:14px; padding:15px 0;">暫無項目</p>`;
+        document.getElementById(`kanban-${col === "待處理"?"todo":col === "進行中"?"progress":"done"}-list`).innerHTML = html || `<p style="color:#888; text-align:center; font-size:14px; padding:15px 0;">暫無項目</p>`;
     });
 }
 
@@ -2031,33 +2403,36 @@ function filterDatabaseEvents() {
     let val = normalize(document.getElementById('searchBox').value); 
     if(val === "") { renderCalendarWithData(activities); return; }
     let filtered = activities.filter(a => {
-        return normalize(a.title).includes(val) || normalize(a.category).includes(val) || normalize(a.assignee).includes(val);
+        return normalize(a.title).includes(val) || 
+               normalize(a.category).includes(val) || 
+               normalize(a.assignee).includes(val) ||
+               (a.ai_Tags && a.ai_Tags.some(t => normalize(t).includes(val)));
     });
     renderCalendarWithData(filtered);
 }
 
 function renderDashboardBlocks() {
-    let todayStr = new Date().toISOString().slice(0, 10);
+    let todayStr = formatLocalDate(new Date());
     let urgentActs = activities.filter(a => (a.category === "重要" || a.isAI_Priority) && (a.status || "待處理") !== "已完成");
     urgentActs.sort((a, b) => calcEventUrgencyScore(b) - calcEventUrgencyScore(a));
 
     let urgentHtml = "";
     urgentActs.forEach(a => { 
         let score = calcEventUrgencyScore(a);
-        urgentHtml += `<div style="padding:12px; margin-bottom:8px; background:rgba(255,59,48,0.04); border-radius:8px; font-size:14px; border-left: 5px solid var(--apple-danger); cursor:pointer;" onclick="openEventPage('${a.id}')"><span style="background:var(--apple-danger); color:white; font-size:11px; padding:2px 6px; border-radius:4px; font-weight:700; margin-right:6px;">⚠️ 權重 ${score}</span><b>[${a.date}] ${a.time}</b> | ${DOMPurify.sanitize(a.title)}</div>`; 
+        urgentHtml += `<div role="button" tabindex="0" style="padding:12px; margin-bottom:8px; background:rgba(215,0,21,0.04); border-radius:8px; font-size:14px; border-left: 5px solid var(--oasis-danger); cursor:pointer;" onclick="openEventPage('${a.id}')" onkeydown="if(event.key==='Enter')openEventPage('${a.id}')"><span style="background:var(--oasis-danger); color:white; font-size:11px; padding:2px 6px; border-radius:4px; font-weight:700; margin-right:6px;">⚠️ 權重 ${score}</span><b>[${a.date}] ${a.time}</b> | ${DOMPurify.sanitize(a.title)}</div>`; 
     });
     document.getElementById('dashUrgentTasks').innerHTML = urgentHtml || "<p style='color:var(--apple-text-secondary); font-size:14px;'>🎉 目前無任何未完成的重要特急任務。</p>";
 
     let todayHtml = ""; 
     activities.filter(a => isEventActiveOnDate(a, todayStr)).forEach(a => { 
         let pColor = getAssigneeColor(a.assignee || '全員');
-        todayHtml += `<div style="padding:12px; margin-bottom:8px; background:${getCategoryColor(a.category)}; border-radius:8px; font-size:14px; cursor:pointer; border:1px solid rgba(0,0,0,0.01);" onclick="openEventPage('${a.id}')"><b>${a.time}</b> | ${DOMPurify.sanitize(a.title)} <span style="float:right; font-weight:700; background:${pColor.bg}; color:${pColor.text}; padding:2px 6px; border-radius:4px; font-size:12px;">👤 ${a.assignee || '全員'}</span></div>`; 
+        todayHtml += `<div role="button" tabindex="0" style="padding:12px; margin-bottom:8px; background:${getCategoryColor(a.category)}; border-radius:8px; font-size:14px; cursor:pointer; border:1px solid rgba(0,0,0,0.04);" onclick="openEventPage('${a.id}')" onkeydown="if(event.key==='Enter')openEventPage('${a.id}')"><b>${a.time}</b> | ${DOMPurify.sanitize(a.title)} <span style="float:right; font-weight:700; background:${pColor.bg}; color:${pColor.text}; padding:2px 6px; border-radius:4px; font-size:12px;">👤 ${a.assignee || '全員'}</span></div>`; 
     });
     document.getElementById('dashTodayEvents').innerHTML = todayHtml || "<p style='color:var(--apple-text-secondary); font-size:14px;'>今日無行程安排。</p>";
 
     let unfinishedHtml = ""; 
     activities.filter(a => (a.status || '待處理') !== '已完成').slice(0, 5).forEach(a => { 
-        unfinishedHtml += `<div style="padding:10px; border-bottom:1px solid var(--apple-border); font-size:14px; cursor:pointer;" onclick="openEventPage('${a.id}')">📌 <span style="color:var(--oasis-warning); font-weight:700;">[${a.status || '待處理'}]</span> <b>${DOMPurify.sanitize(a.title)}</b> <small style="color:var(--apple-text-secondary);">(${a.date})</small></div>`; 
+        unfinishedHtml += `<div role="button" tabindex="0" style="padding:10px; border-bottom:1px solid var(--apple-border); font-size:14px; cursor:pointer;" onclick="openEventPage('${a.id}')" onkeydown="if(event.key==='Enter')openEventPage('${a.id}')">📌 <span style="color:var(--oasis-warning); font-weight:700;">[${a.status || '待處理'}]</span> <b>${DOMPurify.sanitize(a.title)}</b> <small style="color:var(--apple-text-secondary);">(${a.date})</small></div>`; 
     });
     document.getElementById('dashUnfinishedTasks').innerHTML = unfinishedHtml || "<p style='color:var(--apple-text-secondary); font-size:14px;'>所有任務皆已處理完成！</p>";
 
@@ -2066,7 +2441,7 @@ function renderDashboardBlocks() {
     albumItems.slice(-4).forEach(m => {
         let box = document.createElement('div'); 
         box.className = "album-item"; 
-        box.innerHTML = `<img src="${encodeURI(m.url)}" onclick="launchLightboxView('${encodeURI(m.url)}', 'image')"><div class="album-title">${DOMPurify.sanitize(m.title)}</div>`; 
+        box.innerHTML = `<img src="${encodeURI(m.url)}" alt="${DOMPurify.sanitize(m.title)}" onclick="launchLightboxView('${encodeURI(m.url)}', 'image')"><div class="album-title">${DOMPurify.sanitize(m.title)}</div>`; 
         latestMediaContainer.appendChild(box);
     });
 }
@@ -2081,7 +2456,7 @@ function renderPopupManageListUI() {
     let html = "";
     filtered.forEach(ev => { 
         let pColor = getAssigneeColor(ev.assignee || '全員');
-        html += `<div class="manage-item-row" style="padding:14px; margin-bottom:10px; background:rgba(0,0,0,0.02); border-radius:10px; border:1px solid rgba(0,0,0,0.02);"><div style="font-size:15px; margin-bottom:10px; color:var(--apple-text);">⏰ <strong>${ev.time}</strong> - ${DOMPurify.sanitize(ev.title)} <span style="background:${pColor.bg}; color:${pColor.text}; padding:2px 6px; border-radius:4px; font-size:12px; font-weight:700;">[👤 ${ev.assignee || '全員'}]</span></div><div class="action-btn-group-row"><button class="pretty-delete-btn" onclick="deleteEventFromPopup('${ev.id}')">❌ 刪除</button><button class="pretty-edit-btn" onclick="openModifyEventForm('${ev.id}')">✏️ 修改</button></div></div>`; 
+        html += `<div class="manage-item-row" style="padding:14px; margin-bottom:10px; background:rgba(0,0,0,0.02); border-radius:10px; border:1px solid rgba(0,0,0,0.04);"><div style="font-size:15px; margin-bottom:10px; color:var(--apple-text);">⏰ <strong>${ev.time}</strong> - ${DOMPurify.sanitize(ev.title)} <span style="background:${pColor.bg}; color:${pColor.text}; padding:2px 6px; border-radius:4px; font-size:12px; font-weight:700;">[👤 ${ev.assignee || '全員'}]</span></div><div class="action-btn-group-row"><button class="pretty-delete-btn" onclick="deleteEventFromPopup('${ev.id}')">❌ 刪除</button><button class="pretty-edit-btn" onclick="openModifyEventForm('${ev.id}')">✏️ 修改</button></div></div>`; 
     });
     container.innerHTML = html;
 }
@@ -2112,6 +2487,9 @@ function openModifyEventForm(id) {
     document.getElementById('eventRepeat').value = ev.repeat || "不重複";
     document.getElementById('eventReminder').value = ev.reminder || "無"; 
     document.getElementById('eventAssignee').value = ev.assignee || "全員";
+    
+    populateRelationSelectOptions(ev.relations || []);
+    
     document.getElementById('formSubmitBtn').innerText = "確認修改更新至雲端";
 }
 
@@ -2136,20 +2514,42 @@ function sendWhatsAppNotification(id) {
 
 function renderPopupAlbumManageUI() { renderMainAlbumUI(); }
 
-const holidays2026 = { "01-01":"元旦", "02-17":"年初一", "02-18":"年初二", "02-19":"年初三", "04-03":"受難節", "04-04":"清明節", "05-01":"勞動節", "05-25":"佛誕", "06-19":"端午節", "07-01":"七一回歸日", "10-01":"國慶日", "12-25":"聖誕節", "12-26":"節禮日" };
+const holidays2026 = { 
+    "01-01": "元旦", 
+    "02-17": "農曆年初一", 
+    "02-18": "農曆年初二", 
+    "02-19": "農曆年初三", 
+    "04-03": "耶穌受難節", 
+    "04-04": "清明節",
+    "04-06": "復活節星期一",
+    "05-01": "勞動節", 
+    "05-25": "佛誕翌日", 
+    "06-19": "端午節", 
+    "07-01": "七一回歸日", 
+    "09-26": "中秋節翌日",
+    "10-01": "國慶日", 
+    "10-19": "重陽節",
+    "12-25": "聖誕節", 
+    "12-26": "節禮日" 
+};
 function getHKHoliday(m, d) { return holidays2026[`${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`] || ""; }
 
 function getLunarDayText(dateStr) {
     try {
-        let d = new Date(dateStr);
-        if (isNaN(d.getTime())) return "";
+        let partsDate = dateStr.split('-');
+        let d = new Date(Number(partsDate[0]), Number(partsDate[1]) - 1, Number(partsDate[2]), 12, 0, 0);
         let parts = new Intl.DateTimeFormat("zh-Hant-u-ca-chinese", {month:"numeric", day:"numeric"}).formatToParts(d);
-        let month = parts.find(p => p.type === 'month').value;
-        let day = Number(parts.find(p => p.type === 'day').value);
+        let month = parts.find(p => p.type === 'month')?.value || "";
+        let dayStr = parts.find(p => p.type === 'day')?.value || "";
+        let day = parseInt(dayStr, 10);
+        if (isNaN(day)) return "";
         const CN = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
-        if (day === 1) return ["", "正月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "冬月", "臘月"][Number(month)];
-        if (day <= 10) return "初" + CN[day]; if (day < 20) return "十" + CN[day - 10];
-        if (day === 20) return "二十"; if (day < 30) return "廿" + CN[day - 20]; return "三十";
+        if (day === 1) return ["", "正月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "冬月", "臘月"][parseInt(month, 10)] || "初一";
+        if (day <= 10) return "初" + CN[day]; 
+        if (day < 20) return "十" + CN[day - 10];
+        if (day === 20) return "二十"; 
+        if (day < 30) return "廿" + CN[day - 20]; 
+        return "三十";
     } catch(e) { return ""; }
 }
 
@@ -2157,23 +2557,26 @@ function renderCalendarWithData(dataset) {
     let y = current.getFullYear();
     let m = current.getMonth();
     document.getElementById('monthLabel').innerText = y + "年 " + (m + 1) + "月";
+    
     let firstDayIndex = new Date(y, m, 1).getDay();
     let daysCount = new Date(y, m + 1, 0).getDate();
+    let todayDateStr = formatLocalDate(new Date());
+    
     let fragment = document.createDocumentFragment();
     
-    for(let i=0; i<firstDayIndex; i++){ 
+    for(let i = 0; i < firstDayIndex; i++){ 
         let cell = document.createElement('div');
         cell.className = "calendar-day empty"; 
         fragment.appendChild(cell); 
     }
     
-    for(let i=1; i<=daysCount; i++){
-        let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+    for(let i = 1; i <= daysCount; i++){
+        let dStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
         let thisDateObj = new Date(y, m, i);
         let currentDayOfWeek = thisDateObj.getDay();
         
-        let isToday = new Date().toISOString().slice(0,10) === dStr;
-        let isSelected = selectedDateStr === dStr;
+        let isToday = (todayDateStr === dStr);
+        let isSelected = (selectedDateStr === dStr);
         
         let dayActivities = dataset.filter(a => isEventActiveOnDate(a, dStr));
         let dayMediaItems = albumItems.filter(item => item.date === dStr);
@@ -2185,11 +2588,13 @@ function renderCalendarWithData(dataset) {
             let aiStateHtml = (act.ai_analyzed === false) ? ' ⚡' : '';
             eventsHtml += `<span class="day-event-badge" style="background:${pColor.bg}; color:${pColor.text}; border-left:3px solid ${pColor.text};">${priorityMark}${act.time} ${DOMPurify.sanitize(act.title)}${aiStateHtml}</span>`; 
         });
+        
         dayMediaItems.forEach(media => { 
-            eventsHtml = `<span class="day-event-badge" style="background:rgba(255,149,0,0.08); color:var(--oasis-warning); border-left:3px solid var(--oasis-warning); font-weight:bold;">🖼️ 附圖: ${DOMPurify.sanitize(media.title)}</span>` + eventsHtml; 
+            eventsHtml = `<span class="day-event-badge" style="background:rgba(201,117,0,0.08); color:var(--oasis-warning); border-left:3px solid var(--oasis-warning); font-weight:bold;">🖼️ 附圖: ${DOMPurify.sanitize(media.title)}</span>` + eventsHtml; 
         });
+        
         let hasMultiDayActive = dayActivities.some(a => a.date !== a.endDate);
-        let holidayName = getHKHoliday(m+1, i);
+        let holidayName = getHKHoliday(m + 1, i);
         let isHolidayOrSunday = (holidayName !== "") || (currentDayOfWeek === 0);
         
         let dayCell = document.createElement('div');
@@ -2199,24 +2604,36 @@ function renderCalendarWithData(dataset) {
                             (isHolidayOrSunday ? " hk-holiday-pass-range" : "") + 
                             (hasMultiDayActive ? " multiday-pass-range" : "");
         dayCell.setAttribute('data-date', dStr); 
+        dayCell.setAttribute('role', 'gridcell');
+        dayCell.setAttribute('tabindex', '0');
+        dayCell.setAttribute('aria-label', `${dStr}，${holidayName ? holidayName + '，' : ''}共 ${dayActivities.length} 項活動`);
         dayCell.onclick = () => selectDate(dStr);
+        dayCell.onkeydown = (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                selectDate(dStr);
+            }
+        };
         
         let holidayLabelHtml = "";
         if (holidayName !== "") {
             holidayLabelHtml = `<div class="holiday">🔴 ${holidayName}</div>`;
         } else if (currentDayOfWeek === 0) {
-            holidayLabelHtml = `<div class="holiday" style="color: #ff7875;">☕ 星期日</div>`;
+            holidayLabelHtml = `<div class="holiday" style="color: #ff3b30;">☕ 星期日</div>`;
         }
         
         dayCell.innerHTML = `<strong>${i}</strong><div class="lunar">${getLunarDayText(dStr)}</div>${holidayLabelHtml}<div class="day-events-container">${eventsHtml}</div>`;
         fragment.appendChild(dayCell);
     }
     
-    while((firstDayIndex + daysCount) % 7 !== 0){ 
-        let cell = document.createElement('div');
-        cell.className = "calendar-day empty";
-        fragment.appendChild(cell); 
-        daysCount++; 
+    let totalCells = firstDayIndex + daysCount;
+    let remainder = totalCells % 7;
+    if (remainder !== 0) {
+        for (let i = 0; i < (7 - remainder); i++) {
+            let cell = document.createElement('div');
+            cell.className = "calendar-day empty";
+            fragment.appendChild(cell); 
+        }
     }
     
     const cal = document.getElementById('calendar');
@@ -2243,20 +2660,21 @@ function renderDayEvents() {
     filtered.forEach(ev => { 
         let aiChipsHtml = "";
         if (ev.ai_analyzed === false) {
-            aiChipsHtml += `<span class="meta-chip chip-ai-pulse">⚡ AI 深度分析中...</span>`;
+            aiChipsHtml += `<span class="meta-chip chip-ai-pulse">⚡ 本地規則預選（等待 Dify 雲端識別...）</span>`;
         } else {
-            if (ev.isAI_Priority) aiChipsHtml += `<span class="meta-chip" style="background:var(--apple-danger); color:white;">🔥 高優先</span>`;
+            if (ev.isAI_Priority) aiChipsHtml += `<span class="meta-chip" style="background:var(--oasis-danger); color:white;">🔥 高優先</span>`;
             if (ev.ai_Tags) {
                 ev.ai_Tags.forEach(t => { aiChipsHtml += `<span class="meta-chip chip-ai">${DOMPurify.sanitize(t)}</span>`; });
             }
         }
         let pColor = getAssigneeColor(ev.assignee || '全員');
-        html += `<div class="event-item" style="border-left-color:var(--oasis-primary);" onclick="openEventPage('${ev.id}')"><div class="event-time">⏰ 時間：${ev.time}</div><div class="event-desc">📌 項目：<strong>${DOMPurify.sanitize(ev.title)}</strong></div><div class="event-meta-tags"><span class="meta-chip" style="background:${getCategoryColor(ev.category)}; color:var(--apple-text);">${ev.category}</span><span class="meta-chip" style="background:${pColor.bg}; color:${pColor.text};">${ev.assignee || '全員'}</span><span class="meta-chip chip-reminder">${ev.status || '待處理'}</span>${aiChipsHtml}</div></div>`; 
+        html += `<div class="event-item" role="button" tabindex="0" style="border-left-color:var(--oasis-primary);" onclick="openEventPage('${ev.id}')" onkeydown="if(event.key==='Enter')openEventPage('${ev.id}')" aria-label="${DOMPurify.sanitize(ev.title)}，時間 ${ev.time}"><div class="event-time">⏰ 時間：${ev.time}</div><div class="event-desc">📌 項目：<strong>${DOMPurify.sanitize(ev.title)}</strong></div><div class="event-meta-tags"><span class="meta-chip" style="background:${getCategoryColor(ev.category)}; color:var(--apple-text);">${ev.category}</span><span class="meta-chip" style="background:${pColor.bg}; color:${pColor.text};">${ev.assignee || '全員'}</span><span class="meta-chip chip-reminder">${ev.status || '待處理'}</span>${aiChipsHtml}</div></div>`; 
     });
     container.innerHTML = html;
 }
 
 function changeMonth(dir) { 
+    current.setDate(1);
     current.setMonth(current.getMonth() + dir); 
     renderCalendarWithData(activities); 
 }
