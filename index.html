@@ -99,7 +99,7 @@ header {
     top: 75px;
     left: 50%;
     transform: translateX(-50%) translateY(-20px);
-    background: rgba(29, 29, 31, 0.9);
+    background: rgba(29, 29, 31, 0.92);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     color: white;
@@ -311,7 +311,7 @@ header {
 /* Phase 1 修復：補齊 class 點號 .today */
 .calendar-day.today { 
     border: 2.5px solid var(--oasis-warning) !important; 
-    background: rgba(255, 149, 0, 0.02);
+    background: rgba(255, 149, 0, 0.03);
 }
 .calendar-day.selected-day { 
     background: #e2f7e9 !important; 
@@ -699,7 +699,7 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
 <div id="toastBar" class="toast-notice">✓ 雲端資料同步中...</div>
 
 <header>
-    <div style="font-weight: 700;">🏠 Family OS <span style="font-size: 13px; font-weight: normal; color: var(--apple-text-secondary);">v8.6 (Secure)</span></div>
+    <div style="font-weight: 700;">🏠 Family OS <span style="font-size: 13px; font-weight: normal; color: var(--apple-text-secondary);">v8.7 (Auth Fixed)</span></div>
     <div class="header-status-group">
         <div id="roleBadge" class="auth-badge" onclick="handleAuthBadgeClick()">🔒 訪客模式 (Viewer)</div>
         <span id="logoutBtn" class="logout-link" onclick="logoutCurrentUser()">登出</span>
@@ -824,17 +824,17 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
             <h3 id="formTitle" style="margin-top:0; font-size:20px; letter-spacing:-0.02em;">➕ 新增家庭活動</h3>
             <input type="hidden" id="editKey" value="">
 
-            <!-- 登入驗證區塊 (Firebase Auth 接管) -->
+            <!-- 登入驗證區塊（完全精確匹配 Firebase 控制台使用者） -->
             <div class="password-lock-section" id="lockSection">
                 <p style="margin:0 0 10px 0; font-size:14px; color:var(--apple-text-secondary);">請選擇家庭成員帳戶並驗證密碼：</p>
                 <div style="display:flex; flex-direction:column; gap:8px;">
                     <select id="loginMemberSelect" style="margin:0;">
                         <option value="daddy">👨 Daddy</option>
                         <option value="mummy">👩‍🦱 Mummy</option>
-                        <option value="tit">👦 鐵</option>
+                        <option value="iron">👦 鐵 (iron)</option>
                         <option value="jolie">👧 Jolie</option>
-                        <option value="bei">👩 蓓</option>
-                        <option value="hei">👶 熹</option>
+                        <option value="leisel">👩 蓓 (leisel)</option>
+                        <option value="karis">👶 熹 (karis)</option>
                     </select>
                     <div style="display:flex; gap:8px;">
                         <input type="password" id="popupPassword" placeholder="輸入個人專屬密碼..." style="margin:0; flex:1; padding:12px;">
@@ -1045,23 +1045,23 @@ let userRole = "viewer";
 let currentActiveSlashInput = null;
 let currentSlashSelectedIndex = 0;
 
-// 成員帳號映射表
+// 成員帳號映射表（完全對齊 Firebase 控制台，預設支援 @family.local 與 @family.com 雙重嘗試）
 const MEMBER_EMAIL_MAP = {
     "daddy": "daddy@family.local",
     "mummy": "mummy@family.local",
-    "tit": "tit@family.local",
+    "iron": "iron@family.local",
     "jolie": "jolie@family.local",
-    "bei": "bei@family.local",
-    "hei": "hei@family.local"
+    "leisel": "leisel@family.local",
+    "karis": "karis@family.local"
 };
 
 const MEMBER_NAME_MAP = {
     "daddy": "Daddy",
     "mummy": "Mummy",
-    "tit": "鐵",
+    "iron": "鐵",
     "jolie": "Jolie",
-    "bei": "蓓",
-    "hei": "熹"
+    "leisel": "蓓",
+    "karis": "熹"
 };
 
 function normalize(text) {
@@ -1214,10 +1214,10 @@ function getAssigneeColor(assignee) {
     if (!name || name === "全員" || name === "所有人" || name === "全部人") {
         return { bg: "rgba(0,0,0,0.04)", text: "#666666" };
     }
-    if (name.includes("鐵") || name.includes("tit")) return { bg: "rgba(0,113,227,0.08)", text: "#0071e3" };
+    if (name.includes("鐵") || name.includes("tit") || name.includes("iron")) return { bg: "rgba(0,113,227,0.08)", text: "#0071e3" };
     if (name.includes("jolie") || name.includes("喬莉")) return { bg: "rgba(175,82,222,0.08)", text: "#af52de" };
-    if (name.includes("蓓") || name.includes("bei")) return { bg: "rgba(255,45,85,0.08)", text: "#ff2d55" };
-    if (name.includes("熹") || name.includes("hei")) return { bg: "rgba(52,199,89,0.08)", text: "#34c759" };
+    if (name.includes("蓓") || name.includes("bei") || name.includes("leisel")) return { bg: "rgba(255,45,85,0.08)", text: "#ff2d55" };
+    if (name.includes("熹") || name.includes("hei") || name.includes("karis")) return { bg: "rgba(52,199,89,0.08)", text: "#34c759" };
     if (name.includes("mummy") || name.includes("媽")) return { bg: "rgba(255,149,0,0.08)", text: "#ff9500" };
     if (name.includes("daddy") || name.includes("爸")) return { bg: "rgba(162,132,94,0.08)", text: "#a2845e" };
     return { bg: "rgba(90,200,250,0.08)", text: "#5ac8fa" };
@@ -1234,7 +1234,7 @@ function populateRelationSelectOptions() {
     });
 }
 
-// 透過 Firebase Auth 安全登入驗證
+// 透過 Firebase Auth 安全登入驗證（包含雙域名容錯與精準錯誤解析）
 async function verifyGatePassword() {
     const memberKey = document.getElementById('loginMemberSelect').value;
     const inputPwd = document.getElementById('popupPassword').value.trim();
@@ -1245,18 +1245,44 @@ async function verifyGatePassword() {
         return;
     }
     
-    const email = MEMBER_EMAIL_MAP[memberKey] || `${memberKey}@family.local`;
+    const primaryEmail = MEMBER_EMAIL_MAP[memberKey] || `${memberKey}@family.local`;
     btn.disabled = true;
     btn.innerText = "驗證中...";
 
     try {
-        await window.fbSignIn(window.fbAuth, email, inputPwd);
+        try {
+            // 優先嘗試當前設定的 email
+            await window.fbSignIn(window.fbAuth, primaryEmail, inputPwd);
+        } catch (initialErr) {
+            // 若因為 @family.local 或 @family.com 互換問題，自動進行容錯重試
+            if (initialErr.code === 'auth/user-not-found' || initialErr.code === 'auth/invalid-email' || initialErr.code === 'auth/invalid-credential') {
+                const fallbackEmail = primaryEmail.includes('@family.local') 
+                    ? primaryEmail.replace('@family.local', '@family.com')
+                    : primaryEmail.replace('@family.com', '@family.local');
+                await window.fbSignIn(window.fbAuth, fallbackEmail, inputPwd);
+            } else {
+                throw initialErr;
+            }
+        }
+        
         showToast("✓ 登入成功！已具備修改權限", "success");
         document.getElementById('lockSection').style.display = 'none';
         unlockPanelsBasedOnMode();
     } catch (error) {
-        console.error(error);
-        alert("❌ 密碼錯誤或帳號驗證失敗！請確認密碼是否正確。");
+        console.error("Firebase Auth Failure:", error);
+        let errorMsg = "❌ 驗證失敗：";
+        if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+            errorMsg += "密碼不正確，請重新檢查。";
+        } else if (error.code === 'auth/user-not-found') {
+            errorMsg += "找不到該帳戶，請確認後台是否已註冊。";
+        } else if (error.code === 'auth/invalid-email') {
+            errorMsg += "Firebase 阻擋了 .local 域名，請將後台帳戶後綴改為 @family.com！";
+        } else if (error.code === 'auth/unauthorized-domain') {
+            errorMsg += "當前網址未授權，請在 Firebase Authentication 設定授權網域。";
+        } else {
+            errorMsg += error.message || error.code;
+        }
+        alert(errorMsg);
     } finally {
         btn.disabled = false;
         btn.innerText = "登入驗證";
@@ -1336,7 +1362,6 @@ function openAddFormPopup(mode) {
         return;
     } else { document.getElementById('formTitle').innerText = "➕ 新增家庭活動"; }
 
-    // 已登入則免密直接解鎖
     if (userRole === "admin") {
         document.getElementById('lockSection').style.display = 'none';
         unlockPanelsBasedOnMode();
