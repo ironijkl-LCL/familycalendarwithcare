@@ -1,20 +1,40 @@
 {
-  "name": "Family OS 麟李家庭智慧管理系統",
-  "short_name": "FamilyOS",
+  "name": "Family OS - 麟李家庭智慧管理系統",
+  "short_name": "Family OS",
+  "description": "麟李家庭專屬日曆、任務、相簿與 AI 助手",
   "start_url": "./index.html",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#f5f5f7",
   "theme_color": "#0071e3",
+  "lang": "zh-HK",
+  "scope": "./",
   "icons": [
     {
       "src": "https://img.icons8.com/fluency/192/home.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "https://img.icons8.com/fluency/512/home.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "新增活動",
+      "short_name": "新增",
+      "url": "./index.html?action=add",
+      "icons": [{ "src": "https://img.icons8.com/fluency/96/plus-math.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "今日行程",
+      "short_name": "今日",
+      "url": "./index.html?view=today",
+      "icons": [{ "src": "https://img.icons8.com/fluency/96/calendar.png", "sizes": "96x96" }]
     }
   ]
 }
