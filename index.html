@@ -658,7 +658,7 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
 }
 </style>
 
-<!-- Firebase SDK (含 Auth, RTDB, Storage) -->
+<!-- Firebase SDK (包含完整 apiKey 設定) -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -666,8 +666,14 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
   import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
   
   const firebaseConfig = {
+    apiKey: "AIzaSyAasqW8TgacCLLNuhg_I1ItVQlDfAHatc0",
+    authDomain: "familycalender-a62ae.firebaseapp.com",
     databaseURL: "https://familycalender-a62ae-default-rtdb.firebaseio.com",
-    storageBucket: "familycalender-a62ae.firebasestorage.app"
+    projectId: "familycalender-a62ae",
+    storageBucket: "familycalender-a62ae.firebasestorage.app",
+    messagingSenderId: "161867987572",
+    appId: "1:161867987572:web:ee6641980baaf9cd78ef21",
+    measurementId: "G-9ZSCC551ZJ"
   };
 
   const app = initializeApp(firebaseConfig);
@@ -699,7 +705,7 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
 <div id="toastBar" class="toast-notice">✓ 雲端資料同步中...</div>
 
 <header>
-    <div style="font-weight: 700;">🏠 Family OS <span style="font-size: 13px; font-weight: normal; color: var(--apple-text-secondary);">v8.7 (Auth Fixed)</span></div>
+    <div style="font-weight: 700;">🏠 Family OS <span style="font-size: 13px; font-weight: normal; color: var(--apple-text-secondary);">v8.8</span></div>
     <div class="header-status-group">
         <div id="roleBadge" class="auth-badge" onclick="handleAuthBadgeClick()">🔒 訪客模式 (Viewer)</div>
         <span id="logoutBtn" class="logout-link" onclick="logoutCurrentUser()">登出</span>
@@ -824,9 +830,9 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
             <h3 id="formTitle" style="margin-top:0; font-size:20px; letter-spacing:-0.02em;">➕ 新增家庭活動</h3>
             <input type="hidden" id="editKey" value="">
 
-            <!-- 登入驗證區塊（完全精確匹配 Firebase 控制台使用者） -->
+            <!-- 登入驗證區塊 -->
             <div class="password-lock-section" id="lockSection">
-                <p style="margin:0 0 10px 0; font-size:14px; color:var(--apple-text-secondary);">請選擇家庭成員帳戶並驗證密碼：</p>
+                <p style="margin:0 0 10px 0; font-size:14px; color:var(--apple-text-secondary);">請選擇家庭成員帳戶並輸入專屬密碼：</p>
                 <div style="display:flex; flex-direction:column; gap:8px;">
                     <select id="loginMemberSelect" style="margin:0;">
                         <option value="daddy">👨 Daddy</option>
@@ -1045,7 +1051,7 @@ let userRole = "viewer";
 let currentActiveSlashInput = null;
 let currentSlashSelectedIndex = 0;
 
-// 成員帳號映射表（完全對齊 Firebase 控制台，預設支援 @family.local 與 @family.com 雙重嘗試）
+// 成員帳號映射表（預設嘗試 @family.local，亦支援自動 fallback 至 @family.com）
 const MEMBER_EMAIL_MAP = {
     "daddy": "daddy@family.local",
     "mummy": "mummy@family.local",
@@ -1236,6 +1242,11 @@ function populateRelationSelectOptions() {
 
 // 透過 Firebase Auth 安全登入驗證（包含雙域名容錯與精準錯誤解析）
 async function verifyGatePassword() {
+    if (typeof window.fbSignIn !== 'function') {
+        alert("⚠️ Firebase Auth 模組載入中，請稍候 3 秒後重試！");
+        return;
+    }
+
     const memberKey = document.getElementById('loginMemberSelect').value;
     const inputPwd = document.getElementById('popupPassword').value.trim();
     const btn = document.getElementById('loginSubmitBtn');
@@ -1251,10 +1262,8 @@ async function verifyGatePassword() {
 
     try {
         try {
-            // 優先嘗試當前設定的 email
             await window.fbSignIn(window.fbAuth, primaryEmail, inputPwd);
         } catch (initialErr) {
-            // 若因為 @family.local 或 @family.com 互換問題，自動進行容錯重試
             if (initialErr.code === 'auth/user-not-found' || initialErr.code === 'auth/invalid-email' || initialErr.code === 'auth/invalid-credential') {
                 const fallbackEmail = primaryEmail.includes('@family.local') 
                     ? primaryEmail.replace('@family.local', '@family.com')
