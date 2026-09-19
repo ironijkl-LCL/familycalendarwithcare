@@ -612,7 +612,7 @@ button.pretty-edit-btn:hover { background: rgba(0, 113, 227, 0.15); }
 .wheel-btn { background: transparent !important; border: none !important; width: 44px; height: 100%; position: relative; pointer-events: auto; }
 .picker-overlay-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0 !important; cursor: pointer; z-index: 5; }
 
-/* ─── 🎛️ Popups & Modals（安全邊距置頂） ─── */
+/* ─── 🎛️ Popups & Modals ─── */
 .popup-overlay { 
     display: none; 
     position: fixed; 
@@ -795,7 +795,6 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
 
   const app = initializeApp(firebaseConfig);
   
-  // 🚨 關鍵：指定使用 LocalStorage 持久化，杜絕 WKWebView 凍結卡死
   let auth;
   try {
     auth = initializeAuth(app, {
@@ -847,7 +846,7 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
 <div id="toastBar" class="toast-notice" role="status" aria-live="polite">✓ 雲端資料同步中...</div>
 
 <header role="banner">
-    <div style="font-weight: 700; font-size: 16px;">🏠 Family OS <span style="font-size: 12px; font-weight: normal; color: var(--apple-text-secondary);">v9.4 (全功能完全版)</span></div>
+    <div style="font-weight: 700; font-size: 16px;">🏠 Family OS <span style="font-size: 12px; font-weight: normal; color: var(--apple-text-secondary);">v9.5 (Gmail Alias 版)</span></div>
     <div class="header-status-group">
         <button id="e2eeKeyBtn" class="e2ee-badge" onclick="openE2EEKeyPrompt()" title="端對端加密金鑰管理">🔐 E2EE 密鑰</button>
         <button id="roleBadge" class="auth-badge" onclick="handleAuthBadgeClick()" aria-label="登入狀態切換">🔒 訪客模式 (Viewer)</button>
@@ -979,7 +978,7 @@ input:focus, select:focus { border-color: var(--oasis-primary); background: #fff
             <h3 id="formTitle" style="margin-top:0; font-size:20px; letter-spacing:-0.02em;">➕ 新增家庭活動</h3>
             <input type="hidden" id="editKey" value="">
 
-            <!-- 登入驗證區塊（📱 智能多格式適配 + 支援自訂切換，保證永不逾時） -->
+            <!-- 登入驗證區塊（支援選單與手動 Email 切換） -->
             <div class="password-lock-section" id="lockSection">
                 <p style="margin:0 0 10px 0; font-size:14px; color:var(--apple-text-secondary);">請選擇家庭成員帳戶或輸入登入 Email：</p>
                 <div style="display:flex; flex-direction:column; gap:8px;">
@@ -1301,24 +1300,24 @@ function toggleManualEmailInput() {
 let currentActiveSlashInput = null;
 let currentSlashSelectedIndex = 0;
 
-// 成員常見帳號池（精確相容你的 Firebase Auth 帳戶格式）
+// 🎯 更新：CANDIDATE_EMAILS（Gmail + 別名模式）
 const CANDIDATE_EMAILS = {
-    "iron": ["iron@family.com", "ironijkl@gmail.com", "iron@family.local", "iron@familycalender.internal"],
-    "daddy": ["daddy@family.com", "daddy@family.local", "daddy@familycalender.internal"],
-    "mummy": ["mummy@family.com", "mummy@family.local", "mummy@familycalender.internal"],
-    "jolie": ["jolie@family.com", "jolie@family.local", "jolie@familycalender.internal"],
-    "leisel": ["leisel@family.com", "leisel@family.local", "leisel@familycalender.internal"],
-    "karis": ["karis@family.com", "karis@family.local", "karis@familycalender.internal"]
+    "iron":   ["ironijkl+iron@gmail.com"],
+    "daddy":  ["ironijkl+daddy@gmail.com"],
+    "mummy":  ["ironijkl+mummy@gmail.com"],
+    "jolie":  ["ironijkl+jolie@gmail.com"],
+    "leisel": ["ironijkl+leisel@gmail.com"],
+    "karis":  ["ironijkl+karis@gmail.com"]
 };
 
+// 🎯 更新：MEMBER_NAME_MAP
 const MEMBER_NAME_MAP = {
-    "daddy": "Daddy",
-    "mummy": "Mummy",
-    "iron": "鐵",
-    "ironijkl": "鐵",
-    "jolie": "Jolie",
+    "iron":   "鐵",
+    "daddy":  "Daddy",
+    "mummy":  "Mummy",
+    "jolie":  "Jolie",
     "leisel": "蓓",
-    "karis": "熹"
+    "karis":  "熹"
 };
 
 function normalize(text) {
@@ -1338,7 +1337,7 @@ function showToast(message, type = "normal") {
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('searchBox').addEventListener('input', filterDatabaseEvents);
     initKanbanUXListeners();
-    renderUnauthenticatedState(); // 避免一開始卡在載入中
+    renderUnauthenticatedState();
     initFirebaseRealtimeSubscription();
     initSlashMenuClickListeners();
     initCalendarTouchSwipe();
@@ -1410,10 +1409,14 @@ function initFirebaseRealtimeSubscription() {
         if (window.fbDb && window.fbRef && window.fbOnValue && window.fbAuth) {
             clearInterval(checkInterval);
             
+            // 🎯 更新：onAuthStateChanged 解析 Gmail + 別名
             window.fbOnAuthStateChanged(window.fbAuth, async (user) => {
                 if (user) {
-                    const localPrefix = user.email ? user.email.split('@')[0] : "member";
-                    currentUserMemberName = MEMBER_NAME_MAP[localPrefix] || localPrefix;
+                    const localPart = user.email ? user.email.split('@')[0] : "member";
+                    const memberKey = localPart.includes('+') 
+                        ? localPart.split('+')[1] 
+                        : localPart;
+                    currentUserMemberName = MEMBER_NAME_MAP[memberKey] || memberKey;
                     userRole = "admin";
                     
                     const badge = document.getElementById('roleBadge');
@@ -1606,7 +1609,7 @@ async function verifyGatePassword() {
         emailsToTest = [manual];
     } else {
         const memberKey = document.getElementById('loginMemberSelect').value;
-        emailsToTest = CANDIDATE_EMAILS[memberKey] || [`${memberKey}@family.com`];
+        emailsToTest = CANDIDATE_EMAILS[memberKey] || [`ironijkl+${memberKey}@gmail.com`];
     }
 
     btn.disabled = true;
@@ -1619,7 +1622,6 @@ async function verifyGatePassword() {
         const apiKey = window.firebaseConfig.apiKey;
         const restUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`;
 
-        // 循序進行極速 REST 查驗 (每項僅耗時約 0.1~0.2 秒)
         for (const testEmail of emailsToTest) {
             try {
                 const response = await fetch(restUrl, {
@@ -1642,7 +1644,7 @@ async function verifyGatePassword() {
                     if (msg.includes("INVALID_PASSWORD") || msg.includes("INVALID_LOGIN_CREDENTIALS")) {
                         lastErrorMsg = "密碼不正確，請重新檢查！";
                     } else if (msg.includes("EMAIL_NOT_FOUND")) {
-                        lastErrorMsg = `找不到帳號 (${testEmail})。`;
+                        lastErrorMsg = `找不到帳號 (${testEmail})。請確認 Firebase Authentication 是否已新增此帳號！`;
                     } else {
                         lastErrorMsg = msg;
                     }
@@ -1653,7 +1655,6 @@ async function verifyGatePassword() {
         }
 
         if (authSuccess) {
-            // REST 成功後同步至前端 SDK 狀態
             await window.fbSignIn(window.fbAuth, matchedEmail, inputPwd);
             showToast("✓ 身分驗證成功！具備編輯權限", "success");
             document.getElementById('lockSection').style.display = 'none';
@@ -2263,7 +2264,6 @@ async function addFamilyEvent() {
 
     let preRule = localHeuristicPreFilter(rawTitle);
     
-    // E2EE 加密標題
     const encryptedTitle = await E2EE.encrypt(rawTitle);
 
     let payload = { 
