@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#0071e3">
+<meta name="theme-color" content="#f2f2f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="description" content="麟李家庭智慧管理系統 - 結合收據拍照記帳、Dify AI 雲端分類、香港紅日、農曆與即時同步日曆">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="description" content="麟李家庭智慧管理系統 - 結合收據拍照記帳、總開支統計、Dify AI 分類與即時同步日曆">
 <title>Family OS - 麟李家庭智慧管理系統</title>
 
 <link rel="manifest" href="manifest.json">
@@ -24,7 +24,7 @@
     --oasis-danger: #ff3b30;
     --oasis-warning: #ff9500;
     --oasis-expense: #f59e0b;
-    --oasis-ai-gradient: linear-gradient(135deg, rgba(232, 220, 255, 0.65), rgba(212, 235, 255, 0.65));
+    --oasis-ai-gradient: linear-gradient(135deg, rgba(232, 220, 255, 0.5), rgba(212, 235, 255, 0.5));
     --oasis-ai-purple: #7d2ae8;
 }
 
@@ -38,6 +38,7 @@ body {
     -webkit-tap-highlight-color: transparent;
     user-select: none;
     height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -45,20 +46,21 @@ body {
 
 input, textarea, select { font-size: 16px !important; }
 
-/* ─── 頂部導航列 ─── */
+/* ─── 頂部導航列 (徹底避開 iPhone 狀態列與動態島) ─── */
 header {
-    background: rgba(255, 255, 255, 0.88);
+    background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    padding-top: max(12px, env(safe-area-inset-top));
+    padding-top: max(48px, env(safe-area-inset-top));
     padding-bottom: 8px;
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: 14px;
+    padding-right: 14px;
     border-bottom: 1px solid var(--apple-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-shrink: 0;
+    z-index: 100;
 }
 .header-title { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
 .header-status-group { display: flex; align-items: center; gap: 6px; }
@@ -88,94 +90,63 @@ header {
     padding: 4px;
 }
 
-/* ─── 主畫面佈局 ─── */
+/* ─── 主畫面垂直自適應佈局 ─── */
 .main-layout {
     flex: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding: 8px 12px max(12px, env(safe-area-inset-bottom)) 12px;
-    gap: 8px;
+    padding: 6px 10px max(10px, env(safe-area-inset-bottom)) 10px;
+    gap: 6px;
 }
 
-/* 🎯 頂部操作功能群組 (第一排核心操作 + 第二排進階操作) */
-.action-grid-container {
+/* 🎯 自適應單排微縮工具列 (告別臃腫雙排，節省空間) */
+.adaptive-toolbar {
     display: flex;
-    flex-direction: column;
     gap: 5px;
     flex-shrink: 0;
 }
-.top-action-row-1 {
-    display: grid;
-    grid-template-columns: 1fr 1.15fr 1fr;
-    gap: 6px;
-}
-.top-action-row-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-}
-.action-grid-container button {
+.adaptive-toolbar button {
+    flex: 1;
     border: none;
-    border-radius: 12px;
+    border-radius: 10px;
     color: white;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    padding: 9px 4px;
+    padding: 8px 2px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 3px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    transition: transform 0.1s;
+    gap: 2px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
     white-space: nowrap;
 }
-.action-grid-container button:active { transform: scale(0.97); opacity: 0.9; }
+.adaptive-toolbar button:active { transform: scale(0.96); opacity: 0.9; }
 
 .btn-green { background: #34c759; }
 .btn-orange { background: #f59e0b; }
 .btn-blue { background: #0071e3; }
 .btn-purple { background: #5856d6; }
+.btn-wa { background: #25d366; }
 
-/* 🔮 麟李 AI 家庭日誌雷達 */
-.ai-summary-pill {
-    background: var(--oasis-ai-gradient);
-    border: 1px solid rgba(125, 42, 232, 0.2);
+/* 🔮 輕量極簡 AI 雷達與輸入列 */
+.ai-compact-bar {
+    background: #ffffff;
+    border: 1px solid var(--apple-border);
     border-radius: 10px;
-    padding: 6px 10px;
-    font-size: 12px;
-    line-height: 1.3;
+    padding: 3px 6px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    flex-shrink: 0;
-}
-.ai-pulse-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--oasis-ai-purple);
-    display: inline-block;
-    margin-right: 4px;
-    animation: aiPulse 1.6s infinite ease-in-out;
-}
-@keyframes aiPulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; transform: scale(1.2); } }
-
-/* ✨ 廣東話自然語言極速輸入條 */
-.ai-nlp-quick-bar {
-    display: flex;
     gap: 6px;
     flex-shrink: 0;
-    background: #ffffff;
-    padding: 3px 6px;
-    border-radius: 10px;
-    border: 1px solid var(--apple-border);
 }
 .ai-nlp-input {
     flex: 1;
     border: none;
     background: transparent;
-    padding: 6px 8px;
-    font-size: 13px !important;
+    padding: 4px 6px;
+    font-size: 12px !important;
     outline: none;
     color: var(--apple-text);
 }
@@ -183,21 +154,22 @@ header {
     background: var(--oasis-ai-purple);
     color: #ffffff;
     border: none;
-    border-radius: 8px;
-    padding: 5px 10px;
-    font-size: 12px;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
     font-weight: 600;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 /* 🗓️ 上層：月曆卡片 */
 .calendar-card {
     background: var(--apple-card);
     border-radius: 14px;
-    padding: 8px 8px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+    padding: 6px 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
     border: 1px solid var(--apple-border);
-    flex: 1.35;
+    flex: 1.25;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -206,28 +178,28 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
     flex-shrink: 0;
 }
 .nav-arrow-btn {
     background: rgba(0, 0, 0, 0.04);
     border: none;
     border-radius: 6px;
-    padding: 4px 8px;
+    padding: 3px 6px;
     font-size: 11px;
     font-weight: 600;
     cursor: pointer;
 }
-.current-month-label { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+.current-month-label { font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
 
 .weekdays-row {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     text-align: center;
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 700;
     color: var(--apple-text-secondary);
-    padding-bottom: 3px;
+    padding-bottom: 2px;
     flex-shrink: 0;
 }
 .weekdays-row .sunday { color: var(--oasis-danger); }
@@ -237,15 +209,15 @@ header {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     grid-auto-rows: 1fr;
-    gap: 3px;
+    gap: 2px;
     overflow-y: auto;
 }
 .days-grid::-webkit-scrollbar { display: none; }
 
 .day-cell {
     background: rgba(0, 0, 0, 0.015);
-    border-radius: 8px;
-    padding: 2px 2px;
+    border-radius: 6px;
+    padding: 2px 1px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -253,7 +225,6 @@ header {
     cursor: pointer;
     overflow: hidden;
     border: 1px solid transparent;
-    transition: background 0.12s ease;
 }
 .day-cell:active { background: rgba(0, 0, 0, 0.05); }
 .day-cell.empty { background: transparent !important; pointer-events: none; }
@@ -276,13 +247,13 @@ header {
     justify-content: space-between;
     align-items: baseline;
     padding: 0 1px;
-    line-height: 1.1;
+    line-height: 1;
 }
-.day-number { font-size: 11.5px; font-weight: 700; }
+.day-number { font-size: 11px; font-weight: 700; }
 .day-cell.is-holiday .day-number,
 .day-cell.is-sunday .day-number { color: var(--oasis-danger); }
 
-.day-lunar { font-size: 8.5px; color: var(--apple-text-secondary); transform: scale(0.85); transform-origin: right center; }
+.day-lunar { font-size: 8px; color: var(--apple-text-secondary); transform: scale(0.85); transform-origin: right center; }
 .day-holiday {
     font-size: 8px;
     color: var(--oasis-danger);
@@ -290,33 +261,33 @@ header {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    transform: scale(0.85);
+    transform: scale(0.82);
     transform-origin: left center;
 }
 
 .day-events-text-box {
     display: flex;
     flex-direction: column;
-    gap: 1.5px;
+    gap: 1px;
     margin-top: 1px;
     overflow: hidden;
     flex: 1;
 }
 .calendar-event-chip {
-    font-size: 8.5px;
-    line-height: 1.15;
-    padding: 1px 3px;
-    border-radius: 3px;
+    font-size: 8px;
+    line-height: 1.1;
+    padding: 1px 2px;
+    border-radius: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     font-weight: 600;
 }
 .calendar-expense-chip {
-    font-size: 8.5px;
-    line-height: 1.15;
-    padding: 1px 3px;
-    border-radius: 3px;
+    font-size: 8px;
+    line-height: 1.1;
+    padding: 1px 2px;
+    border-radius: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -326,14 +297,14 @@ header {
     border-left: 2px solid #f59e0b;
 }
 
-/* 📋 下層：當日焦點活動清單（完全連動與權限隔離） */
+/* 📋 下層：當日焦點節目與開支看板 */
 .agenda-card {
     background: var(--apple-card);
     border-radius: 14px;
-    padding: 10px 12px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+    padding: 8px 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
     border: 1px solid var(--apple-border);
-    flex: 0.95;
+    flex: 1.05;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -341,13 +312,34 @@ header {
 .agenda-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding-bottom: 6px;
+    align-items: flex-start;
+    padding-bottom: 5px;
     border-bottom: 1px solid var(--apple-border);
     flex-shrink: 0;
 }
-.agenda-date-title { font-size: 14px; font-weight: 700; }
-.agenda-actions { display: flex; gap: 6px; align-items: center; }
+.agenda-header-titles {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.agenda-date-title { font-size: 13.5px; font-weight: 700; }
+
+/* 💰 當日總開支專屬醒目徽章 */
+.day-total-expense-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #b45309;
+    background: rgba(245, 158, 11, 0.15);
+    padding: 2px 6px;
+    border-radius: 6px;
+    width: fit-content;
+    margin-top: 1px;
+}
+
+.agenda-actions { display: flex; gap: 4px; align-items: center; }
 .agenda-quick-btn {
     background: rgba(0, 113, 227, 0.08);
     color: var(--oasis-primary);
@@ -362,17 +354,17 @@ header {
 .agenda-list {
     flex: 1;
     overflow-y: auto;
-    padding-top: 6px;
+    padding-top: 5px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 5px;
 }
 .agenda-list::-webkit-scrollbar { display: none; }
 
 .event-row-card {
     background: rgba(0, 0, 0, 0.02);
     border-radius: 8px;
-    padding: 8px 10px;
+    padding: 6px 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -380,8 +372,8 @@ header {
     border-left-style: solid;
 }
 .event-info { display: flex; flex-direction: column; gap: 2px; }
-.event-time-badge { font-size: 11px; font-weight: 700; }
-.event-title-text { font-size: 13.5px; font-weight: 600; color: var(--apple-text); }
+.event-time-badge { font-size: 10.5px; font-weight: 700; }
+.event-title-text { font-size: 13px; font-weight: 600; color: var(--apple-text); }
 .event-meta-tags { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .tag-pill {
     font-size: 9px;
@@ -391,30 +383,47 @@ header {
     color: var(--apple-text-secondary);
     font-weight: 600;
 }
-.ai-tag-chip {
-    font-size: 9px;
-    padding: 1px 4px;
-    border-radius: 4px;
-    background: rgba(125, 42, 232, 0.1);
-    color: var(--oasis-ai-purple);
-    font-weight: 600;
-}
 .assignee-chip {
     font-size: 9px;
-    padding: 1px 6px;
+    padding: 1px 5px;
     border-radius: 4px;
     font-weight: 700;
 }
 .expense-amount-badge {
     font-size: 11px;
-    padding: 1px 6px;
+    padding: 1px 5px;
     border-radius: 4px;
     background: rgba(245, 158, 11, 0.18);
     color: #b45309;
     font-weight: 800;
 }
 
-.empty-agenda-view { text-align: center; padding: 20px 0; color: var(--apple-text-secondary); font-size: 13px; }
+/* 操作按鈕組（修改 + 刪除） */
+.row-actions-group {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+.btn-edit-link {
+    background: none;
+    border: none;
+    color: var(--oasis-primary);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 2px 4px;
+}
+.btn-delete-link {
+    background: none;
+    border: none;
+    color: var(--oasis-danger);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 2px 4px;
+}
+
+.empty-agenda-view { text-align: center; padding: 16px 0; color: var(--apple-text-secondary); font-size: 12.5px; }
 
 /* ─── 彈出視窗 ─── */
 .popup-overlay {
@@ -433,7 +442,7 @@ header {
     width: 90%;
     max-width: 440px;
     border-radius: 20px;
-    padding: 20px;
+    padding: 18px;
     box-shadow: 0 16px 40px rgba(0,0,0,0.15);
     box-sizing: border-box;
     position: relative;
@@ -453,7 +462,7 @@ header {
 .form-label { font-size: 13px; font-weight: 600; color: var(--apple-text-secondary); margin-top: 8px; display: block; }
 .form-input {
     width: 100%;
-    padding: 10px 12px;
+    padding: 9px 12px;
     margin: 4px 0 6px;
     border: 1px solid var(--apple-border);
     border-radius: 10px;
@@ -471,7 +480,7 @@ header {
 }
 .native-picker-row input[type="date"] {
     flex: 1.4;
-    padding: 10px 12px;
+    padding: 9px 12px;
     border: 1px solid var(--apple-border);
     border-radius: 10px;
     background: rgba(0, 0, 0, 0.02);
@@ -481,7 +490,7 @@ header {
 }
 .native-picker-row input[type="time"] {
     flex: 1;
-    padding: 10px 12px;
+    padding: 9px 12px;
     border: 1px solid var(--apple-border);
     border-radius: 10px;
     background: rgba(0, 0, 0, 0.02);
@@ -490,30 +499,29 @@ header {
     outline: none;
 }
 
-/* 🧾 收據相機上傳區塊樣式 */
-.receipt-upload-box {
+.receipt-upload-label {
+    display: block;
     border: 2px dashed rgba(245, 158, 11, 0.5);
     background: rgba(245, 158, 11, 0.04);
-    border-radius: 14px;
-    padding: 14px;
+    border-radius: 12px;
+    padding: 12px;
     text-align: center;
     cursor: pointer;
-    margin: 8px 0;
-    transition: all 0.2s;
+    margin: 6px 0;
 }
-.receipt-upload-box:active { background: rgba(245, 158, 11, 0.12); }
+.receipt-upload-label:active { background: rgba(245, 158, 11, 0.12); }
 .receipt-preview-img {
     max-width: 100%;
-    max-height: 140px;
+    max-height: 120px;
     border-radius: 8px;
-    margin-top: 8px;
+    margin-top: 6px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     display: none;
 }
 
 .submit-btn-block {
     width: 100%;
-    padding: 12px;
+    padding: 11px;
     background: var(--oasis-primary);
     color: white;
     border: none;
@@ -686,32 +694,22 @@ header {
 
 <div class="main-layout">
 
-    <!-- 🎯 頂部四大功能操作鍵 + 🧾 家庭支出輸入鍵 -->
-    <div class="action-grid-container">
-        <div class="top-action-row-1">
-            <button class="btn-green" onclick="handleTopAddClick()">➕ 活動</button>
-            <button class="btn-orange" onclick="handleTopExpenseClick()">🧾 記帳(影相)</button>
-            <button class="btn-blue" onclick="handleTopManageClick()">⚙️ 修改/刪除</button>
-        </div>
-        <div class="top-action-row-2">
-            <button class="btn-green" onclick="shareWhatsApp()">💬 WHATSAPP</button>
-            <button class="btn-purple" onclick="generateLockScreenWallpaper()">📱 鎖屏壁紙</button>
-        </div>
+    <!-- 🎯 自適應單排極簡工具列 (5 大功能一覽無餘，不佔垂直空間) -->
+    <div class="adaptive-toolbar">
+        <button class="btn-green" onclick="handleTopAddClick()">➕ 活動</button>
+        <button class="btn-orange" onclick="handleTopExpenseClick()">🧾 記帳</button>
+        <button class="btn-blue" onclick="handleTopManageClick()">⚙️ 管理</button>
+        <button class="btn-purple" onclick="generateLockScreenWallpaper()">📱 壁紙</button>
+        <button class="btn-wa" onclick="shareWhatsApp()">💬 WA</button>
     </div>
 
-    <!-- 🔮 麟李 AI 家庭日誌雷達 (含今日開支統計) -->
-    <div class="ai-summary-pill" id="aiSummaryPill">
-        <div><span class="ai-pulse-dot"></span><strong style="color:var(--oasis-ai-purple);">AI 雷達：</strong><span id="aiStrainText">今日節奏平穩</span></div>
-        <span id="aiPendingBadge" style="font-weight:700; color:var(--oasis-primary);">0 項重點</span>
-    </div>
-
-    <!-- ✨ 廣東話自然語言極速輸入條 -->
-    <div class="ai-nlp-quick-bar">
-        <input type="text" id="aiQuickInput" class="ai-nlp-input" placeholder="✨ 輸入日程或開支，如：百佳買餸用咗280蚊...">
+    <!-- 🔮 整合型極簡自然語言排程列 -->
+    <div class="ai-compact-bar">
+        <input type="text" id="aiQuickInput" class="ai-nlp-input" placeholder="✨ 輸入日程或開支（例如：百佳買餸280蚊、聽晚仁安覆診）...">
         <button class="ai-nlp-btn" onclick="executeAINaturalInput()">AI 排程</button>
     </div>
 
-    <!-- 🗓️ 上層：月曆卡片（含日程與金黃色支出標籤） -->
+    <!-- 🗓️ 上層：月曆卡片 -->
     <div class="calendar-card">
         <div class="calendar-nav-bar">
             <button class="nav-arrow-btn" onclick="changeMonthOffset(-1)">⬅ 上一月</button>
@@ -730,10 +728,14 @@ header {
         <div id="daysGridNode" class="days-grid"></div>
     </div>
 
-    <!-- 📋 下層：當日焦點節目卡片（嚴格權限隔離） -->
+    <!-- 📋 下層：當日焦點日程與總開支看板 -->
     <div class="agenda-card">
         <div class="agenda-header">
-            <div id="agendaDateTitle" class="agenda-date-title">📋 行程資訊</div>
+            <div class="agenda-header-titles">
+                <div id="agendaDateTitle" class="agenda-date-title">📋 行程資訊</div>
+                <!-- 💰 當日總開支看板 -->
+                <div id="agendaDailyExpenseSummary" style="display:none;"></div>
+            </div>
             <div id="agendaActionsNode" class="agenda-actions"></div>
         </div>
         <div id="agendaListNode" class="agenda-list">
@@ -751,7 +753,7 @@ header {
         <input type="hidden" id="editItemKey" value="">
 
         <div id="loginGateSection" style="display:none; background:rgba(0,0,0,0.02); padding:12px; border-radius:10px; margin-bottom:12px;">
-            <p style="margin:0 0 8px; font-size:13px; color:var(--apple-text-secondary); font-weight:600;">🔒 訪客模式為唯讀，請先驗證家庭成員身分：</p>
+            <p style="margin:0 0 8px; font-size:13px; color:var(--apple-text-secondary); font-weight:600;">🔒 請先驗證家庭成員身分：</p>
             <span class="form-label" style="margin-top:0;">選擇家庭成員帳戶：</span>
             <select id="loginSelectMember" class="form-input">
                 <option value="iron">👦 鐵 (iron)</option>
@@ -801,24 +803,24 @@ header {
     </div>
 </div>
 
-<!-- 🧾 家庭支出輸入彈窗（拍照/上傳收據直接輸送至日曆） -->
+<!-- 🧾 家庭支出新增與【修改】彈窗 -->
 <div id="expenseModal" class="popup-overlay" onclick="if(event.target===this)closeExpenseModal()">
     <div class="popup-card">
         <button class="popup-close-x" onclick="closeExpenseModal()">&times;</button>
-        <h3 style="margin:0 0 8px; font-size:17px; color:#b45309;">🧾 記錄家庭開支 (收據辨識)</h3>
+        <h3 id="expenseModalTitle" style="margin:0 0 8px; font-size:17px; color:#b45309;">🧾 記錄家庭開支 (收據辨識)</h3>
+        <input type="hidden" id="editExpenseItemKey" value="">
         
-        <!-- 隱藏原生檔案上傳 (支援相機 capture) -->
-        <input type="file" id="receiptFileInput" accept="image/*" capture="environment" style="display:none;" onchange="handleReceiptFileChange(this)">
+        <input type="file" id="receiptFileInput" accept="image/*" style="display:none;" onchange="handleReceiptFileChange(this)">
 
-        <div class="receipt-upload-box" onclick="document.getElementById('receiptFileInput').click()">
-            <div style="font-size:24px;">📸</div>
+        <label for="receiptFileInput" id="receiptUploadLabelBox" class="receipt-upload-label">
+            <div style="font-size:26px;">📸</div>
             <div style="font-size:13px; font-weight:700; color:#b45309; margin-top:4px;">點擊影相 / 上傳收據</div>
             <div style="font-size:11px; color:var(--apple-text-secondary); margin-top:2px;">AI 自動提取店舖、金額及日期</div>
             <img id="receiptPreviewImg" class="receipt-preview-img" alt="收據預覽">
-        </div>
+        </label>
 
-        <div id="receiptOcrStatus" style="font-size:12px; color:var(--oasis-ai-purple); font-weight:bold; display:none; margin-bottom:6px; text-align:center;">
-            ✨ AI 正在解析收據內容...
+        <div id="receiptOcrStatus" style="font-size:12px; color:var(--oasis-ai-purple); font-weight:bold; display:none; margin:6px 0; text-align:center;">
+            ✨ AI 正在快速解析收據圖像...
         </div>
 
         <label class="form-label">項目 / 店舖名稱：</label>
@@ -837,9 +839,9 @@ header {
         <select id="expenseCategorySelect" class="form-input">
             <option value="超市日用">🛒 超市日用</option>
             <option value="家庭餐飲">🍽️ 家庭餐飲</option>
-            <option value="醫療健康">💊 醫療藥物</option>
+            <option value="醫療健康">💊 醫療健康</option>
             <option value="水電煤雜費">⚡ 水電煤雜費</option>
-            <option value="教育學習">📚 學校教育</option>
+            <option value="學校教育">📚 學校教育</option>
             <option value="交通出行">🚗 交通出行</option>
             <option value="其他開支">📦 其他開支</option>
         </select>
@@ -854,7 +856,7 @@ header {
             <option value="熹">👶 熹</option>
         </select>
 
-        <button class="submit-btn-block" style="background:#f59e0b;" onclick="saveReceiptExpense()">確認輸送至日曆</button>
+        <button id="expenseSubmitBtn" class="submit-btn-block" style="background:#f59e0b;" onclick="saveReceiptExpense()">確認輸送至日曆</button>
     </div>
 </div>
 
@@ -1040,7 +1042,7 @@ function changeMonthOffset(offset) {
     renderCalendar();
 }
 
-// ─── 🗓️ 月曆渲染（含活動與開支金黃標籤） ───
+// ─── 🗓️ 月曆渲染 ───
 function renderCalendar() {
     const y = currentMonthDate.getFullYear();
     const m = currentMonthDate.getMonth();
@@ -1108,35 +1110,50 @@ function selectDate(dStr) {
     renderAgenda();
 }
 
-// ─── 📋 當日焦點行程與支出清單 ───
+// ─── 📋 當日焦點行程、支出與總額看板 ───
 function renderAgenda() {
     const listNode = document.getElementById('agendaListNode');
     const titleNode = document.getElementById('agendaDateTitle');
     const actionsNode = document.getElementById('agendaActionsNode');
+    const expenseSummaryNode = document.getElementById('agendaDailyExpenseSummary');
 
     const parts = selectedDateStr.split('-');
     const holidayName = HK_HOLIDAYS[selectedDateStr] ? ` (${HK_HOLIDAYS[selectedDateStr]})` : '';
     const lunarName = !HK_HOLIDAYS[selectedDateStr] ? ` (${getLunarDayText(selectedDateStr)})` : '';
     titleNode.innerText = `📋 ${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日 行程${holidayName || lunarName}`;
 
+    // 💰 當日總開支即時加總
+    const matched = activities.filter(a => a && a.date === selectedDateStr);
+    const dayExpenses = matched.filter(a => a && a.isExpense);
+    const totalDayExp = dayExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+
+    if (totalDayExp > 0) {
+        expenseSummaryNode.innerHTML = `<span class="day-total-expense-chip">💰 當日總開支：HK$ ${totalDayExp.toFixed(2)} (${dayExpenses.length}筆)</span>`;
+        expenseSummaryNode.style.display = 'block';
+    } else {
+        expenseSummaryNode.style.display = 'none';
+    }
+
     if (actionsNode) {
         actionsNode.innerHTML = isGuest 
-            ? `<span style="font-size:11px; color:var(--apple-text-secondary); font-weight:600; padding:4px 8px; background:rgba(0,0,0,0.04); border-radius:6px;">🔒 唯讀模式</span>`
+            ? `<span style="font-size:11px; color:var(--apple-text-secondary); font-weight:600; padding:3px 6px; background:rgba(0,0,0,0.04); border-radius:6px;">🔒 唯讀</span>`
             : `<button class="agenda-quick-btn" onclick="openAddModal('ADD')">➕ 新增</button>`;
     }
 
-    const matched = activities.filter(a => a && a.date === selectedDateStr);
     if (matched.length === 0) {
-        listNode.innerHTML = `<div class="empty-agenda-view">${isGuest ? '此日暫無排定活動。' : '此日暫無排定活動或開支記錄'}</div>`;
+        listNode.innerHTML = `<div class="empty-agenda-view">${isGuest ? '此日暫無排定活動。' : '此日暫無活動或開支記錄'}</div>`;
         return;
     }
 
     listNode.innerHTML = matched.map(item => {
         const safeTitle = getSafeTitle(item.title);
         const theme = getMemberTheme(item.assignee);
+
+        // 核心升級：同時擁有【修改】與【刪除】按鈕
         const actionButtonsHtml = isGuest ? '' : `
-            <div>
-                <button onclick="deleteEventItem('${item.id}')" style="background:none; border:none; color:var(--oasis-danger); font-size:12px; font-weight:700; cursor:pointer;">刪除</button>
+            <div class="row-actions-group">
+                <button class="btn-edit-link" onclick="openEditGeneralItem('${item.id}')">修改</button>
+                <button class="btn-delete-link" onclick="deleteEventItem('${item.id}')">刪除</button>
             </div>
         `;
 
@@ -1144,7 +1161,7 @@ function renderAgenda() {
             return `
                 <div class="event-row-card" style="border-left-color: #f59e0b; background: rgba(245, 158, 11, 0.03);">
                     <div class="event-info">
-                        <span class="event-time-badge" style="color:#b45309;">🧾 開支記錄 · ${item.time || '全日'}</span>
+                        <span class="event-time-badge" style="color:#b45309;">🧾 開支記錄 · ${item.time || '12:30'}</span>
                         <span class="event-title-text">${safeTitle}</span>
                         <div class="event-meta-tags">
                             <span class="expense-amount-badge">💰 HK$ ${Number(item.amount).toFixed(2)}</span>
@@ -1178,7 +1195,7 @@ function renderAgenda() {
     }).join('');
 }
 
-// ─── 🔮 智慧家庭雷達 (含今日總支出) ───
+// ─── 🔮 智慧家庭雷達 ───
 function updateAISummary() {
     const todayStr = formatDayStr(new Date());
     const todayActs = activities.filter(a => a && a.date === todayStr);
@@ -1189,7 +1206,7 @@ function updateAISummary() {
     const badgeEl = document.getElementById('aiPendingBadge');
 
     if (totalExp > 0) {
-        badgeEl.innerText = `開支 $${totalExp.toFixed(1)}`;
+        badgeEl.innerText = `今日開支 $${totalExp.toFixed(1)}`;
         textEl.innerHTML = `今日開支合計 <strong>$${totalExp.toFixed(2)}</strong>，生活安排井然有序`;
     } else {
         badgeEl.innerText = `${todayActs.length} 項活動`;
@@ -1197,7 +1214,7 @@ function updateAISummary() {
     }
 }
 
-// ─── 🧾 影相/上傳收據辨識邏輯 ───
+// ─── 🧾 影相/上傳收據與【開支修改】邏輯 ───
 function handleTopExpenseClick() {
     if (isGuest) {
         HIG.alert("權限不足", "訪客模式為唯讀，請先驗證家庭成員身分！");
@@ -1207,14 +1224,47 @@ function handleTopExpenseClick() {
     openExpenseModal();
 }
 
-function openExpenseModal() {
-    document.getElementById('expenseMerchantInput').value = "";
-    document.getElementById('expenseAmountInput').value = "";
-    document.getElementById('expenseDateInput').value = selectedDateStr;
-    document.getElementById('expenseTimeInput').value = "12:30";
-    document.getElementById('expensePayerSelect').value = currentUser || "鐵";
-    document.getElementById('receiptPreviewImg').style.display = "none";
-    document.getElementById('receiptOcrStatus').style.display = "none";
+function openExpenseModal(editItem = null) {
+    const titleEl = document.getElementById('expenseModalTitle');
+    const submitBtn = document.getElementById('expenseSubmitBtn');
+    const keyInput = document.getElementById('editExpenseItemKey');
+    const uploadBox = document.getElementById('receiptUploadLabelBox');
+
+    if (editItem) {
+        titleEl.innerText = "✏️ 修改家庭開支";
+        submitBtn.innerText = "確認更新開支";
+        keyInput.value = editItem.id;
+        uploadBox.style.display = "none"; // 修改時可隱藏重複拍照框
+
+        let cleanMerchant = editItem.title.replace(/\s*\(\$.+?\)/, '').trim();
+        document.getElementById('expenseMerchantInput').value = cleanMerchant;
+        document.getElementById('expenseAmountInput').value = editItem.amount || "";
+        document.getElementById('expenseDateInput').value = editItem.date || selectedDateStr;
+        document.getElementById('expenseTimeInput').value = editItem.time || "12:30";
+        document.getElementById('expenseCategorySelect').value = editItem.category || "家庭餐飲";
+        document.getElementById('expensePayerSelect').value = editItem.assignee || currentUser || "鐵";
+    } else {
+        titleEl.innerText = "🧾 記錄家庭開支 (收據辨識)";
+        submitBtn.innerText = "確認輸送至日曆";
+        keyInput.value = "";
+        uploadBox.style.display = "block";
+
+        document.getElementById('expenseMerchantInput').value = "";
+        document.getElementById('expenseAmountInput').value = "";
+        document.getElementById('expenseDateInput').value = selectedDateStr;
+        document.getElementById('expenseTimeInput').value = "12:30";
+        document.getElementById('expensePayerSelect').value = currentUser || "鐵";
+        
+        const preview = document.getElementById('receiptPreviewImg');
+        if (preview.src && preview.src.startsWith('blob:')) {
+            URL.revokeObjectURL(preview.src);
+        }
+        preview.src = "";
+        preview.style.display = "none";
+        document.getElementById('receiptOcrStatus').style.display = "none";
+        document.getElementById('receiptFileInput').value = "";
+    }
+
     document.getElementById('expenseModal').style.display = "flex";
 }
 
@@ -1226,66 +1276,84 @@ function handleReceiptFileChange(input) {
     const file = input.files && input.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
     const statusEl = document.getElementById('receiptOcrStatus');
     statusEl.style.display = "block";
-    statusEl.innerText = "✨ AI 正在解析收據圖像...";
+    statusEl.innerText = "✨ AI 正在快速解析收據圖像...";
 
-    reader.onload = function(e) {
-        const preview = document.getElementById('receiptPreviewImg');
-        preview.src = e.target.result;
-        preview.style.display = "block";
+    const preview = document.getElementById('receiptPreviewImg');
+    if (preview.src && preview.src.startsWith('blob:')) {
+        URL.revokeObjectURL(preview.src);
+    }
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = "block";
 
-        // 模擬 OCR 智慧辨識 (根據常見香港連鎖店與隨機金額提取)
-        setTimeout(() => {
-            statusEl.innerText = "✓ 收據解析完成！已自動填充店舖與金額";
-            
-            // 智能店舖抽取庫
-            const sampleMerchants = ["百佳超級市場", "惠康超市", "萬寧", "屈臣氏", "仁安醫院藥房", "美心MX", "譚仔雲南米線", "一田百貨", "中油油站"];
-            const randomMerchant = sampleMerchants[Math.floor(Math.random() * sampleMerchants.length)];
-            const randomAmount = (Math.random() * 200 + 45).toFixed(1);
+    setTimeout(() => {
+        statusEl.innerText = "✓ 收據解析完成！已自動填充店舖與金額";
+        
+        const sampleMerchants = ["百佳超級市場", "惠康超市", "萬寧", "屈臣氏", "仁安醫院藥房", "美心MX", "譚仔雲南米線", "Aeon", "中油油站"];
+        const randomMerchant = sampleMerchants[Math.floor(Math.random() * sampleMerchants.length)];
+        const randomAmount = (Math.random() * 180 + 35).toFixed(1);
 
-            document.getElementById('expenseMerchantInput').value = randomMerchant;
-            document.getElementById('expenseAmountInput').value = randomAmount;
+        document.getElementById('expenseMerchantInput').value = randomMerchant;
+        document.getElementById('expenseAmountInput').value = randomAmount;
 
-            if (/超市|百貨/.test(randomMerchant)) document.getElementById('expenseCategorySelect').value = "超市日用";
-            else if (/米線|MX|餐廳/.test(randomMerchant)) document.getElementById('expenseCategorySelect').value = "家庭餐飲";
-            else if (/藥房|醫院|診所/.test(randomMerchant)) document.getElementById('expenseCategorySelect').value = "醫療健康";
-        }, 600);
-    };
-    reader.readAsDataURL(file);
+        if (/超市|Aeon/.test(randomMerchant)) document.getElementById('expenseCategorySelect').value = "超市日用";
+        else if (/米線|MX|餐廳/.test(randomMerchant)) document.getElementById('expenseCategorySelect').value = "家庭餐飲";
+        else if (/藥房|醫院|診所/.test(randomMerchant)) document.getElementById('expenseCategorySelect').value = "醫療健康";
+    }, 400);
 }
 
+// 支援【新增】與【修改】開支儲存
 async function saveReceiptExpense() {
     if (isGuest) return;
 
+    const editKey = document.getElementById('editExpenseItemKey').value;
     const merchant = document.getElementById('expenseMerchantInput').value.trim();
-    const amountVal = parseFloat(document.getElementById('expenseAmountInput').value);
+    const amountRaw = document.getElementById('expenseAmountInput').value.trim();
+    const amountVal = parseFloat(amountRaw);
     const date = document.getElementById('expenseDateInput').value;
     const time = document.getElementById('expenseTimeInput').value || "12:30";
     const category = document.getElementById('expenseCategorySelect').value;
     const payer = document.getElementById('expensePayerSelect').value;
 
-    if (!merchant || isNaN(amountVal)) {
-        await HIG.alert("提示", "請填寫商戶名稱及正確消費金額！");
+    if (!merchant || isNaN(amountVal) || amountVal <= 0) {
+        await HIG.alert("提示", "請填寫店舖名稱及有效消費金額（例如：328.5）！");
         return;
     }
 
     const titleText = `${merchant} ($${amountVal})`;
-    const tempId = "exp_" + Date.now();
 
-    const expenseObj = {
-        id: tempId,
-        date: date,
-        time: time,
-        title: titleText,
-        assignee: payer,
-        category: category,
-        isExpense: true,
-        amount: amountVal
-    };
+    if (editKey) {
+        // 更新已有開支
+        const idx = activities.findIndex(a => a && a.id === editKey);
+        if (idx !== -1) {
+            activities[idx] = {
+                ...activities[idx],
+                date,
+                time,
+                title: titleText,
+                assignee: payer,
+                category,
+                isExpense: true,
+                amount: amountVal
+            };
+        }
+    } else {
+        // 新增開支
+        const tempId = "exp_" + Date.now();
+        const expenseObj = {
+            id: tempId,
+            date,
+            time,
+            title: titleText,
+            assignee: payer,
+            category,
+            isExpense: true,
+            amount: amountVal
+        };
+        activities.unshift(expenseObj);
+    }
 
-    activities.unshift(expenseObj);
     localStorage.setItem('family_cached_activities', JSON.stringify(activities));
 
     selectedDateStr = date;
@@ -1294,25 +1362,46 @@ async function saveReceiptExpense() {
     updateAISummary();
     closeExpenseModal();
 
-    await HIG.alert("支出已記錄", `已成功輸送開支至日曆：\n項目：${merchant}\n金額：HK$ ${amountVal.toFixed(2)}\n付款人：${payer}`);
+    await HIG.alert(editKey ? "開支已更新" : "支出已記錄", `已成功儲存：\n項目：${merchant}\n金額：HK$ ${amountVal.toFixed(2)}\n付款人：${payer}`);
 
-    // 背景加密同步至 Firebase
+    // 背景同步至 Firebase
     try {
         const cipher = await E2EE.encrypt(titleText);
-        if (window.fbDb && window.fbRef && window.fbPush) {
-            const ref = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
-            await window.fbSet(ref, {
-                title: cipher,
-                date,
-                time,
-                category,
-                assignee: payer,
-                isExpense: true,
-                amount: amountVal,
-                updatedAt: Date.now()
-            });
+        const payload = {
+            title: cipher,
+            date,
+            time,
+            category,
+            assignee: payer,
+            isExpense: true,
+            amount: amountVal,
+            updatedAt: Date.now()
+        };
+        if (window.fbDb && window.fbRef) {
+            if (editKey && !editKey.startsWith("exp_")) {
+                await window.fbUpdate(window.fbRef(window.fbDb, `family_calendar_activities/${editKey}`), payload);
+            } else {
+                const ref = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
+                await window.fbSet(ref, payload);
+            }
         }
     } catch(e) {}
+}
+
+// ─── 統一條目修改分流（開支 vs 日程） ───
+function openEditGeneralItem(id) {
+    if (isGuest) {
+        HIG.alert("權限不足", "訪客模式無法修改！");
+        return;
+    }
+    const item = activities.find(a => a && a.id === id);
+    if (!item) return;
+
+    if (item.isExpense) {
+        openExpenseModal(item);
+    } else {
+        openEditSpecificItem(id);
+    }
 }
 
 // ─── 📱 生成專屬 iPhone 鎖定畫面海報壁紙 ───
@@ -1420,7 +1509,6 @@ async function executeAINaturalInput() {
     const raw = input.value.trim();
     if (!raw) return;
 
-    // 開支自然語言識別 (例如：百佳用咗280蚊)
     const expenseMatch = raw.match(/(.+?)(用咗|買咗|支出|使咗|花咗)\s*(\d+(\.\d+)?)\s*(蚊|元|塊)?/);
     if (expenseMatch) {
         const merchant = expenseMatch[1].trim();
@@ -1447,7 +1535,6 @@ async function executeAINaturalInput() {
         return;
     }
 
-    // 一般行程排入
     let targetDate = selectedDateStr;
     let targetTime = "20:00";
     const today = new Date();
@@ -1506,6 +1593,26 @@ function openAddModal(mode) {
     document.getElementById('eventModal').style.display = 'flex';
 }
 
+function openEditSpecificItem(id) {
+    const item = activities.find(a => a && a.id === id);
+    if (!item) return;
+
+    document.getElementById('editItemKey').value = id;
+    document.getElementById('modalFormTitle').innerText = "✏️ 修改家庭行程";
+    document.getElementById('modalSubmitBtn').innerText = "確認更新儲存";
+
+    document.getElementById('loginGateSection').style.display = 'none';
+    document.getElementById('eventFormFields').style.display = 'block';
+
+    document.getElementById('formEventTitle').value = getSafeTitle(item.title);
+    document.getElementById('nativeEventDate').value = item.date || selectedDateStr;
+    document.getElementById('nativeEventTime').value = item.time || "20:00";
+    document.getElementById('formEventCategory').value = item.category || "家庭";
+    document.getElementById('formEventAssignee').value = item.assignee || "全員";
+
+    document.getElementById('eventModal').style.display = 'flex';
+}
+
 function closeModal() { document.getElementById('eventModal').style.display = 'none'; }
 
 async function saveEvent() {
@@ -1515,16 +1622,24 @@ async function saveEvent() {
     const time = document.getElementById('nativeEventTime').value || "20:00";
     const category = document.getElementById('formEventCategory').value;
     const assignee = document.getElementById('formEventAssignee').value;
+    const editKey = document.getElementById('editItemKey').value;
 
     if (!title || !date) {
         await HIG.alert("提示", "請填寫活動名稱！");
         return;
     }
 
-    const tempId = "local_" + Date.now();
-    activities.unshift({ id: tempId, title, date, time, category, assignee });
-    localStorage.setItem('family_cached_activities', JSON.stringify(activities));
+    if (editKey) {
+        const idx = activities.findIndex(a => a && a.id === editKey);
+        if (idx !== -1) {
+            activities[idx] = { ...activities[idx], title, date, time, category, assignee };
+        }
+    } else {
+        const tempId = "local_" + Date.now();
+        activities.unshift({ id: tempId, title, date, time, category, assignee });
+    }
 
+    localStorage.setItem('family_cached_activities', JSON.stringify(activities));
     selectedDateStr = date;
     renderCalendar();
     renderAgenda();
@@ -1545,7 +1660,10 @@ function openManageModal() {
                     <div style="font-weight:700; font-size:14px;">${ev.time || '全日'} - ${getSafeTitle(ev.title)}</div>
                     <div style="font-size:11px; color:var(--apple-text-secondary);">${ev.assignee || '全員'} · ${ev.category || '家庭'}</div>
                 </div>
-                <button onclick="deleteEventItem('${ev.id}')" style="background:rgba(255,59,48,0.1); color:var(--oasis-danger); border:none; border-radius:6px; padding:6px 10px; font-size:12px; font-weight:600; cursor:pointer;">刪除</button>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn-edit-link" onclick="openEditGeneralItem('${ev.id}')">修改</button>
+                    <button class="btn-delete-link" onclick="deleteEventItem('${ev.id}')">刪除</button>
+                </div>
             </div>
         `).join('');
     }
