@@ -7,24 +7,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="description" content="麟李家庭智慧管理系統 - 結合 Dify AI 雲端分類、真 E2EE 加密與即時同步日曆">
-<title>🏠 Family OS - 麟李家庭智慧管理系統</title>
+<title>Family OS - 麟李家庭智慧管理系統</title>
 
-<!-- PWA Web App Manifest -->
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-<!-- DOMPurify 防禦 XSS 消毒庫 -->
+<!-- DOMPurify 防禦 XSS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/dompurify.min.js"></script>
-
-<script>
-window.onerror = function (msg, url, lineNo) {
-    console.error("【Family OS 錯誤攔截】", msg, url, lineNo);
-    return false;
-};
-window.addEventListener('unhandledrejection', event => {
-    console.error("【Family OS 未處理 Promise 異常】", event.reason);
-});
-</script>
 
 <style>
 :root {
@@ -55,7 +44,6 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
-/* 📱 避免 iOS Safari / WebKit 輸入框自動放大 */
 input, textarea, select {
     font-size: 16px !important;
 }
@@ -159,7 +147,6 @@ header {
     display: flex;
     flex-direction: row;
     gap: 8px;
-    box-sizing: border-box;
     border: 1px solid var(--apple-glow-border);
 }
 .top-action-card button.action-btn {
@@ -173,9 +160,7 @@ header {
     padding: 12px 6px;
     font-weight: 600;
     cursor: pointer;
-    transition: transform 0.15s;
 }
-.top-action-card button.action-btn:active { transform: scale(0.96); }
 
 .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .nav-btn {
@@ -226,9 +211,7 @@ header {
     cursor: pointer;
     border: 1px solid rgba(0,0,0,0.06);
     position: relative;
-    transition: all 0.15s ease;
 }
-.calendar-day:active { transform: scale(0.97); }
 .calendar-day.empty { background: transparent !important; border-color: transparent !important; pointer-events: none; }
 .calendar-day.today { border: 2px solid var(--oasis-warning) !important; background: rgba(201, 117, 0, 0.05); }
 .calendar-day.selected-day { background: #eafff1 !important; border: 2px solid var(--oasis-success) !important; }
@@ -304,31 +287,63 @@ button.action-btn-block {
 }
 button.action-btn-block:disabled { opacity: 0.6; }
 
-input, textarea, select {
-    width: 100%;
-    padding: 12px 14px;
-    margin: 6px 0;
-    border: 1px solid rgba(0,0,0,0.14);
-    border-radius: 10px;
-    box-sizing: border-box;
-    background: rgba(255,255,255,0.9);
-    outline: none;
-    color: var(--apple-text);
-}
-input:focus, select:focus { border-color: var(--oasis-primary); }
-
-.personal-mode-banner {
-    display: flex;
-    justify-content: space-between;
+/* 🍏 Apple HIG 規範專用自訂 Modal (完全取代 alert / confirm / prompt) */
+.hig-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 10000;
+    justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, rgba(0, 113, 227, 0.1), rgba(52, 199, 89, 0.1));
-    border: 1px solid rgba(0, 113, 227, 0.2);
-    padding: 10px 14px;
-    border-radius: 12px;
-    margin-bottom: 16px;
-    font-size: 14px;
-    font-weight: 600;
 }
+.hig-modal-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    width: 275px;
+    border-radius: 14px;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.2);
+    overflow: hidden;
+    text-align: center;
+    animation: higPop 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes higPop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.hig-modal-header { padding: 18px 16px 12px; }
+.hig-modal-title { font-size: 17px; font-weight: 600; color: var(--apple-text); margin: 0; }
+.hig-modal-message { font-size: 13px; color: var(--apple-text-secondary); margin-top: 6px; line-height: 1.4; }
+.hig-modal-input {
+    width: 88%;
+    margin: 8px auto 14px;
+    padding: 6px 10px;
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 6px;
+    box-sizing: border-box;
+    display: block;
+    background: #ffffff;
+}
+.hig-modal-actions {
+    display: flex;
+    border-top: 1px solid rgba(0,0,0,0.1);
+}
+.hig-modal-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 12px 0;
+    font-size: 16px;
+    color: var(--oasis-primary);
+    cursor: pointer;
+}
+.hig-modal-btn.cancel {
+    border-right: 1px solid rgba(0,0,0,0.1);
+    font-weight: 400;
+    color: var(--apple-text-secondary);
+}
+.hig-modal-btn.destructive { color: var(--oasis-danger); font-weight: 600; }
+.hig-modal-btn.primary { font-weight: 600; }
 </style>
 
 <!-- Firebase SDK 模組 (App Check + Auth + RTDB) -->
@@ -344,7 +359,8 @@ input:focus, select:focus { border-color: var(--oasis-primary); }
     signOut, 
     deleteUser, 
     reauthenticateWithCredential, 
-    EmailAuthProvider 
+    EmailAuthProvider,
+    onAuthStateChanged
   } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
   import { getDatabase, ref, onValue, set, push, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -361,20 +377,20 @@ input:focus, select:focus { border-color: var(--oasis-primary); }
 
   const app = initializeApp(firebaseConfig);
 
-  // 1. 本地開發、模擬器或 Capacitor 混合環境開啟除錯權杖輸出
+  // 1. 本地開發、模擬器或 Capacitor 混合環境除錯權杖
   if (location.hostname === "localhost" || location.protocol === "capacitor:") {
       self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
   }
 
-  // 2. 啟用 Firebase App Check（reCAPTCHA Enterprise）
+  // 2. 啟動 Firebase App Check (reCAPTCHA Enterprise)
   try {
-      const appCheck = initializeAppCheck(app, {
+      initializeAppCheck(app, {
           provider: new ReCaptchaEnterpriseProvider('6LcD6cQtAAAAAB0OQG6JElGlxF3qbvlg_X8lr1Ln'),
           isTokenAutoRefreshEnabled: true
       });
       console.log("✓ Firebase App Check 已啟動");
   } catch (err) {
-      console.warn("App Check 初始化略過 (開發模式):", err.message);
+      console.warn("App Check 初始化略過:", err.message);
   }
 
   let auth;
@@ -399,6 +415,24 @@ input:focus, select:focus { border-color: var(--oasis-primary); }
   window.fbPush = push;
   window.fbUpdate = update;
   window.fbRemove = remove;
+
+  // 3. 恢復 onAuthStateChanged 狀態監聽器 (修復 P0-5)
+  onAuthStateChanged(auth, async (user) => {
+      if (user) {
+          const email = user.email || "";
+          let matchedName = "鐵";
+          if (email.includes("daddy")) matchedName = "Daddy";
+          else if (email.includes("mummy")) matchedName = "Mummy";
+          else if (email.includes("jolie")) matchedName = "Jolie";
+          else if (email.includes("leisel")) matchedName = "蓓";
+          else if (email.includes("karis")) matchedName = "熹";
+          
+          applyAdminState(matchedName);
+          window.startFirebaseSync();
+      } else {
+          renderUnauthenticatedState();
+      }
+  });
 
   window.startFirebaseSync = function() {
       if (!window.fbDb || !window.fbRef || !window.fbOnValue) return;
@@ -429,7 +463,7 @@ input:focus, select:focus { border-color: var(--oasis-primary); }
               triggerPipelineRefresh();
           }
       }, (error) => {
-          console.warn("RTDB 讀取狀態:", error.code);
+          console.warn("RTDB 權限受限，維持離線快取:", error.code);
       });
   };
 </script>
@@ -440,20 +474,15 @@ input:focus, select:focus { border-color: var(--oasis-primary); }
 <div id="toastBar" class="toast-notice" role="status" aria-live="polite">✓ 雲端同步完成</div>
 
 <header role="banner">
-    <div style="font-weight: 700; font-size: 16px;">🏠 Family OS <span style="font-size: 12px; font-weight: normal; color: var(--apple-text-secondary);">v10.1 (安全加固版)</span></div>
+    <div style="font-weight: 700; font-size: 16px;">🏠 Family OS <span style="font-size: 12px; font-weight: normal; color: var(--apple-text-secondary);">v10.2 (HIG 規範版)</span></div>
     <div class="header-status-group">
-        <button id="e2eeKeyBtn" class="e2ee-badge" onclick="openE2EEKeyPrompt()">🔐 E2EE 密鑰</button>
+        <button id="e2eeKeyBtn" class="e2ee-badge" onclick="promptMasterVaultKey()">🔐 解鎖保險箱</button>
         <button id="roleBadge" class="auth-badge" onclick="handleAuthBadgeClick()">🔒 訪客模式 (Viewer)</button>
         <span id="logoutBtn" class="logout-link" role="button" tabindex="0" onclick="logoutCurrentUser()">登出</span>
     </div>
 </header>
 
 <main class="container" role="main">
-
-    <div id="personalModeBanner" class="personal-mode-banner" style="display:none;">
-        <span id="personalBannerText">👤 目前檢視：鐵 (Iron) 的專屬日程</span>
-        <button onclick="togglePersonalViewOnly()" style="background:#0071e3; color:white; border:none; border-radius:8px; padding:4px 10px; font-size:12px; font-weight:700; cursor:pointer;" id="toggleViewScopeBtn">切換為全員視角</button>
-    </div>
 
     <nav class="top-action-card">
         <button class="action-btn" style="background: #34c759;" onclick="openAddFormPopup('ADD')">➕ 活動</button>
@@ -486,7 +515,7 @@ input:focus, select:focus { border-color: var(--oasis-primary); }
 
     <button class="floating-add-btn" onclick="openAddFormPopup('ADD')">＋</button>
 
-    <!-- 彈出視窗 Popup -->
+    <!-- 活動表單 Popup -->
     <div class="popup-overlay" id="addEventPopupOverlay" onclick="closePopupOverlayOutside(event)">
         <div class="popup-content-card">
             <button class="popup-close-x" onclick="closeEventPopup()">&times;</button>
@@ -496,7 +525,6 @@ input:focus, select:focus { border-color: var(--oasis-primary); }
             <div class="password-lock-section" id="lockSection">
                 <p style="margin:0 0 10px 0; font-size:14px; color:var(--apple-text-secondary);">請選擇家庭成員帳戶或輸入登入 Email：</p>
                 <div style="display:flex; flex-direction:column; gap:8px;">
-                    
                     <div id="memberSelectContainer">
                         <select id="loginMemberSelect" style="margin:0;">
                             <option value="iron">👦 鐵 (iron)</option>
@@ -525,7 +553,7 @@ input:focus, select:focus { border-color: var(--oasis-primary); }
                 </div>
             </div>
 
-            <!-- 活動表單 -->
+            <!-- 活動表單區塊 -->
             <div class="secure-form-fields" id="secureFormPanel">
                 <label for="eventCategory" style="font-size:14px; font-weight:600; color:var(--apple-text-secondary)">🏷️ 分類 (Tag)：</label>
                 <select id="eventCategory">
@@ -559,7 +587,7 @@ input:focus, select:focus { border-color: var(--oasis-primary); }
 
                 <button id="formSubmitBtn" class="action-btn-block" onclick="addFamilyEvent()">儲存至此日期</button>
 
-                <!-- Apple 必審：帳號註銷與資料刪除入口 -->
+                <!-- Apple 必審：In-App 帳號刪除入口 -->
                 <div style="margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--apple-border); text-align: center;">
                     <button type="button" onclick="handleDeleteAccount()" style="background: transparent; color: var(--oasis-danger); border: 1px solid var(--oasis-danger); padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
                         🗑️ 永久註銷並刪除帳號 (Delete Account)
@@ -571,15 +599,109 @@ input:focus, select:focus { border-color: var(--oasis-primary); }
         </div>
     </div>
 
+    <!-- 🍏 Apple HIG 自訂 Modal 結構 -->
+    <div id="higModalOverlay" class="hig-modal-overlay">
+        <div class="hig-modal-card">
+            <div class="hig-modal-header">
+                <h4 id="higModalTitle" class="hig-modal-title">標題</h4>
+                <div id="higModalMessage" class="hig-modal-message">訊息</div>
+            </div>
+            <input type="text" id="higModalInput" class="hig-modal-input" style="display:none;">
+            <div id="higModalActions" class="hig-modal-actions"></div>
+        </div>
+    </div>
+
 </main>
 
 <script>
-// ─── 🛡️ 真·E2EE 模組 (PBKDF2 100,000 次衍生 + AES-GCM 256) ───
-const E2EE = {
-    cachedKey: null,
-    SALT: new TextEncoder().encode("FamilyOS_Lohas_SecuredSalt_2026_HK"),
+// ─── 🍏 Apple HIG 自訂對話框系統 (修復 P0-3：徹底杜絕原生 alert / confirm / prompt) ───
+const CustomDialog = {
+    overlay: null,
+    titleEl: null,
+    msgEl: null,
+    inputEl: null,
+    actionsEl: null,
 
-    async deriveMasterKey(passphrase) {
+    init() {
+        this.overlay = document.getElementById('higModalOverlay');
+        this.titleEl = document.getElementById('higModalTitle');
+        this.msgEl = document.getElementById('higModalMessage');
+        this.inputEl = document.getElementById('higModalInput');
+        this.actionsEl = document.getElementById('higModalActions');
+    },
+
+    alert(title, message) {
+        return new Promise(resolve => {
+            this.init();
+            this.titleEl.innerText = title;
+            this.msgEl.innerText = message;
+            this.inputEl.style.display = 'none';
+            this.actionsEl.innerHTML = `<button class="hig-modal-btn primary">確定</button>`;
+            this.actionsEl.querySelector('button').onclick = () => {
+                this.overlay.style.display = 'none';
+                resolve();
+            };
+            this.overlay.style.display = 'flex';
+        });
+    },
+
+    confirm(title, message, isDestructive = false) {
+        return new Promise(resolve => {
+            this.init();
+            this.titleEl.innerText = title;
+            this.msgEl.innerText = message;
+            this.inputEl.style.display = 'none';
+            this.actionsEl.innerHTML = `
+                <button class="hig-modal-btn cancel">取消</button>
+                <button class="hig-modal-btn ${isDestructive ? 'destructive' : 'primary'}">確認</button>
+            `;
+            this.actionsEl.querySelector('.cancel').onclick = () => {
+                this.overlay.style.display = 'none';
+                resolve(false);
+            };
+            this.actionsEl.querySelector(isDestructive ? '.destructive' : '.primary').onclick = () => {
+                this.overlay.style.display = 'none';
+                resolve(true);
+            };
+            this.overlay.style.display = 'flex';
+        });
+    },
+
+    prompt(title, message, placeholder = "", isPassword = false) {
+        return new Promise(resolve => {
+            this.init();
+            this.titleEl.innerText = title;
+            this.msgEl.innerText = message;
+            this.inputEl.style.display = 'block';
+            this.inputEl.type = isPassword ? 'password' : 'text';
+            this.inputEl.placeholder = placeholder;
+            this.inputEl.value = "";
+            this.actionsEl.innerHTML = `
+                <button class="hig-modal-btn cancel">取消</button>
+                <button class="hig-modal-btn primary">確定</button>
+            `;
+            this.actionsEl.querySelector('.cancel').onclick = () => {
+                this.overlay.style.display = 'none';
+                resolve(null);
+            };
+            this.actionsEl.querySelector('.primary').onclick = () => {
+                const val = this.inputEl.value;
+                this.overlay.style.display = 'none';
+                resolve(val);
+            };
+            this.overlay.style.display = 'flex';
+            setTimeout(() => this.inputEl.focus(), 150);
+        });
+    }
+};
+
+// ─── 🛡️ 真·E2EE 模組 (修復 P0-2：徹底移除寫死密鑰，改用家庭主保險庫金鑰) ───
+const E2EE = {
+    masterKey: null,
+    FAMILY_SALT: new TextEncoder().encode("Lohas_FamilyOS_SecuredSalt_2026_HK"),
+
+    async deriveKey(passphrase) {
+        if (!passphrase) return null;
         const enc = new TextEncoder();
         const baseKey = await crypto.subtle.importKey(
             "raw",
@@ -592,7 +714,7 @@ const E2EE = {
         return await crypto.subtle.deriveKey(
             {
                 name: "PBKDF2",
-                salt: this.SALT,
+                salt: this.FAMILY_SALT,
                 iterations: 100000,
                 hash: "SHA-256"
             },
@@ -603,62 +725,74 @@ const E2EE = {
         );
     },
 
-    async initKey(passphrase) {
-        if (!passphrase) return;
-        this.cachedKey = await this.deriveMasterKey(passphrase);
-        sessionStorage.setItem("family_e2ee_active", "true");
+    async unlockVault(passphrase) {
+        this.masterKey = await this.deriveKey(passphrase);
+        sessionStorage.setItem("family_e2ee_unlocked", "true");
+        const btn = document.getElementById('e2eeKeyBtn');
+        if (btn) {
+            btn.innerText = "🔓 保險箱已解鎖";
+            btn.style.color = "var(--oasis-success)";
+        }
     },
 
     async encrypt(text) {
         if (!text || typeof text !== 'string') return text;
-        if (!this.cachedKey) {
-            // 未解鎖時使用預設保護金鑰
-            await this.initKey("FamilyOS_Lohas_SafeKey_2026");
+        if (!this.masterKey) {
+            throw new Error("E2EE_LOCKED");
         }
-        try {
-            const iv = crypto.getRandomValues(new Uint8Array(12));
-            const encoded = new TextEncoder().encode(text);
-            const ciphertext = await crypto.subtle.encrypt(
-                { name: "AES-GCM", iv },
-                this.cachedKey,
-                encoded
-            );
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const encoded = new TextEncoder().encode(text);
+        const ciphertext = await crypto.subtle.encrypt(
+            { name: "AES-GCM", iv },
+            this.masterKey,
+            encoded
+        );
 
-            return {
-                is_encrypted: true,
-                iv: btoa(String.fromCharCode(...iv)),
-                data: btoa(String.fromCharCode(...new Uint8Array(ciphertext)))
-            };
-        } catch (e) {
-            return text;
-        }
+        return {
+            is_encrypted: true,
+            iv: btoa(String.fromCharCode(...iv)),
+            data: btoa(String.fromCharCode(...new Uint8Array(ciphertext)))
+        };
     },
 
     async decrypt(target) {
         if (!target) return "";
         if (typeof target !== 'object' || !target.is_encrypted) return String(target);
-        if (!this.cachedKey) {
-            await this.initKey("FamilyOS_Lohas_SafeKey_2026");
-        }
+        if (!this.masterKey) return "🔒 [需要家庭主密鑰]";
+
         try {
             const iv = Uint8Array.from(atob(target.iv), c => c.charCodeAt(0));
             const ciphertext = Uint8Array.from(atob(target.data), c => c.charCodeAt(0));
             const decrypted = await crypto.subtle.decrypt(
                 { name: "AES-GCM", iv },
-                this.cachedKey,
+                this.masterKey,
                 ciphertext
             );
             return new TextDecoder().decode(decrypted);
-        } catch (e) {
-            return "🔒 [加密行程]";
+        } catch {
+            return "🔒 [主密鑰不相符]";
         }
     }
 };
 
+async function promptMasterVaultKey() {
+    const key = await CustomDialog.prompt(
+        "🔐 解鎖家庭加密保險箱",
+        "請輸入全家統一的家庭主密鑰 (PBKDF2 100,000 次運算)：",
+        "輸入家庭共享密鑰...",
+        true
+    );
+    if (key && key.trim()) {
+        await E2EE.unlockVault(key.trim());
+        showToast("✓ 家庭保險箱已成功解鎖！", "success");
+        triggerPipelineRefresh();
+    }
+}
+
 // ─── 🛡️ 登入防爆破限制器 (Rate Limiter) ───
 const LoginRateLimiter = {
     MAX_ATTEMPTS: 5,
-    LOCKOUT_DURATION_MS: 15 * 60 * 1000, // 鎖定 15 分鐘
+    LOCKOUT_MS: 15 * 60 * 1000,
 
     checkStatus() {
         const lockUntil = parseInt(localStorage.getItem("family_lockout_time") || "0", 10);
@@ -673,7 +807,7 @@ const LoginRateLimiter = {
     recordFailure() {
         let attempts = parseInt(localStorage.getItem("family_login_fail_count") || "0", 10) + 1;
         if (attempts >= this.MAX_ATTEMPTS) {
-            localStorage.setItem("family_lockout_time", Date.now() + this.LOCKOUT_DURATION_MS);
+            localStorage.setItem("family_lockout_time", Date.now() + this.LOCKOUT_MS);
             localStorage.setItem("family_login_fail_count", "0");
             return { locked: true, remainingMins: 15 };
         }
@@ -694,7 +828,6 @@ function formatLocalDate(d = new Date()) {
 let activities = JSON.parse(localStorage.getItem('family_cached_activities') || "[]");
 let currentUserMemberName = localStorage.getItem('family_auth_user') || "";
 let userRole = localStorage.getItem('family_auth_role') || "viewer";
-let isPersonalOnly = false;
 
 let current = new Date();
 let selectedDateStr = formatLocalDate(new Date());
@@ -727,15 +860,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
         renderUnauthenticatedState();
     }
-    
     triggerPipelineRefresh();
-
-    let checkInterval = setInterval(() => {
-        if (window.startFirebaseSync) {
-            clearInterval(checkInterval);
-            window.startFirebaseSync();
-        }
-    }, 150);
 });
 
 function toggleManualEmailInput() {
@@ -755,9 +880,6 @@ function applyAdminState(memberName) {
     badge.style.background = "rgba(52,199,89,0.15)";
     badge.style.color = "#28a745";
     document.getElementById('logoutBtn').style.display = 'inline';
-    
-    document.getElementById('personalModeBanner').style.display = 'flex';
-    document.getElementById('personalBannerText').innerText = `👤 目前檢視：${memberName} 的專屬視角`;
 }
 
 function renderUnauthenticatedState() {
@@ -771,28 +893,13 @@ function renderUnauthenticatedState() {
     badge.style.background = "rgba(0,0,0,0.06)";
     badge.style.color = "var(--apple-text-secondary)";
     document.getElementById('logoutBtn').style.display = 'none';
-    document.getElementById('personalModeBanner').style.display = 'none';
 }
 
-function togglePersonalViewOnly() {
-    isPersonalOnly = !isPersonalOnly;
-    const btn = document.getElementById('toggleViewScopeBtn');
-    const txt = document.getElementById('personalBannerText');
-    if (isPersonalOnly) {
-        btn.innerText = "切換為全員日程";
-        txt.innerText = `👤 目前僅顯示：${currentUserMemberName} 的專屬活動`;
-    } else {
-        btn.innerText = "切換為我的日程";
-        txt.innerText = `👨‍👩‍👧‍👦 目前顯示：全家成員所有活動`;
-    }
-    triggerPipelineRefresh();
-}
-
-// 📱 官方 SDK 登入 + 防爆破驗證
+// 📱 登入驗證
 async function verifyGatePassword() {
     const lockCheck = LoginRateLimiter.checkStatus();
     if (lockCheck.locked) {
-        showToast(`❌ 登入嘗試次數過多，請等待 ${lockCheck.remainingMins} 分鐘後再試`, "error");
+        showToast(`❌ 登入嘗試次數過多，請等待 ${lockCheck.remainingMins} 分鐘`, "error");
         return;
     }
 
@@ -828,33 +935,32 @@ async function verifyGatePassword() {
                 await window.fbSignIn(window.fbAuth, testEmail, inputPwd);
                 authSuccess = true;
                 break;
-            } catch (authErr) {
-                // 嘗試下一組 candidate email
-            }
+            } catch (authErr) {}
         }
 
         if (authSuccess) {
             LoginRateLimiter.recordSuccess();
-            // 啟用使用者密碼作為 E2EE PBKDF2 密鑰衍生基礎
-            await E2EE.initKey(inputPwd);
-
             applyAdminState(memberLabel);
-            showToast(`✓ 歡迎 ${memberLabel}！已進入安全管理模式`, "success");
+            showToast(`✓ 歡迎 ${memberLabel}！`, "success");
             document.getElementById('lockSection').style.display = 'none';
             document.getElementById('secureFormPanel').style.display = 'block';
             document.getElementById('eventAssignee').value = memberLabel;
-            if (window.startFirebaseSync) window.startFirebaseSync();
+            
+            // 登入後若尚未解鎖主保險箱，引導解鎖
+            if (!E2EE.masterKey) {
+                setTimeout(() => promptMasterVaultKey(), 400);
+            }
         } else {
             const failStatus = LoginRateLimiter.recordFailure();
             if (failStatus.locked) {
-                errBox.innerText = "❌ 密碼錯誤已達 5 次，系統已鎖定 15 分鐘！";
+                errBox.innerText = "❌ 密碼錯誤已達 5 次，系統鎖定 15 分鐘！";
             } else {
-                errBox.innerText = `❌ 密碼不正確！剩餘嘗試次數：${failStatus.remainingAttempts}`;
+                errBox.innerText = `❌ 密碼不正確！剩餘次數：${failStatus.remainingAttempts}`;
             }
             errBox.style.display = "block";
         }
     } catch (e) {
-        errBox.innerText = "❌ 連線異常：" + e.message;
+        errBox.innerText = "❌ 系統異常：" + e.message;
         errBox.style.display = "block";
     } finally {
         btn.disabled = false;
@@ -862,50 +968,71 @@ async function verifyGatePassword() {
     }
 }
 
-// 📱 Apple 必審：In-App 刪除帳號 (Account Deletion)
+// 📱 Apple 必審：帳號刪除流程 (修復 P0-4 與 P0-5)
 async function handleDeleteAccount() {
+    // 確保 Session 已完全 restore
+    if (window.fbAuth && window.fbAuth.authStateReady) {
+        await window.fbAuth.authStateReady();
+    }
     const user = window.fbAuth?.currentUser;
     if (!user) {
-        alert("目前尚未登入任何帳號！");
+        await CustomDialog.alert("提示", "目前尚未登入任何帳號！");
         return;
     }
 
-    const firstConfirm = confirm("⚠️ 警告：刪除帳號是不可逆的操作！\n此操作將永久註銷您的登入權限並刪除個人設定。確定要繼續嗎？");
-    if (!firstConfirm) return;
+    const confirmFirst = await CustomDialog.confirm(
+        "永久刪除帳號",
+        "此操作為不可逆行為。將會註銷您的憑證並永久刪除帳號設定。確定繼續？",
+        true
+    );
+    if (!confirmFirst) return;
 
-    const confirmPassword = prompt("為了安全起見，請輸入您的密碼以確認刪除帳號：");
+    const confirmPassword = await CustomDialog.prompt(
+        "驗證身分",
+        "為了安全起見，請輸入密碼以確認註銷刪除：",
+        "輸入登入密碼...",
+        true
+    );
     if (!confirmPassword) return;
 
-    showToast("正在註銷並刪除帳號...", "normal");
+    showToast("正在處理帳號註銷...", "normal");
 
     try {
+        // 1. 於 deleteUser 前一刻完成 Reauth
         const credential = window.fbEmailAuthProvider.credential(user.email, confirmPassword);
         await window.fbReauth(user, credential);
 
+        // 2. 清理伺服器端資料
         if (currentUserMemberName && window.fbDb && window.fbRef && window.fbRemove) {
             await window.fbRemove(window.fbRef(window.fbDb, `family_members/${currentUserMemberName}`));
         }
 
+        // 3. 刪除使用者
         await window.fbDeleteUser(user);
 
+        // 4. 清理本地所有狀態
         localStorage.clear();
         sessionStorage.clear();
         renderUnauthenticatedState();
         closeEventPopup();
 
-        alert("您的帳號已成功永久刪除。");
+        await CustomDialog.alert("帳號已刪除", "您的帳戶及相關個人設定已成功永久刪除。");
         location.reload();
     } catch (error) {
+        console.error("帳號刪除失敗:", error);
         if (error.code === "auth/wrong-password") {
-            alert("密碼不正確，刪除操作已中止。");
+            await CustomDialog.alert("錯誤", "密碼不正確，刪除操作已中止。");
+        } else if (error.code === "auth/requires-recent-login") {
+            await CustomDialog.alert("錯誤", "登入時間過長，請重新登入後再次嘗試。");
         } else {
-            alert("刪除帳號失敗：" + error.message);
+            await CustomDialog.alert("錯誤", "刪除失敗：" + error.message);
         }
     }
 }
 
 async function logoutCurrentUser() {
-    if (confirm("確定要退出目前帳戶嗎？")) {
+    const isConfirm = await CustomDialog.confirm("退出登入", "確定要退出目前管理員身分嗎？");
+    if (isConfirm) {
         renderUnauthenticatedState();
         if (window.fbSignOut && window.fbAuth) await window.fbSignOut(window.fbAuth);
         showToast("已退出管理員身分");
@@ -942,6 +1069,11 @@ function closePopupOverlayOutside(e) {
 }
 
 async function addFamilyEvent() {
+    if (userRole !== "admin") {
+        await CustomDialog.alert("權限不足", "訪客模式無法新增行程，請先登入！");
+        return;
+    }
+
     let rawTitle = document.getElementById('eventTitle').value.trim();
     let startVal = document.getElementById('eventTime').value.trim();
     let endVal = document.getElementById('eventEndTime').value.trim();
@@ -949,7 +1081,13 @@ async function addFamilyEvent() {
     let chosenCategory = document.getElementById('eventCategory').value;
 
     if (!rawTitle || !startVal) {
-        alert("請填寫活動名稱與開始時間！");
+        await CustomDialog.alert("提示", "請填寫活動名稱與開始時間！");
+        return;
+    }
+
+    // 檢查保險箱是否解鎖
+    if (!E2EE.masterKey) {
+        await CustomDialog.alert("保險箱未解鎖", "請先點擊頂部「解鎖保險箱」輸入家庭主密鑰，才能加密並儲存行程！");
         return;
     }
 
@@ -959,8 +1097,6 @@ async function addFamilyEvent() {
     if (endVal) timeLabel = `${timeLabel} ~ ${endVal.split(' ')[1] || endVal}`;
 
     const newId = "local_" + Date.now();
-    
-    // 1. 本地樂觀更新（0 毫秒即刻渲染）
     const localActivityObj = {
         id: newId,
         date: detectedDate,
@@ -972,16 +1108,16 @@ async function addFamilyEvent() {
         status: "待處理"
     };
 
+    // 1. 本地立即渲染
     activities.unshift(localActivityObj);
     localStorage.setItem('family_cached_activities', JSON.stringify(activities));
-    
     triggerPipelineRefresh();
     showToast(`✓ 已成功新增「${rawTitle}」！`, "success");
-    
+
     closeEventPopup();
     document.getElementById('eventTitle').value = "";
 
-    // 2. 雲端真 E2EE 加密儲存
+    // 2. 雲端真 E2EE 儲存
     try {
         const encryptedTitle = await E2EE.encrypt(rawTitle);
         const payload = {
@@ -1000,7 +1136,7 @@ async function addFamilyEvent() {
             await window.fbSet(newRef, payload);
         }
     } catch (err) {
-        console.warn("雲端背景同步延遲，已保留本地版本:", err);
+        console.warn("雲端同步延遲:", err);
     }
 }
 
@@ -1012,11 +1148,7 @@ function isEventActiveOnDate(event, dateStr) {
 }
 
 function triggerPipelineRefresh() {
-    let dataset = activities;
-    if (isPersonalOnly && currentUserMemberName) {
-        dataset = activities.filter(a => a.assignee === currentUserMemberName || a.assignee === "全員");
-    }
-    renderCalendarWithData(dataset);
+    renderCalendarWithData(activities);
 }
 
 function renderCalendarWithData(dataset) {
@@ -1081,10 +1213,10 @@ function renderDayEvents(dataset) {
     container.innerHTML = html;
 }
 
-function sendTodayWhatsApp() {
+async function sendTodayWhatsApp() {
     let evs = activities.filter(a => isEventActiveOnDate(a, selectedDateStr));
     if (evs.length === 0) {
-        alert("所選日期沒有任何行程可發送！");
+        await CustomDialog.alert("提示", "所選日期沒有任何行程可發送！");
         return;
     }
     let text = `💡【麟李家庭智慧日程 - ${selectedDateStr}】\n\n`;
@@ -1099,16 +1231,6 @@ function changeMonth(dir) {
     current.setDate(1);
     current.setMonth(current.getMonth() + dir);
     triggerPipelineRefresh();
-}
-
-function openE2EEKeyPrompt() {
-    const newKey = prompt("🔑 請設定或輸入全家端對端加密金鑰（輸入後將以 PBKDF2 進行 100,000 次運算衍生）：");
-    if (newKey && newKey.trim() !== "") {
-        E2EE.initKey(newKey.trim()).then(() => {
-            showToast("✓ E2EE 金鑰已成功更新！", "success");
-            triggerPipelineRefresh();
-        });
-    }
 }
 </script>
 </body>
