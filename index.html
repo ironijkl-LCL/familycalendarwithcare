@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#f2f2f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="description" content="麟李家庭智慧管理系統 - 結合收據拍照記帳、總開支統計、Dify AI 分類與即時同步日曆">
+<meta name="description" content="麟李家庭智慧管理系統 - 支援手勢縮放、公開/私人保密、收據拍照記帳與即時日曆同步">
 <title>Family OS - 麟李家庭智慧管理系統</title>
 
 <link rel="manifest" href="manifest.json">
@@ -26,6 +26,8 @@
     --oasis-expense: #f59e0b;
     --oasis-ai-gradient: linear-gradient(135deg, rgba(232, 220, 255, 0.5), rgba(212, 235, 255, 0.5));
     --oasis-ai-purple: #7d2ae8;
+    /* 🔍 日曆動態縮放因子 (支援雙指 Pinch 與按鍵調整) */
+    --cal-zoom: 1;
 }
 
 body {
@@ -46,7 +48,7 @@ body {
 
 input, textarea, select { font-size: 16px !important; }
 
-/* ─── 頂部導航列 (徹底避開 iPhone 狀態列與動態島) ─── */
+/* ─── 頂部導航列 (避開 iPhone 瀏海與動態島) ─── */
 header {
     background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(20px);
@@ -100,7 +102,7 @@ header {
     gap: 6px;
 }
 
-/* 🎯 自適應單排微縮工具列 (告別臃腫雙排，節省空間) */
+/* 🎯 自適應單排微縮工具列 */
 .adaptive-toolbar {
     display: flex;
     gap: 5px;
@@ -162,7 +164,7 @@ header {
     white-space: nowrap;
 }
 
-/* 🗓️ 上層：月曆卡片 */
+/* 🗓️ 上層：月曆卡片（支援雙指縮放與流暢檢視） */
 .calendar-card {
     background: var(--apple-card);
     border-radius: 14px;
@@ -173,12 +175,13 @@ header {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    touch-action: pan-y pinch-zoom;
 }
 .calendar-nav-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2px;
+    margin-bottom: 3px;
     flex-shrink: 0;
 }
 .nav-arrow-btn {
@@ -190,7 +193,22 @@ header {
     font-weight: 600;
     cursor: pointer;
 }
+.calendar-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
 .current-month-label { font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
+.zoom-toggle-badge {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--oasis-primary);
+    background: rgba(0, 113, 227, 0.08);
+    border: 1px solid rgba(0, 113, 227, 0.2);
+    padding: 1px 6px;
+    border-radius: 10px;
+    cursor: pointer;
+}
 
 .weekdays-row {
     display: grid;
@@ -209,7 +227,7 @@ header {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     grid-auto-rows: 1fr;
-    gap: 2px;
+    gap: calc(2px * var(--cal-zoom));
     overflow-y: auto;
 }
 .days-grid::-webkit-scrollbar { display: none; }
@@ -217,7 +235,7 @@ header {
 .day-cell {
     background: rgba(0, 0, 0, 0.015);
     border-radius: 6px;
-    padding: 2px 1px;
+    padding: calc(2px * var(--cal-zoom)) calc(1px * var(--cal-zoom));
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -225,6 +243,7 @@ header {
     cursor: pointer;
     overflow: hidden;
     border: 1px solid transparent;
+    min-height: calc(44px * var(--cal-zoom));
 }
 .day-cell:active { background: rgba(0, 0, 0, 0.05); }
 .day-cell.empty { background: transparent !important; pointer-events: none; }
@@ -249,13 +268,13 @@ header {
     padding: 0 1px;
     line-height: 1;
 }
-.day-number { font-size: 11px; font-weight: 700; }
+.day-number { font-size: calc(11px * var(--cal-zoom)); font-weight: 700; }
 .day-cell.is-holiday .day-number,
 .day-cell.is-sunday .day-number { color: var(--oasis-danger); }
 
-.day-lunar { font-size: 8px; color: var(--apple-text-secondary); transform: scale(0.85); transform-origin: right center; }
+.day-lunar { font-size: calc(8px * var(--cal-zoom)); color: var(--apple-text-secondary); transform: scale(0.85); transform-origin: right center; }
 .day-holiday {
-    font-size: 8px;
+    font-size: calc(8px * var(--cal-zoom));
     color: var(--oasis-danger);
     font-weight: 700;
     white-space: nowrap;
@@ -274,9 +293,9 @@ header {
     flex: 1;
 }
 .calendar-event-chip {
-    font-size: 8px;
+    font-size: calc(8px * var(--cal-zoom));
     line-height: 1.1;
-    padding: 1px 2px;
+    padding: calc(1px * var(--cal-zoom)) calc(2px * var(--cal-zoom));
     border-radius: 2px;
     white-space: nowrap;
     overflow: hidden;
@@ -284,9 +303,9 @@ header {
     font-weight: 600;
 }
 .calendar-expense-chip {
-    font-size: 8px;
+    font-size: calc(8px * var(--cal-zoom));
     line-height: 1.1;
-    padding: 1px 2px;
+    padding: calc(1px * var(--cal-zoom)) calc(2px * var(--cal-zoom));
     border-radius: 2px;
     white-space: nowrap;
     overflow: hidden;
@@ -324,7 +343,6 @@ header {
 }
 .agenda-date-title { font-size: 13.5px; font-weight: 700; }
 
-/* 💰 當日總開支專屬醒目徽章 */
 .day-total-expense-chip {
     display: inline-flex;
     align-items: center;
@@ -397,8 +415,15 @@ header {
     color: #b45309;
     font-weight: 800;
 }
+.privacy-badge {
+    font-size: 9px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.07);
+    color: #4b5563;
+    font-weight: 700;
+}
 
-/* 操作按鈕組（修改 + 刪除） */
 .row-actions-group {
     display: flex;
     gap: 6px;
@@ -662,6 +687,7 @@ header {
                       category: item.category || "家庭",
                       isExpense: item.isExpense || false,
                       amount: item.amount || 0,
+                      isPrivate: item.isPrivate || false,
                       isAI_Priority: item.isAI_Priority || false,
                       ai_tags: item.ai_tags || [],
                       urgency_score: item.urgency_score || 0
@@ -694,7 +720,7 @@ header {
 
 <div class="main-layout">
 
-    <!-- 🎯 自適應單排極簡工具列 (5 大功能一覽無餘，不佔垂直空間) -->
+    <!-- 🎯 自適應單排極簡工具列 -->
     <div class="adaptive-toolbar">
         <button class="btn-green" onclick="handleTopAddClick()">➕ 活動</button>
         <button class="btn-orange" onclick="handleTopExpenseClick()">🧾 記帳</button>
@@ -705,15 +731,18 @@ header {
 
     <!-- 🔮 整合型極簡自然語言排程列 -->
     <div class="ai-compact-bar">
-        <input type="text" id="aiQuickInput" class="ai-nlp-input" placeholder="✨ 輸入日程或開支（例如：百佳買餸280蚊、聽晚仁安覆診）...">
+        <input type="text" id="aiQuickInput" class="ai-nlp-input" placeholder="✨ 輸入日程或開支（例如：日常開支百佳280蚊、聽晚仁安覆診）...">
         <button class="ai-nlp-btn" onclick="executeAINaturalInput()">AI 排程</button>
     </div>
 
-    <!-- 🗓️ 上層：月曆卡片 -->
-    <div class="calendar-card">
+    <!-- 🗓️ 上層：月曆卡片（支援雙指開合縮放 + 快速倍率切換） -->
+    <div class="calendar-card" id="calendarCardNode">
         <div class="calendar-nav-bar">
             <button class="nav-arrow-btn" onclick="changeMonthOffset(-1)">⬅ 上一月</button>
-            <div id="calendarMonthLabel" class="current-month-label">2026年 9月</div>
+            <div class="calendar-title-wrap">
+                <div id="calendarMonthLabel" class="current-month-label">2026年 9月</div>
+                <span id="zoomLevelIndicator" class="zoom-toggle-badge" onclick="cycleCalendarZoom()" title="點擊切換大小或雙指手勢縮放">🔍 100%</span>
+            </div>
             <button class="nav-arrow-btn" onclick="changeMonthOffset(1)">下一月 ➡</button>
         </div>
         <div class="weekdays-row">
@@ -733,7 +762,6 @@ header {
         <div class="agenda-header">
             <div class="agenda-header-titles">
                 <div id="agendaDateTitle" class="agenda-date-title">📋 行程資訊</div>
-                <!-- 💰 當日總開支看板 -->
                 <div id="agendaDailyExpenseSummary" style="display:none;"></div>
             </div>
             <div id="agendaActionsNode" class="agenda-actions"></div>
@@ -745,7 +773,7 @@ header {
 
 </div>
 
-<!-- ➕ 活動輸入與修改彈窗 -->
+<!-- ➕ 活動輸入與修改彈窗（含 公開/不公開 與 日常開支） -->
 <div id="eventModal" class="popup-overlay" onclick="if(event.target===this)closeModal()">
     <div class="popup-card">
         <button class="popup-close-x" onclick="closeModal()">&times;</button>
@@ -777,8 +805,17 @@ header {
                 <input type="time" id="nativeEventTime">
             </div>
 
+            <!-- 🔒 公開 / 不公開 可見度選項 -->
+            <label class="form-label">可見度權限：</label>
+            <select id="formEventVisibility" class="form-input">
+                <option value="public">🌐 公開 (全家人可見)</option>
+                <option value="private">🔒 不公開 (僅自己可見/私人保密)</option>
+            </select>
+
+            <!-- 🏷️ 分類（首項包含 日常開支） -->
             <label class="form-label">活動分類：</label>
             <select id="formEventCategory" class="form-input">
+                <option value="日常開支">💰 日常開支</option>
                 <option value="家庭">👨‍👩‍👧 家庭</option>
                 <option value="醫療健康">💊 醫療健康</option>
                 <option value="體育運動">🎯 體育運動</option>
@@ -803,7 +840,7 @@ header {
     </div>
 </div>
 
-<!-- 🧾 家庭支出新增與【修改】彈窗 -->
+<!-- 🧾 家庭支出輸入彈窗（含 公開/不公開 與 日常開支） -->
 <div id="expenseModal" class="popup-overlay" onclick="if(event.target===this)closeExpenseModal()">
     <div class="popup-card">
         <button class="popup-close-x" onclick="closeExpenseModal()">&times;</button>
@@ -835,8 +872,17 @@ header {
             <input type="time" id="expenseTimeInput">
         </div>
 
+        <!-- 🔒 開支公開 / 不公開 -->
+        <label class="form-label">開支可見度：</label>
+        <select id="expenseVisibilitySelect" class="form-input">
+            <option value="public">🌐 公開 (全家可見)</option>
+            <option value="private">🔒 不公開 (個人私密開銷)</option>
+        </select>
+
+        <!-- 🏷️ 支出類別（含日常開支） -->
         <label class="form-label">支出類別：</label>
         <select id="expenseCategorySelect" class="form-input">
+            <option value="日常開支">💰 日常開支</option>
             <option value="超市日用">🛒 超市日用</option>
             <option value="家庭餐飲">🍽️ 家庭餐飲</option>
             <option value="醫療健康">💊 醫療健康</option>
@@ -1006,7 +1052,61 @@ let selectedDateStr = formatDayStr(new Date());
 let currentUser = localStorage.getItem('family_auth_user') || "";
 let isGuest = !currentUser;
 
+// ─── 🔍 雙指縮放與縮放等級管理 ───
+let currentCalZoom = parseFloat(localStorage.getItem('family_cal_zoom') || "1.0");
+
+function applyCalendarZoom(factor) {
+    currentCalZoom = Math.min(Math.max(factor, 0.85), 1.65);
+    document.documentElement.style.setProperty('--cal-zoom', currentCalZoom);
+    localStorage.setItem('family_cal_zoom', currentCalZoom);
+    const badge = document.getElementById('zoomLevelIndicator');
+    if (badge) badge.innerText = `🔍 ${Math.round(currentCalZoom * 100)}%`;
+}
+
+function cycleCalendarZoom() {
+    if (currentCalZoom < 1.15) applyCalendarZoom(1.3);
+    else if (currentCalZoom < 1.45) applyCalendarZoom(1.6);
+    else applyCalendarZoom(1.0);
+}
+
+// 綁定原生 Touch 手勢監聽
+function initPinchToZoom() {
+    const card = document.getElementById('calendarCardNode');
+    if (!card) return;
+
+    let initDist = 0;
+    let startZoom = 1.0;
+
+    card.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+            initDist = Math.hypot(
+                e.touches[0].pageX - e.touches[1].pageX,
+                e.touches[0].pageY - e.touches[1].pageY
+            );
+            startZoom = currentCalZoom;
+        }
+    }, { passive: true });
+
+    card.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2 && initDist > 0) {
+            const curDist = Math.hypot(
+                e.touches[0].pageX - e.touches[1].pageX,
+                e.touches[0].pageY - e.touches[1].pageY
+            );
+            const ratio = curDist / initDist;
+            applyCalendarZoom(startZoom * ratio);
+        }
+    }, { passive: true });
+
+    card.addEventListener('touchend', (e) => {
+        if (e.touches.length < 2) initDist = 0;
+    }, { passive: true });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    applyCalendarZoom(currentCalZoom);
+    initPinchToZoom();
+
     if (currentUser) applyLoginState(currentUser);
     else renderGuestState();
     renderCalendar();
@@ -1042,7 +1142,7 @@ function changeMonthOffset(offset) {
     renderCalendar();
 }
 
-// ─── 🗓️ 月曆渲染 ───
+// ─── 🗓️ 月曆渲染（支援縮放與保密行程隔離） ───
 function renderCalendar() {
     const y = currentMonthDate.getFullYear();
     const m = currentMonthDate.getMonth();
@@ -1077,7 +1177,13 @@ function renderCalendar() {
         try {
             const dayActs = activities.filter(a => a && a.date === dStr);
             if (dayActs.length > 0) {
-                eventChipsHtml = `<div class="day-events-text-box">${dayActs.slice(0, 2).map(act => {
+                eventChipsHtml = `<div class="day-events-text-box">${dayActs.slice(0, 3).map(act => {
+                    const isOwner = currentUser && act.assignee === currentUser;
+                    // 🔒 私人保密遮蔽處理
+                    if (act.isPrivate && !isOwner) {
+                        return `<div class="calendar-event-chip" style="background:rgba(0,0,0,0.06); color:#6b7280; border-left:2px solid #9ca3af;">🔒 ${act.assignee}私人</div>`;
+                    }
+
                     const safeTitle = getSafeTitle(act.title);
                     if (act.isExpense) {
                         return `<div class="calendar-expense-chip" title="${safeTitle}">💰 $${act.amount}${safeTitle}</div>`;
@@ -1085,7 +1191,7 @@ function renderCalendar() {
                     const timePart = (typeof act.time === 'string') ? act.time.split(' ')[0] : '';
                     const theme = getMemberTheme(act.assignee);
                     return `<div class="calendar-event-chip" style="background:${theme.bg}; color:${theme.color}; border-left: 2px solid${theme.border};" title="${safeTitle} (${act.assignee})">${timePart}${safeTitle}</div>`;
-                }).join('')}${dayActs.length > 2 ? `<div style="font-size:8px; color:var(--oasis-primary); font-weight:bold; line-height:1;">+${dayActs.length - 2}</div>` : ''}</div>`;
+                }).join('')}${dayActs.length > 3 ? `<div style="font-size:7.5px; color:var(--oasis-primary); font-weight:bold; line-height:1;">+${dayActs.length - 3}</div>` : ''}</div>`;
             }
         } catch (e) {}
 
@@ -1122,13 +1228,13 @@ function renderAgenda() {
     const lunarName = !HK_HOLIDAYS[selectedDateStr] ? ` (${getLunarDayText(selectedDateStr)})` : '';
     titleNode.innerText = `📋 ${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日 行程${holidayName || lunarName}`;
 
-    // 💰 當日總開支即時加總
+    // 💰 當日總開支即時統計 (兼顧保密過濾)
     const matched = activities.filter(a => a && a.date === selectedDateStr);
-    const dayExpenses = matched.filter(a => a && a.isExpense);
-    const totalDayExp = dayExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    const visibleExpenses = matched.filter(a => a && a.isExpense && (!a.isPrivate || (currentUser && a.assignee === currentUser)));
+    const totalDayExp = visibleExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
     if (totalDayExp > 0) {
-        expenseSummaryNode.innerHTML = `<span class="day-total-expense-chip">💰 當日總開支：HK$ ${totalDayExp.toFixed(2)} (${dayExpenses.length}筆)</span>`;
+        expenseSummaryNode.innerHTML = `<span class="day-total-expense-chip">💰 當日總開支：HK$ ${totalDayExp.toFixed(2)} (${visibleExpenses.length}筆)</span>`;
         expenseSummaryNode.style.display = 'block';
     } else {
         expenseSummaryNode.style.display = 'none';
@@ -1146,10 +1252,26 @@ function renderAgenda() {
     }
 
     listNode.innerHTML = matched.map(item => {
-        const safeTitle = getSafeTitle(item.title);
+        const isOwner = currentUser && item.assignee === currentUser;
         const theme = getMemberTheme(item.assignee);
 
-        // 核心升級：同時擁有【修改】與【刪除】按鈕
+        // 🔒 不公開私密項目的保護呈現
+        if (item.isPrivate && !isOwner) {
+            return `
+                <div class="event-row-card" style="border-left-color: #9ca3af; background: rgba(0,0,0,0.02);">
+                    <div class="event-info">
+                        <span class="event-time-badge" style="color:#6b7280;">⏰ ${item.time || '全日'}</span>
+                        <span class="event-title-text" style="color:#6b7280; font-style:italic;">🔒 ${item.assignee} 的私人項目 (不公開)</span>
+                        <div class="event-meta-tags">
+                            <span class="privacy-badge">🔒 私人保密</span>
+                            <span class="assignee-chip" style="background:${theme.bg}; color:${theme.color};">👤 ${item.assignee}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        const safeTitle = getSafeTitle(item.title);
         const actionButtonsHtml = isGuest ? '' : `
             <div class="row-actions-group">
                 <button class="btn-edit-link" onclick="openEditGeneralItem('${item.id}')">修改</button>
@@ -1168,7 +1290,8 @@ function renderAgenda() {
                             <span class="assignee-chip" style="background:${theme.bg}; color:${theme.color}; border:1px solid ${theme.border};">
                                 ${theme.icon} 由 ${item.assignee} 支付
                             </span>
-                            <span class="tag-pill">${item.category || '家庭開支'}</span>
+                            <span class="tag-pill">${item.category || '日常開支'}</span>
+                            ${item.isPrivate ? '<span class="privacy-badge">🔒 私密開銷</span>' : ''}
                         </div>
                     </div>
                     ${actionButtonsHtml}
@@ -1186,6 +1309,7 @@ function renderAgenda() {
                             ${theme.icon} ${item.assignee || '全員'}
                         </span>
                         <span class="tag-pill">${item.category || '家庭'}</span>
+                        ${item.isPrivate ? '<span class="privacy-badge">🔒 私人保密</span>' : ''}
                         ${item.isAI_Priority ? '<span class="ai-priority-badge">🔥 高優先</span>' : ''}
                     </div>
                 </div>
@@ -1199,8 +1323,8 @@ function renderAgenda() {
 function updateAISummary() {
     const todayStr = formatDayStr(new Date());
     const todayActs = activities.filter(a => a && a.date === todayStr);
-    const todayExpenses = todayActs.filter(a => a.isExpense);
-    const totalExp = todayExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    const visibleExpenses = todayActs.filter(a => a.isExpense && (!a.isPrivate || (currentUser && a.assignee === currentUser)));
+    const totalExp = visibleExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
     const textEl = document.getElementById('aiStrainText');
     const badgeEl = document.getElementById('aiPendingBadge');
@@ -1210,7 +1334,7 @@ function updateAISummary() {
         textEl.innerHTML = `今日開支合計 <strong>$${totalExp.toFixed(2)}</strong>，生活安排井然有序`;
     } else {
         badgeEl.innerText = `${todayActs.length} 項活動`;
-        textEl.innerText = `家庭步調輕鬆，今日暫無重大開支`;
+        textEl.innerText = `家庭步調輕鬆，今日安排順暢`;
     }
 }
 
@@ -1234,14 +1358,15 @@ function openExpenseModal(editItem = null) {
         titleEl.innerText = "✏️ 修改家庭開支";
         submitBtn.innerText = "確認更新開支";
         keyInput.value = editItem.id;
-        uploadBox.style.display = "none"; // 修改時可隱藏重複拍照框
+        uploadBox.style.display = "none";
 
         let cleanMerchant = editItem.title.replace(/\s*\(\$.+?\)/, '').trim();
         document.getElementById('expenseMerchantInput').value = cleanMerchant;
         document.getElementById('expenseAmountInput').value = editItem.amount || "";
         document.getElementById('expenseDateInput').value = editItem.date || selectedDateStr;
         document.getElementById('expenseTimeInput').value = editItem.time || "12:30";
-        document.getElementById('expenseCategorySelect').value = editItem.category || "家庭餐飲";
+        document.getElementById('expenseVisibilitySelect').value = editItem.isPrivate ? "private" : "public";
+        document.getElementById('expenseCategorySelect').value = editItem.category || "日常開支";
         document.getElementById('expensePayerSelect').value = editItem.assignee || currentUser || "鐵";
     } else {
         titleEl.innerText = "🧾 記錄家庭開支 (收據辨識)";
@@ -1253,6 +1378,8 @@ function openExpenseModal(editItem = null) {
         document.getElementById('expenseAmountInput').value = "";
         document.getElementById('expenseDateInput').value = selectedDateStr;
         document.getElementById('expenseTimeInput').value = "12:30";
+        document.getElementById('expenseVisibilitySelect').value = "public";
+        document.getElementById('expenseCategorySelect').value = "日常開支";
         document.getElementById('expensePayerSelect').value = currentUser || "鐵";
         
         const preview = document.getElementById('receiptPreviewImg');
@@ -1300,10 +1427,11 @@ function handleReceiptFileChange(input) {
         if (/超市|Aeon/.test(randomMerchant)) document.getElementById('expenseCategorySelect').value = "超市日用";
         else if (/米線|MX|餐廳/.test(randomMerchant)) document.getElementById('expenseCategorySelect').value = "家庭餐飲";
         else if (/藥房|醫院|診所/.test(randomMerchant)) document.getElementById('expenseCategorySelect').value = "醫療健康";
+        else document.getElementById('expenseCategorySelect').value = "日常開支";
     }, 400);
 }
 
-// 支援【新增】與【修改】開支儲存
+// 支援【新增】與【修改】開支儲存（包含 公開/不公開）
 async function saveReceiptExpense() {
     if (isGuest) return;
 
@@ -1315,6 +1443,7 @@ async function saveReceiptExpense() {
     const time = document.getElementById('expenseTimeInput').value || "12:30";
     const category = document.getElementById('expenseCategorySelect').value;
     const payer = document.getElementById('expensePayerSelect').value;
+    const isPrivate = document.getElementById('expenseVisibilitySelect').value === "private";
 
     if (!merchant || isNaN(amountVal) || amountVal <= 0) {
         await HIG.alert("提示", "請填寫店舖名稱及有效消費金額（例如：328.5）！");
@@ -1324,7 +1453,6 @@ async function saveReceiptExpense() {
     const titleText = `${merchant} ($${amountVal})`;
 
     if (editKey) {
-        // 更新已有開支
         const idx = activities.findIndex(a => a && a.id === editKey);
         if (idx !== -1) {
             activities[idx] = {
@@ -1335,11 +1463,11 @@ async function saveReceiptExpense() {
                 assignee: payer,
                 category,
                 isExpense: true,
-                amount: amountVal
+                amount: amountVal,
+                isPrivate
             };
         }
     } else {
-        // 新增開支
         const tempId = "exp_" + Date.now();
         const expenseObj = {
             id: tempId,
@@ -1349,7 +1477,8 @@ async function saveReceiptExpense() {
             assignee: payer,
             category,
             isExpense: true,
-            amount: amountVal
+            amount: amountVal,
+            isPrivate
         };
         activities.unshift(expenseObj);
     }
@@ -1362,9 +1491,8 @@ async function saveReceiptExpense() {
     updateAISummary();
     closeExpenseModal();
 
-    await HIG.alert(editKey ? "開支已更新" : "支出已記錄", `已成功儲存：\n項目：${merchant}\n金額：HK$ ${amountVal.toFixed(2)}\n付款人：${payer}`);
+    await HIG.alert(editKey ? "開支已更新" : "支出已記錄", `已成功儲存：\n項目：${merchant}\n金額：HK$ ${amountVal.toFixed(2)}\n付款人：${payer}\n可見度：${isPrivate ? '🔒 不公開 (私密)' : '🌐 全家公開'}`);
 
-    // 背景同步至 Firebase
     try {
         const cipher = await E2EE.encrypt(titleText);
         const payload = {
@@ -1375,6 +1503,7 @@ async function saveReceiptExpense() {
             assignee: payer,
             isExpense: true,
             amount: amountVal,
+            isPrivate,
             updatedAt: Date.now()
         };
         if (window.fbDb && window.fbRef) {
@@ -1388,7 +1517,6 @@ async function saveReceiptExpense() {
     } catch(e) {}
 }
 
-// ─── 統一條目修改分流（開支 vs 日程） ───
 function openEditGeneralItem(id) {
     if (isGuest) {
         HIG.alert("權限不足", "訪客模式無法修改！");
@@ -1419,7 +1547,7 @@ async function generateLockScreenWallpaper() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     let startY = 640;
-    const dayActs = activities.filter(a => a && a.date === selectedDateStr);
+    const dayActs = activities.filter(a => a && a.date === selectedDateStr && (!a.isPrivate || (currentUser && a.assignee === currentUser)));
     const parts = selectedDateStr.split('-');
     const holiday = HK_HOLIDAYS[selectedDateStr] || "";
     const lunar = getLunarDayText(selectedDateStr);
@@ -1522,8 +1650,9 @@ async function executeAINaturalInput() {
             time: "12:30",
             title: titleText,
             assignee: currentUser || "鐵",
-            category: "超市日用",
+            category: "日常開支",
             isExpense: true,
+            isPrivate: false,
             amount: amount
         });
         localStorage.setItem('family_cached_activities', JSON.stringify(activities));
@@ -1531,7 +1660,7 @@ async function executeAINaturalInput() {
         renderAgenda();
         updateAISummary();
         input.value = "";
-        await HIG.alert("開支已排入", `已識別開支：\n${merchant} - HK$ ${amount.toFixed(2)}`);
+        await HIG.alert("開支已排入", `已識別日常開支：\n${merchant} - HK$ ${amount.toFixed(2)}`);
         return;
     }
 
@@ -1549,7 +1678,8 @@ async function executeAINaturalInput() {
         date: targetDate,
         time: targetTime,
         category: "家庭",
-        assignee: currentUser || "鐵"
+        assignee: currentUser || "鐵",
+        isPrivate: false
     });
     localStorage.setItem('family_cached_activities', JSON.stringify(activities));
     selectedDateStr = targetDate;
@@ -1590,6 +1720,8 @@ function openAddModal(mode) {
     document.getElementById('formEventTitle').value = "";
     document.getElementById('nativeEventDate').value = selectedDateStr;
     document.getElementById('nativeEventTime').value = "20:00";
+    document.getElementById('formEventVisibility').value = "public";
+    document.getElementById('formEventCategory').value = "日常開支";
     document.getElementById('eventModal').style.display = 'flex';
 }
 
@@ -1607,7 +1739,8 @@ function openEditSpecificItem(id) {
     document.getElementById('formEventTitle').value = getSafeTitle(item.title);
     document.getElementById('nativeEventDate').value = item.date || selectedDateStr;
     document.getElementById('nativeEventTime').value = item.time || "20:00";
-    document.getElementById('formEventCategory').value = item.category || "家庭";
+    document.getElementById('formEventVisibility').value = item.isPrivate ? "private" : "public";
+    document.getElementById('formEventCategory').value = item.category || "日常開支";
     document.getElementById('formEventAssignee').value = item.assignee || "全員";
 
     document.getElementById('eventModal').style.display = 'flex';
@@ -1622,6 +1755,7 @@ async function saveEvent() {
     const time = document.getElementById('nativeEventTime').value || "20:00";
     const category = document.getElementById('formEventCategory').value;
     const assignee = document.getElementById('formEventAssignee').value;
+    const isPrivate = document.getElementById('formEventVisibility').value === "private";
     const editKey = document.getElementById('editItemKey').value;
 
     if (!title || !date) {
@@ -1632,11 +1766,11 @@ async function saveEvent() {
     if (editKey) {
         const idx = activities.findIndex(a => a && a.id === editKey);
         if (idx !== -1) {
-            activities[idx] = { ...activities[idx], title, date, time, category, assignee };
+            activities[idx] = { ...activities[idx], title, date, time, category, assignee, isPrivate };
         }
     } else {
         const tempId = "local_" + Date.now();
-        activities.unshift({ id: tempId, title, date, time, category, assignee });
+        activities.unshift({ id: tempId, title, date, time, category, assignee, isPrivate });
     }
 
     localStorage.setItem('family_cached_activities', JSON.stringify(activities));
@@ -1645,6 +1779,19 @@ async function saveEvent() {
     renderAgenda();
     updateAISummary();
     closeModal();
+
+    try {
+        const cipher = await E2EE.encrypt(title);
+        const payload = { title: cipher, date, time, category, assignee, isPrivate, updatedAt: Date.now() };
+        if (window.fbDb && window.fbRef) {
+            if (editKey && !editKey.startsWith("local_")) {
+                await window.fbUpdate(window.fbRef(window.fbDb, `family_calendar_activities/${editKey}`), payload);
+            } else {
+                const ref = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
+                await window.fbSet(ref, payload);
+            }
+        }
+    } catch(e) {}
 }
 
 function openManageModal() {
@@ -1654,18 +1801,22 @@ function openManageModal() {
     if (matched.length === 0) {
         container.innerHTML = `<div style="text-align:center; padding:16px; color:var(--apple-text-secondary); font-size:13px;">所選日期無行程可供管理。</div>`;
     } else {
-        container.innerHTML = matched.map(ev => `
-            <div style="background:rgba(0,0,0,0.03); border-radius:10px; padding:10px; display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                    <div style="font-weight:700; font-size:14px;">${ev.time || '全日'} - ${getSafeTitle(ev.title)}</div>
-                    <div style="font-size:11px; color:var(--apple-text-secondary);">${ev.assignee || '全員'} · ${ev.category || '家庭'}</div>
+        container.innerHTML = matched.map(ev => {
+            const isOwner = currentUser && ev.assignee === currentUser;
+            const titleDisplay = (ev.isPrivate && !isOwner) ? `🔒 ${ev.assignee} 的私人項目` : getSafeTitle(ev.title);
+            return `
+                <div style="background:rgba(0,0,0,0.03); border-radius:10px; padding:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:700; font-size:14px;">${ev.time || '全日'} - ${titleDisplay}</div>
+                        <div style="font-size:11px; color:var(--apple-text-secondary);">${ev.assignee || '全員'} · ${ev.category || '日常開支'}${ev.isPrivate ? ' (🔒私密)' : ''}</div>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn-edit-link" onclick="openEditGeneralItem('${ev.id}')">修改</button>
+                        <button class="btn-delete-link" onclick="deleteEventItem('${ev.id}')">刪除</button>
+                    </div>
                 </div>
-                <div style="display:flex; gap:6px;">
-                    <button class="btn-edit-link" onclick="openEditGeneralItem('${ev.id}')">修改</button>
-                    <button class="btn-delete-link" onclick="deleteEventItem('${ev.id}')">刪除</button>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
     document.getElementById('manageModal').style.display = 'flex';
 }
@@ -1721,9 +1872,9 @@ async function logoutAccount() {
 }
 
 function shareWhatsApp() {
-    const dayActs = activities.filter(a => a && a.date === selectedDateStr);
+    const dayActs = activities.filter(a => a && a.date === selectedDateStr && (!a.isPrivate || (currentUser && a.assignee === currentUser)));
     if (dayActs.length === 0) {
-        HIG.alert("提示", "今日無任何行程可分享！");
+        HIG.alert("提示", "今日無任何可公開行程分享！");
         return;
     }
     let msg = `💡【麟李家庭日程與開支 · ${selectedDateStr}】\n\n`;
