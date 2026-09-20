@@ -5,362 +5,492 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0071e3">
 <meta name="apple-mobile-web-app-capable" content="yes">
+    
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="description" content="麟李家庭智慧管理系統 - 結合 Dify AI 雲端分類、真 E2EE 加密與即時同步日曆">
+<meta name="description" content="麟李家庭智慧管理系統 - 結合 Dify AI 雲端分類、香港紅日、農曆與即時同步日曆">
 <title>Family OS - 麟李家庭智慧管理系統</title>
 
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-<!-- DOMPurify 防禦 XSS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/dompurify.min.js"></script>
-
 <style>
 :root {
-    --apple-bg: #f5f5f7;
-    --apple-card: rgba(255, 255, 255, 0.92);
-    --apple-text: #1d1d1f;
-    --apple-text-secondary: #48484a;
-    --apple-border: rgba(0, 0, 0, 0.08);
-    --apple-glow-border: rgba(255, 255, 255, 0.7);
+    --apple-bg: #f2f2f7;
+    --apple-card: #ffffff;
+    --apple-text: #1c1c1e;
+    --apple-text-secondary: #8e8e93;
+    --apple-border: rgba(60, 60, 67, 0.12);
     --oasis-primary: #0071e3;
-    --oasis-primary-glow: rgba(0, 113, 227, 0.15);
     --oasis-success: #34c759;
-    --oasis-warning: #c97500;
-    --oasis-danger: #d70015;
-    --oasis-ai-gradient: linear-gradient(135deg, rgba(232, 220, 255, 0.55), rgba(212, 235, 255, 0.55));
+    --oasis-danger: #ff3b30;
+    --oasis-warning: #ff9500;
+    --oasis-ai-gradient: linear-gradient(135deg, rgba(232, 220, 255, 0.65), rgba(212, 235, 255, 0.65));
     --oasis-ai-purple: #7d2ae8;
 }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
     margin: 0;
-    font-size: 17px;
+    padding: 0;
     background-color: var(--apple-bg);
     color: var(--apple-text);
-    padding-bottom: calc(100px + env(safe-area-inset-bottom));
-    letter-spacing: -0.01em;
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
-input, textarea, select {
-    font-size: 16px !important;
-}
+input, textarea, select { font-size: 16px !important; }
 
+/* ─── 頂部導航列 ─── */
 header {
     background: rgba(255, 255, 255, 0.88);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    color: var(--apple-text);
-    padding-top: max(16px, env(safe-area-inset-top));
-    padding-bottom: 12px;
-    padding-left: max(16px, env(safe-area-inset-left));
-    padding-right: max(16px, env(safe-area-inset-right));
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-bottom: 8px;
+    padding-left: 16px;
+    padding-right: 16px;
     border-bottom: 1px solid var(--apple-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
+    flex-shrink: 0;
 }
-
-.header-status-group { display: flex; align-items: center; gap: 8px; }
+.header-title { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.header-status-group { display: flex; align-items: center; gap: 6px; }
 
 .auth-badge {
-    font-size: 13px !important;
-    background: rgba(0,0,0,0.06);
-    padding: 6px 14px;
-    border-radius: 20px;
+    font-size: 12px;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 4px 10px;
+    border-radius: 14px;
     font-weight: 600;
     color: var(--apple-text-secondary);
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
     border: none;
-}
-
-.e2ee-badge {
-    font-size: 12px !important;
-    background: rgba(125, 42, 232, 0.1);
-    color: var(--oasis-ai-purple);
-    padding: 6px 10px;
-    border-radius: 20px;
-    font-weight: 700;
     cursor: pointer;
-    border: 1px solid rgba(125, 42, 232, 0.25);
 }
-
-.logout-link {
-    font-size: 13px;
+.auth-badge.logged-in {
+    background: rgba(52, 199, 89, 0.12);
+    color: var(--oasis-success);
+}
+.logout-btn {
+    font-size: 12px;
     color: var(--oasis-danger);
-    text-decoration: underline;
+    background: none;
+    border: none;
+    font-weight: 600;
     cursor: pointer;
     display: none;
-    font-weight: 600;
+    padding: 4px;
 }
 
-.container { padding: 16px; max-width: 1140px; margin: 0 auto; box-sizing: border-box; }
-
-.toast-notice {
-    position: fixed;
-    top: calc(12px + max(16px, env(safe-area-inset-top)));
-    left: 50%;
-    transform: translateX(-50%) translateY(-20px);
-    background: rgba(29, 29, 31, 0.94);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 30px;
-    font-size: 14px;
-    font-weight: 600;
-    z-index: 9999;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-}
-.toast-notice.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-.toast-notice.error { background: rgba(215, 0, 21, 0.95); }
-.toast-notice.success { background: rgba(40, 167, 69, 0.95); }
-
-.card {
-    background: var(--apple-card);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    padding: 22px;
-    margin-bottom: 20px;
-    border-radius: 18px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
-    border: 1px solid var(--apple-glow-border);
-    box-sizing: border-box;
-}
-
-.top-action-card {
-    background: var(--apple-card);
-    padding: 10px;
-    margin-bottom: 18px;
-    border-radius: 16px;
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
-    border: 1px solid var(--apple-glow-border);
-}
-.top-action-card button.action-btn {
+/* ─── 主畫面雙層佈局 ─── */
+.main-layout {
     flex: 1;
-    margin: 0 !important;
-    white-space: nowrap;
-    border: none;
-    border-radius: 10px;
-    color: white;
-    font-size: 14px !important;
-    padding: 12px 6px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.nav-btn {
-    padding: 8px 14px;
-    font-size: 14px;
-    background: rgba(0, 0, 0, 0.06);
-    color: var(--apple-text);
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-}
-.month-title { font-size: 20px; font-weight: 700; }
-
-.weekdays-container {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
-    width: 100%;
-    margin-bottom: 6px;
-}
-.weekday {
-    text-align: center;
-    color: var(--apple-text-secondary);
-    font-weight: 700;
-    font-size: 13px;
-    padding: 4px 0;
-}
-.weekdays-container .weekday:first-child { color: var(--oasis-danger); }
-
-.calendar {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
-    width: 100%;
-    touch-action: pan-y;
-}
-.calendar-day {
     display: flex;
     flex-direction: column;
-    padding: 6px 4px;
-    text-align: center;
-    background: #ffffff;
-    border-radius: 12px;
-    min-height: 110px;
-    font-size: 15px;
-    box-sizing: border-box;
-    cursor: pointer;
-    border: 1px solid rgba(0,0,0,0.06);
-    position: relative;
-}
-.calendar-day.empty { background: transparent !important; border-color: transparent !important; pointer-events: none; }
-.calendar-day.today { border: 2px solid var(--oasis-warning) !important; background: rgba(201, 117, 0, 0.05); }
-.calendar-day.selected-day { background: #eafff1 !important; border: 2px solid var(--oasis-success) !important; }
-
-.day-events-container { margin-top: 4px; display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
-.day-event-badge {
-    font-size: 11px;
-    padding: 3px 5px;
-    text-align: left;
-    border-radius: 4px;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    display: block;
-    font-weight: 600;
+    padding: 8px 12px max(12px, env(safe-area-inset-bottom)) 12px;
+    gap: 8px;
 }
 
-.floating-add-btn {
-    position: fixed;
-    bottom: calc(24px + env(safe-area-inset-bottom));
-    right: max(20px, env(safe-area-inset-right));
-    width: 56px;
-    height: 56px;
-    background: var(--oasis-primary);
-    color: white;
+/* 🎯 頂部三大操作功能鍵 */
+.top-action-bar {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.top-action-bar button {
+    flex: 1;
     border: none;
-    border-radius: 50%;
-    font-size: 28px;
-    box-shadow: 0 8px 24px rgba(0, 113, 227, 0.35);
+    border-radius: 12px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 6px;
     cursor: pointer;
-    z-index: 999;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: transform 0.1s;
+}
+.top-action-bar button:active { transform: scale(0.97); opacity: 0.9; }
+.btn-green { background: #34c759; }
+.btn-blue { background: #0071e3; }
+
+/* 🔮 麟李 AI 家庭日誌雷達 */
+.ai-summary-pill {
+    background: var(--oasis-ai-gradient);
+    border: 1px solid rgba(125, 42, 232, 0.2);
+    border-radius: 10px;
+    padding: 6px 10px;
+    font-size: 12px;
+    line-height: 1.3;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+.ai-pulse-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--oasis-ai-purple);
+    display: inline-block;
+    margin-right: 4px;
+    animation: aiPulse 1.6s infinite ease-in-out;
+}
+@keyframes aiPulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; transform: scale(1.2); } }
+
+/* ✨ 廣東話自然語言極速輸入條 */
+.ai-nlp-quick-bar {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+    background: #ffffff;
+    padding: 3px 6px;
+    border-radius: 10px;
+    border: 1px solid var(--apple-border);
+}
+.ai-nlp-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 6px 8px;
+    font-size: 13px !important;
+    outline: none;
+    color: var(--apple-text);
+}
+.ai-nlp-btn {
+    background: var(--oasis-ai-purple);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
 }
 
+/* 🗓️ 上層：月曆卡片（精準排版 + 文字活動） */
+.calendar-card {
+    background: var(--apple-card);
+    border-radius: 14px;
+    padding: 8px 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+    border: 1px solid var(--apple-border);
+    flex: 1.35;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.calendar-nav-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    flex-shrink: 0;
+}
+.nav-arrow-btn {
+    background: rgba(0, 0, 0, 0.04);
+    border: none;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.current-month-label { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+
+.weekdays-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--apple-text-secondary);
+    padding-bottom: 3px;
+    flex-shrink: 0;
+}
+.weekdays-row .sunday { color: var(--oasis-danger); }
+
+.days-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 3px;
+    overflow-y: auto;
+}
+.days-grid::-webkit-scrollbar { display: none; }
+
+.day-cell {
+    background: rgba(0, 0, 0, 0.015);
+    border-radius: 8px;
+    padding: 2px 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    cursor: pointer;
+    overflow: hidden;
+    border: 1px solid transparent;
+    transition: background 0.12s ease;
+}
+.day-cell:active { background: rgba(0, 0, 0, 0.05); }
+.day-cell.empty { background: transparent !important; pointer-events: none; }
+
+/* 🌟 Apple 原生精緻選取樣式（不再是大藍塊） */
+.day-cell.today { border: 1.5px solid var(--oasis-warning); }
+.day-cell.today .day-number { color: var(--oasis-warning); font-weight: 800; }
+.day-cell.selected {
+    background: rgba(0, 113, 227, 0.08) !important;
+    border-color: var(--oasis-primary) !important;
+}
+.day-cell.selected .day-number {
+    background: var(--oasis-primary);
+    color: #ffffff !important;
+    border-radius: 10px;
+    padding: 0 4px;
+}
+
+.day-cell-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0 1px;
+    line-height: 1.1;
+}
+.day-number { font-size: 11.5px; font-weight: 700; }
+.day-cell.is-holiday .day-number,
+.day-cell.is-sunday .day-number { color: var(--oasis-danger); }
+
+.day-lunar { font-size: 8.5px; color: var(--apple-text-secondary); transform: scale(0.85); transform-origin: right center; }
+.day-holiday {
+    font-size: 8px;
+    color: var(--oasis-danger);
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transform: scale(0.85);
+    transform-origin: left center;
+}
+
+/* 🎯 文字活動直接上曆 */
+.day-events-text-box {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin-top: 1px;
+    overflow: hidden;
+    flex: 1;
+}
+.calendar-event-chip {
+    font-size: 8.5px;
+    line-height: 1.15;
+    padding: 1px 3px;
+    border-radius: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+    background: rgba(0, 113, 227, 0.12);
+    color: var(--oasis-primary);
+}
+
+/* 📋 下層：當日焦點活動清單（完全連動） */
+.agenda-card {
+    background: var(--apple-card);
+    border-radius: 14px;
+    padding: 10px 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+    border: 1px solid var(--apple-border);
+    flex: 0.95;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.agenda-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--apple-border);
+    flex-shrink: 0;
+}
+.agenda-date-title { font-size: 14px; font-weight: 700; }
+.agenda-actions { display: flex; gap: 6px; }
+.agenda-quick-btn {
+    background: rgba(0, 113, 227, 0.08);
+    color: var(--oasis-primary);
+    border: none;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.agenda-list {
+    flex: 1;
+    overflow-y: auto;
+    padding-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.agenda-list::-webkit-scrollbar { display: none; }
+
+.event-row-card {
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 4px solid var(--oasis-primary);
+}
+.event-info { display: flex; flex-direction: column; gap: 2px; }
+.event-time-badge { font-size: 11px; font-weight: 700; color: var(--oasis-primary); }
+.event-title-text { font-size: 13.5px; font-weight: 600; color: var(--apple-text); }
+.event-meta-tags { display: flex; gap: 4px; align-items: center; }
+.tag-pill {
+    font-size: 9px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--apple-text-secondary);
+    font-weight: 600;
+}
+.assignee-chip {
+    font-size: 9px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    background: rgba(52, 199, 89, 0.12);
+    color: var(--oasis-success);
+    font-weight: 700;
+}
+.ai-priority-badge {
+    font-size: 9px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    background: rgba(255, 59, 48, 0.12);
+    color: var(--oasis-danger);
+    font-weight: 700;
+}
+
+.empty-agenda-view { text-align: center; padding: 20px 0; color: var(--apple-text-secondary); font-size: 13px; }
+
+/* ─── 彈出視窗 ─── */
 .popup-overlay {
     display: none;
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
     z-index: 2000;
+    justify-content: center;
+    align-items: center;
+}
+.popup-card {
+    background: #ffffff;
+    width: 90%;
+    max-width: 440px;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.15);
+    box-sizing: border-box;
+    position: relative;
+    max-height: 85vh;
     overflow-y: auto;
 }
-.popup-content-card {
-    position: relative;
-    background: #ffffff;
-    width: 92%;
-    max-width: 520px;
-    margin: calc(24px + max(16px, env(safe-area-inset-top))) auto calc(40px + env(safe-area-inset-bottom)) auto;
-    padding: 24px;
-    border-radius: 24px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-    box-sizing: border-box;
+.popup-close-x {
+    position: absolute;
+    top: 14px; right: 16px;
+    font-size: 22px;
+    color: var(--apple-text-secondary);
+    border: none;
+    background: none;
+    cursor: pointer;
 }
-.popup-close-x { position: absolute; top: 18px; right: 20px; font-size: 24px; color: var(--apple-text-secondary); cursor: pointer; border: none; background: transparent; }
-.password-lock-section { background: rgba(0,0,0,0.03); padding: 16px; border-radius: 14px; margin-top: 12px; }
-.secure-form-fields { display: none; margin-top: 16px; }
 
-button.action-btn-block {
+.form-label { font-size: 13px; font-weight: 600; color: var(--apple-text-secondary); margin-top: 8px; display: block; }
+.form-input {
     width: 100%;
-    padding: 14px;
-    margin-top: 14px;
+    padding: 10px 12px;
+    margin: 4px 0 8px;
+    border: 1px solid var(--apple-border);
+    border-radius: 10px;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.02);
+    outline: none;
+}
+.form-input:focus { border-color: var(--oasis-primary); background: #ffffff; }
+
+.submit-btn-block {
+    width: 100%;
+    padding: 12px;
     background: var(--oasis-primary);
     color: white;
     border: none;
-    border-radius: 12px;
-    font-size: 16px;
+    border-radius: 10px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
+    margin-top: 10px;
 }
-button.action-btn-block:disabled { opacity: 0.6; }
+.submit-btn-block:active { opacity: 0.85; }
 
-/* 🍏 Apple HIG 規範專用自訂 Modal (完全取代 alert / confirm / prompt) */
-.hig-modal-overlay {
+/* ─── HIG 自訂對話框 ─── */
+.hig-dialog-overlay {
     display: none;
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.35);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(8px);
     z-index: 10000;
     justify-content: center;
     align-items: center;
 }
-.hig-modal-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    width: 275px;
+.hig-dialog-card {
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(20px);
+    width: 270px;
     border-radius: 14px;
-    box-shadow: 0 12px 36px rgba(0,0,0,0.2);
     overflow: hidden;
     text-align: center;
-    animation: higPop 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
-@keyframes higPop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.hig-modal-header { padding: 18px 16px 12px; }
-.hig-modal-title { font-size: 17px; font-weight: 600; color: var(--apple-text); margin: 0; }
-.hig-modal-message { font-size: 13px; color: var(--apple-text-secondary); margin-top: 6px; line-height: 1.4; }
-.hig-modal-input {
-    width: 88%;
-    margin: 8px auto 14px;
-    padding: 6px 10px;
-    border: 1px solid rgba(0,0,0,0.2);
-    border-radius: 6px;
-    box-sizing: border-box;
-    display: block;
-    background: #ffffff;
+.hig-dialog-header { padding: 16px 14px 10px; }
+.hig-dialog-title { font-size: 16px; font-weight: 600; margin: 0; }
+.hig-dialog-msg { font-size: 13px; color: var(--apple-text-secondary); margin-top: 4px; }
+.hig-dialog-input {
+    width: 86%; margin: 6px auto 12px; padding: 6px 8px;
+    border: 1px solid rgba(0,0,0,0.15); border-radius: 6px; box-sizing: border-box; display: block;
 }
-.hig-modal-actions {
-    display: flex;
-    border-top: 1px solid rgba(0,0,0,0.1);
+.hig-dialog-actions { display: flex; border-top: 1px solid rgba(0,0,0,0.08); }
+.hig-dialog-btn {
+    flex: 1; background: none; border: none; padding: 11px 0;
+    font-size: 15px; color: var(--oasis-primary); cursor: pointer;
 }
-.hig-modal-btn {
-    flex: 1;
-    background: transparent;
-    border: none;
-    padding: 12px 0;
-    font-size: 16px;
-    color: var(--oasis-primary);
-    cursor: pointer;
-}
-.hig-modal-btn.cancel {
-    border-right: 1px solid rgba(0,0,0,0.1);
-    font-weight: 400;
-    color: var(--apple-text-secondary);
-}
-.hig-modal-btn.destructive { color: var(--oasis-danger); font-weight: 600; }
-.hig-modal-btn.primary { font-weight: 600; }
+.hig-dialog-btn.cancel { border-right: 1px solid rgba(0,0,0,0.08); color: var(--apple-text-secondary); }
+.hig-dialog-btn.destructive { color: var(--oasis-danger); font-weight: 600; }
 </style>
 
-<!-- Firebase SDK 模組 (App Check + Auth + RTDB) -->
+<!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check.js";
-  import { 
-    initializeAuth, 
-    browserLocalPersistence, 
-    inMemoryPersistence, 
-    getAuth, 
-    signInWithEmailAndPassword, 
-    signOut, 
-    deleteUser, 
-    reauthenticateWithCredential, 
-    EmailAuthProvider,
-    onAuthStateChanged
+  import {
+    initializeAuth, browserLocalPersistence, inMemoryPersistence, getAuth,
+    signInWithEmailAndPassword, signOut, deleteUser, reauthenticateWithCredential,
+    EmailAuthProvider, onAuthStateChanged
   } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
   import { getDatabase, ref, onValue, set, push, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -371,27 +501,21 @@ button.action-btn-block:disabled { opacity: 0.6; }
     projectId: "familycalender-a62ae",
     storageBucket: "familycalender-a62ae.firebasestorage.app",
     messagingSenderId: "161867987572",
-    appId: "1:161867987572:web:ee6641980baaf9cd78ef21",
-    measurementId: "G-9ZSCC551ZJ"
+    appId: "1:161867987572:web:ee6641980baaf9cd78ef21"
   };
 
   const app = initializeApp(firebaseConfig);
 
-  // 1. 本地開發、模擬器或 Capacitor 混合環境除錯權杖
   if (location.hostname === "localhost" || location.protocol === "capacitor:") {
       self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
   }
 
-  // 2. 啟動 Firebase App Check (reCAPTCHA Enterprise)
   try {
       initializeAppCheck(app, {
           provider: new ReCaptchaEnterpriseProvider('6LcD6cQtAAAAAB0OQG6JElGlxF3qbvlg_X8lr1Ln'),
           isTokenAutoRefreshEnabled: true
       });
-      console.log("✓ Firebase App Check 已啟動");
-  } catch (err) {
-      console.warn("App Check 初始化略過:", err.message);
-  }
+  } catch (e) {}
 
   let auth;
   try {
@@ -416,821 +540,805 @@ button.action-btn-block:disabled { opacity: 0.6; }
   window.fbUpdate = update;
   window.fbRemove = remove;
 
-  // 3. 恢復 onAuthStateChanged 狀態監聽器 (修復 P0-5)
   onAuthStateChanged(auth, async (user) => {
       if (user) {
           const email = user.email || "";
-          let matchedName = "鐵";
-          if (email.includes("daddy")) matchedName = "Daddy";
-          else if (email.includes("mummy")) matchedName = "Mummy";
-          else if (email.includes("jolie")) matchedName = "Jolie";
-          else if (email.includes("leisel")) matchedName = "蓓";
-          else if (email.includes("karis")) matchedName = "熹";
-          
-          applyAdminState(matchedName);
+          let memberName = "鐵";
+          if (email.includes("daddy")) memberName = "Daddy";
+          else if (email.includes("mummy")) memberName = "Mummy";
+          else if (email.includes("jolie")) memberName = "Jolie";
+          else if (email.includes("leisel")) memberName = "蓓";
+          else if (email.includes("karis")) memberName = "熹";
+
+          applyLoginState(memberName);
           window.startFirebaseSync();
       } else {
-          renderUnauthenticatedState();
+          renderGuestState();
       }
   });
 
   window.startFirebaseSync = function() {
       if (!window.fbDb || !window.fbRef || !window.fbOnValue) return;
-      const activitiesRef = window.fbRef(window.fbDb, "family_calendar_activities");
-      
-      window.fbOnValue(activitiesRef, async (snapshot) => {
+      const actRef = window.fbRef(window.fbDb, "family_calendar_activities");
+      window.fbOnValue(actRef, async (snapshot) => {
           const data = snapshot.val();
-          const tempActivities = [];
+          const list = [];
           if (data) {
               for (let key in data) {
                   const item = data[key];
-                  const decryptedTitle = await E2EE.decrypt(item.title);
-                  tempActivities.push({
+                  const title = await E2EE.decrypt(item.title);
+                  list.push({
                       id: key,
                       date: item.date || "",
-                      endDate: item.endDate || item.date || "",
-                      time: item.time || "全日",
-                      title: decryptedTitle || "行程",
+                      time: item.time || "20:00",
+                      title: title || "活動",
                       assignee: item.assignee || "全員",
                       category: item.category || "家庭",
-                      status: item.status || "待處理"
+                      isAI_Priority: item.isAI_Priority || false
                   });
               }
           }
-          if (tempActivities.length > 0) {
-              activities = tempActivities;
+          if (list.length > 0) {
+              activities = list;
               localStorage.setItem('family_cached_activities', JSON.stringify(activities));
-              triggerPipelineRefresh();
+              renderCalendar();
+              renderAgenda();
+              updateAISummary();
           }
-      }, (error) => {
-          console.warn("RTDB 權限受限，維持離線快取:", error.code);
+      }, (err) => {
+          console.warn("RTDB 同步狀態:", err.code);
       });
   };
 </script>
 </head>
 
-<body class="view-列表" id="bodyNode">
+<body>
 
-<div id="toastBar" class="toast-notice" role="status" aria-live="polite">✓ 雲端同步完成</div>
-
-<header role="banner">
-    <div style="font-weight: 700; font-size: 16px;">🏠 Family OS <span style="font-size: 12px; font-weight: normal; color: var(--apple-text-secondary);">v10.2 (HIG 規範版)</span></div>
+<header>
+    <div class="header-title">🏠 Family OS</div>
     <div class="header-status-group">
-        <button id="e2eeKeyBtn" class="e2ee-badge" onclick="promptMasterVaultKey()">🔐 解鎖保險箱</button>
-        <button id="roleBadge" class="auth-badge" onclick="handleAuthBadgeClick()">🔒 訪客模式 (Viewer)</button>
-        <span id="logoutBtn" class="logout-link" role="button" tabindex="0" onclick="logoutCurrentUser()">登出</span>
+        <button id="authBadgeBtn" class="auth-badge" onclick="handleAuthBadgeClick()">🔒 訪客模式</button>
+        <button id="logoutBtn" class="logout-btn" onclick="logoutAccount()">登出</button>
     </div>
 </header>
 
-<main class="container" role="main">
+<div class="main-layout">
 
-    <nav class="top-action-card">
-        <button class="action-btn" style="background: #34c759;" onclick="openAddFormPopup('ADD')">➕ 活動</button>
-        <button class="action-btn" style="background: #0071e3;" onclick="openAddFormPopup('MANAGE')">⚙️ 修改/刪除</button>
-        <button class="action-btn" style="background: #28cd41;" onclick="sendTodayWhatsApp()">💬 WHATSAPP</button>
-    </nav>
-
-    <div class="card">
-        <div class="calendar-header">
-            <button class="nav-btn" onclick="changeMonth(-1)">⬅ 上一月</button>
-            <div id="monthLabel" class="month-title"></div>
-            <button class="nav-btn" onclick="changeMonth(1)">下一月 ➡</button>
-        </div>
-        <div class="weekdays-container">
-            <div class="weekday">日</div>
-            <div class="weekday">一</div>
-            <div class="weekday">二</div>
-            <div class="weekday">三</div>
-            <div class="weekday">四</div>
-            <div class="weekday">五</div>
-            <div class="weekday">六</div>
-        </div>
-        <div id="calendar" class="calendar"></div>
+    <!-- 🎯 頂部三大操作鍵 -->
+    <div class="top-action-bar">
+        <button class="btn-green" onclick="openAddModal('ADD')">➕ 活動</button>
+        <button class="btn-blue" onclick="openManageModal()">⚙️ 修改/刪除</button>
+        <button class="btn-green" onclick="shareWhatsApp()">💬 WHATSAPP</button>
     </div>
 
-    <div class="card" style="border-top: 4px solid var(--oasis-success);">
-        <h3 style="margin-top:0; color:var(--apple-text); font-size:18px;">📋 <span id="selectedDateLabel"></span> 活動日程</h3>
-        <div id="dayEvents">今日無任何排定活動。</div>
+    <!-- 🔮 麟李 AI 家庭日誌雷達 -->
+    <div class="ai-summary-pill" id="aiSummaryPill">
+        <div><span class="ai-pulse-dot"></span><strong style="color:var(--oasis-ai-purple);">AI 雷達：</strong><span id="aiStrainText">今日節奏平穩，暫無急件衝突</span></div>
+        <span id="aiPendingBadge" style="font-weight:700; color:var(--oasis-primary);">0 項重點</span>
     </div>
 
-    <button class="floating-add-btn" onclick="openAddFormPopup('ADD')">＋</button>
+    <!-- ✨ 廣東話自然語言極速輸入條 -->
+    <div class="ai-nlp-quick-bar">
+        <input type="text" id="aiQuickInput" class="ai-nlp-input" placeholder="✨ 試試輸入：聽晚八點半同嫲嫲仁安覆診...">
+        <button class="ai-nlp-btn" onclick="executeAINaturalInput()">AI 排程</button>
+    </div>
 
-    <!-- 活動表單 Popup -->
-    <div class="popup-overlay" id="addEventPopupOverlay" onclick="closePopupOverlayOutside(event)">
-        <div class="popup-content-card">
-            <button class="popup-close-x" onclick="closeEventPopup()">&times;</button>
-            <h3 id="formTitle" style="margin-top:0; font-size:20px;">➕ 新增家庭活動</h3>
+    <!-- 🗓️ 上層：月曆卡片（完整 30 天 + 活動文字直顯） -->
+    <div class="calendar-card">
+        <div class="calendar-nav-bar">
+            <button class="nav-arrow-btn" onclick="changeMonthOffset(-1)">⬅ 上一月</button>
+            <div id="calendarMonthLabel" class="current-month-label">2026年 9月</div>
+            <button class="nav-arrow-btn" onclick="changeMonthOffset(1)">下一月 ➡</button>
+        </div>
+        <div class="weekdays-row">
+            <div class="sunday">日</div>
+            <div>一</div>
+            <div>二</div>
+            <div>三</div>
+            <div>四</div>
+            <div>五</div>
+            <div>六</div>
+        </div>
+        <div id="daysGridNode" class="days-grid"></div>
+    </div>
 
-            <!-- 登入區塊 -->
-            <div class="password-lock-section" id="lockSection">
-                <p style="margin:0 0 10px 0; font-size:14px; color:var(--apple-text-secondary);">請選擇家庭成員帳戶或輸入登入 Email：</p>
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <div id="memberSelectContainer">
-                        <select id="loginMemberSelect" style="margin:0;">
-                            <option value="iron">👦 鐵 (iron)</option>
-                            <option value="daddy">👨 Daddy</option>
-                            <option value="mummy">👩‍🦱 Mummy</option>
-                            <option value="jolie">👧 Jolie</option>
-                            <option value="leisel">👩 蓓 (leisel)</option>
-                            <option value="karis">👶 熹 (karis)</option>
-                        </select>
-                    </div>
-
-                    <div id="manualEmailContainer" style="display:none;">
-                        <input type="email" id="manualEmailInput" placeholder="輸入完整 Email..." style="margin:0; padding:12px;">
-                    </div>
-
-                    <div style="display:flex; gap:8px;">
-                        <input type="password" id="popupPassword" placeholder="輸入專屬密碼..." style="margin:0; flex:1; padding:12px;">
-                        <button type="button" id="loginSubmitBtn" class="action-btn" style="margin:0; width:auto; padding:0 20px; background:var(--oasis-primary); border:none; border-radius:10px; color:white; font-weight:bold; cursor:pointer;" onclick="verifyGatePassword()">登入驗證</button>
-                    </div>
-
-                    <div>
-                        <span style="font-size:12px; color:var(--oasis-primary); text-decoration:underline; cursor:pointer;" onclick="toggleManualEmailInput()">切換手動輸入 Email / 選單模式</span>
-                    </div>
-
-                    <div id="loginErrorMsg" style="color:var(--oasis-danger); font-size:13px; font-weight:600; display:none; margin-top:4px;"></div>
-                </div>
+    <!-- 📋 下層：當日焦點節目卡片（嚴格即時連動） -->
+    <div class="agenda-card">
+        <div class="agenda-header">
+            <div id="agendaDateTitle" class="agenda-date-title">📋 行程資訊</div>
+            <div class="agenda-actions">
+                <button class="agenda-quick-btn" onclick="openAddModal('ADD')">➕ 新增</button>
             </div>
-
-            <!-- 活動表單區塊 -->
-            <div class="secure-form-fields" id="secureFormPanel">
-                <label for="eventCategory" style="font-size:14px; font-weight:600; color:var(--apple-text-secondary)">🏷️ 分類 (Tag)：</label>
-                <select id="eventCategory">
-                    <option value="家庭">👨‍👩‍👧 家庭</option>
-                    <option value="醫療健康">💊 醫療健康</option>
-                    <option value="體育運動">🎯 體育運動</option>
-                    <option value="學校">🏫 學校</option>
-                    <option value="工作">💼 工作</option>
-                    <option value="重要">❤️ 重要</option>
-                </select>
-
-                <label for="eventTitle" style="font-size:14px; font-weight:600; color:var(--apple-text-secondary)">活動名稱 / 地點：</label>
-                <input type="text" id="eventTitle" placeholder="例如：Dinner/Grandma home">
-         
-                <label for="eventTime" style="font-size:14px; font-weight:600; color:var(--apple-text-secondary)">📅 開始日期時間：</label>
-                <input type="text" id="eventTime" placeholder="格式如：2026-09-25 20:30">
-
-                <label for="eventEndTime" style="font-size:14px; font-weight:600; color:var(--apple-text-secondary)">📆 結束日期時間：</label>
-                <input type="text" id="eventEndTime" placeholder="格式如：2026-09-25 22:32 (選填)">
-
-                <label for="eventAssignee" style="font-size:14px; font-weight:600; color:var(--apple-text-secondary)">👥 執行分工 / 負責人：</label>
-                <select id="eventAssignee">
-                    <option value="鐵">👦 鐵</option>
-                    <option value="全員">👨‍👩‍👧‍👦 全員</option>
-                    <option value="Jolie">👧 Jolie</option>
-                    <option value="蓓">👩 蓓</option>
-                    <option value="熹">👶 熹</option>
-                    <option value="Mummy">👩‍🦱 Mummy</option>
-                    <option value="Daddy">👨 Daddy</option>
-                </select>
-
-                <button id="formSubmitBtn" class="action-btn-block" onclick="addFamilyEvent()">儲存至此日期</button>
-
-                <!-- Apple 必審：In-App 帳號刪除入口 -->
-                <div style="margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--apple-border); text-align: center;">
-                    <button type="button" onclick="handleDeleteAccount()" style="background: transparent; color: var(--oasis-danger); border: 1px solid var(--oasis-danger); padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
-                        🗑️ 永久註銷並刪除帳號 (Delete Account)
-                    </button>
-                </div>
-            </div>
-
-            <button class="action-btn-block" style="background:#6c6c70; margin-top:12px;" onclick="closeEventPopup()">關閉面板</button>
+        </div>
+        <div id="agendaListNode" class="agenda-list">
+            <div class="empty-agenda-view">此日暫無排定活動，點擊上方「➕ 活動」快速記錄</div>
         </div>
     </div>
 
-    <!-- 🍏 Apple HIG 自訂 Modal 結構 -->
-    <div id="higModalOverlay" class="hig-modal-overlay">
-        <div class="hig-modal-card">
-            <div class="hig-modal-header">
-                <h4 id="higModalTitle" class="hig-modal-title">標題</h4>
-                <div id="higModalMessage" class="hig-modal-message">訊息</div>
+</div>
+
+<!-- 活動輸入與修改彈窗 -->
+<div id="eventModal" class="popup-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="popup-card">
+        <button class="popup-close-x" onclick="closeModal()">&times;</button>
+        <h3 id="modalFormTitle" style="margin:0 0 12px; font-size:17px;">➕ 新增家庭行程</h3>
+        <input type="hidden" id="editItemKey" value="">
+
+        <div id="loginGateSection" style="display:none; background:rgba(0,0,0,0.02); padding:12px; border-radius:10px; margin-bottom:12px;">
+            <span class="form-label" style="margin-top:0;">請選擇登入成員：</span>
+            <select id="loginSelectMember" class="form-input">
+                <option value="iron">👦 鐵 (iron)</option>
+                <option value="daddy">👨 Daddy</option>
+                <option value="mummy">👩‍🦱 Mummy</option>
+                <option value="jolie">👧 Jolie</option>
+                <option value="leisel">👩 蓓 (leisel)</option>
+                <option value="karis">👶 熹 (karis)</option>
+            </select>
+            <input type="password" id="loginPasswordInput" class="form-input" placeholder="輸入成員專屬密碼...">
+            <button class="submit-btn-block" onclick="submitLogin()">登入驗證</button>
+        </div>
+
+        <div id="eventFormFields">
+            <label class="form-label">活動名稱 / 地點：</label>
+            <input type="text" id="formEventTitle" class="form-input" placeholder="例如：Dinner/Grandma home">
+
+            <label class="form-label">日期與時間：</label>
+            <input type="text" id="formEventTime" class="form-input">
+
+            <label class="form-label">活動分類：</label>
+            <select id="formEventCategory" class="form-input">
+                <option value="家庭">👨‍👩‍👧 家庭</option>
+                <option value="醫療健康">💊 醫療健康</option>
+                <option value="體育運動">🎯 體育運動</option>
+                <option value="學校">🏫 學校</option>
+                <option value="工作">💼 工作</option>
+                <option value="重要">❤️ 重要</option>
+            </select>
+
+            <label class="form-label">執行負責人：</label>
+            <select id="formEventAssignee" class="form-input">
+                <option value="鐵">👦 鐵</option>
+                <option value="全員">👨‍👩‍👧‍👦 全員</option>
+                <option value="Jolie">👧 Jolie</option>
+                <option value="蓓">👩 蓓</option>
+                <option value="熹">👶 熹</option>
+                <option value="Mummy">👩‍🦱 Mummy</option>
+                <option value="Daddy">👨 Daddy</option>
+            </select>
+
+            <button id="modalSubmitBtn" class="submit-btn-block" onclick="saveEvent()">確認儲存至此日</button>
+
+            <div style="margin-top:20px; text-align:center;">
+                <button onclick="requestAccountDeletion()" style="background:none; border:none; color:var(--oasis-danger); font-size:12px; text-decoration:underline; cursor:pointer;">
+                    永久註銷並刪除帳號 (Delete Account)
+                </button>
             </div>
-            <input type="text" id="higModalInput" class="hig-modal-input" style="display:none;">
-            <div id="higModalActions" class="hig-modal-actions"></div>
         </div>
     </div>
+</div>
 
-</main>
+<!-- ⚙️ 修改 / 刪除專用面板 -->
+<div id="manageModal" class="popup-overlay" onclick="if(event.target===this)closeManageModal()">
+    <div class="popup-card">
+        <button class="popup-close-x" onclick="closeManageModal()">&times;</button>
+        <h3 style="margin:0 0 12px; font-size:17px;">⚙️ 管理與修改當日行程</h3>
+        <div id="manageDayListContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+    </div>
+</div>
+
+<!-- HIG Dialog -->
+<div id="higDialog" class="hig-dialog-overlay">
+    <div class="hig-dialog-card">
+        <div class="hig-dialog-header">
+            <h4 id="higDialogTitle" class="hig-dialog-title"></h4>
+            <div id="higDialogMsg" class="hig-dialog-msg"></div>
+        </div>
+        <input type="text" id="higDialogInput" class="hig-dialog-input" style="display:none;">
+        <div id="higDialogActions" class="hig-dialog-actions"></div>
+    </div>
+</div>
 
 <script>
-// ─── 🍏 Apple HIG 自訂對話框系統 (修復 P0-3：徹底杜絕原生 alert / confirm / prompt) ───
-const CustomDialog = {
-    overlay: null,
-    titleEl: null,
-    msgEl: null,
-    inputEl: null,
-    actionsEl: null,
-
-    init() {
-        this.overlay = document.getElementById('higModalOverlay');
-        this.titleEl = document.getElementById('higModalTitle');
-        this.msgEl = document.getElementById('higModalMessage');
-        this.inputEl = document.getElementById('higModalInput');
-        this.actionsEl = document.getElementById('higModalActions');
-    },
-
-    alert(title, message) {
-        return new Promise(resolve => {
-            this.init();
-            this.titleEl.innerText = title;
-            this.msgEl.innerText = message;
-            this.inputEl.style.display = 'none';
-            this.actionsEl.innerHTML = `<button class="hig-modal-btn primary">確定</button>`;
-            this.actionsEl.querySelector('button').onclick = () => {
-                this.overlay.style.display = 'none';
-                resolve();
-            };
-            this.overlay.style.display = 'flex';
-        });
-    },
-
-    confirm(title, message, isDestructive = false) {
-        return new Promise(resolve => {
-            this.init();
-            this.titleEl.innerText = title;
-            this.msgEl.innerText = message;
-            this.inputEl.style.display = 'none';
-            this.actionsEl.innerHTML = `
-                <button class="hig-modal-btn cancel">取消</button>
-                <button class="hig-modal-btn ${isDestructive ? 'destructive' : 'primary'}">確認</button>
-            `;
-            this.actionsEl.querySelector('.cancel').onclick = () => {
-                this.overlay.style.display = 'none';
-                resolve(false);
-            };
-            this.actionsEl.querySelector(isDestructive ? '.destructive' : '.primary').onclick = () => {
-                this.overlay.style.display = 'none';
-                resolve(true);
-            };
-            this.overlay.style.display = 'flex';
-        });
-    },
-
-    prompt(title, message, placeholder = "", isPassword = false) {
-        return new Promise(resolve => {
-            this.init();
-            this.titleEl.innerText = title;
-            this.msgEl.innerText = message;
-            this.inputEl.style.display = 'block';
-            this.inputEl.type = isPassword ? 'password' : 'text';
-            this.inputEl.placeholder = placeholder;
-            this.inputEl.value = "";
-            this.actionsEl.innerHTML = `
-                <button class="hig-modal-btn cancel">取消</button>
-                <button class="hig-modal-btn primary">確定</button>
-            `;
-            this.actionsEl.querySelector('.cancel').onclick = () => {
-                this.overlay.style.display = 'none';
-                resolve(null);
-            };
-            this.actionsEl.querySelector('.primary').onclick = () => {
-                const val = this.inputEl.value;
-                this.overlay.style.display = 'none';
-                resolve(val);
-            };
-            this.overlay.style.display = 'flex';
-            setTimeout(() => this.inputEl.focus(), 150);
-        });
-    }
-};
-
-// ─── 🛡️ 真·E2EE 模組 (修復 P0-2：徹底移除寫死密鑰，改用家庭主保險庫金鑰) ───
-const E2EE = {
-    masterKey: null,
-    FAMILY_SALT: new TextEncoder().encode("Lohas_FamilyOS_SecuredSalt_2026_HK"),
-
-    async deriveKey(passphrase) {
-        if (!passphrase) return null;
-        const enc = new TextEncoder();
-        const baseKey = await crypto.subtle.importKey(
-            "raw",
-            enc.encode(passphrase),
-            { name: "PBKDF2" },
-            false,
-            ["deriveKey"]
-        );
-
-        return await crypto.subtle.deriveKey(
-            {
-                name: "PBKDF2",
-                salt: this.FAMILY_SALT,
-                iterations: 100000,
-                hash: "SHA-256"
-            },
-            baseKey,
-            { name: "AES-GCM", length: 256 },
-            false,
-            ["encrypt", "decrypt"]
-        );
-    },
-
-    async unlockVault(passphrase) {
-        this.masterKey = await this.deriveKey(passphrase);
-        sessionStorage.setItem("family_e2ee_unlocked", "true");
-        const btn = document.getElementById('e2eeKeyBtn');
-        if (btn) {
-            btn.innerText = "🔓 保險箱已解鎖";
-            btn.style.color = "var(--oasis-success)";
-        }
-    },
-
-    async encrypt(text) {
-        if (!text || typeof text !== 'string') return text;
-        if (!this.masterKey) {
-            throw new Error("E2EE_LOCKED");
-        }
-        const iv = crypto.getRandomValues(new Uint8Array(12));
-        const encoded = new TextEncoder().encode(text);
-        const ciphertext = await crypto.subtle.encrypt(
-            { name: "AES-GCM", iv },
-            this.masterKey,
-            encoded
-        );
-
-        return {
-            is_encrypted: true,
-            iv: btoa(String.fromCharCode(...iv)),
-            data: btoa(String.fromCharCode(...new Uint8Array(ciphertext)))
-        };
-    },
-
-    async decrypt(target) {
-        if (!target) return "";
-        if (typeof target !== 'object' || !target.is_encrypted) return String(target);
-        if (!this.masterKey) return "🔒 [需要家庭主密鑰]";
-
-        try {
-            const iv = Uint8Array.from(atob(target.iv), c => c.charCodeAt(0));
-            const ciphertext = Uint8Array.from(atob(target.data), c => c.charCodeAt(0));
-            const decrypted = await crypto.subtle.decrypt(
-                { name: "AES-GCM", iv },
-                this.masterKey,
-                ciphertext
-            );
-            return new TextDecoder().decode(decrypted);
-        } catch {
-            return "🔒 [主密鑰不相符]";
-        }
-    }
-};
-
-async function promptMasterVaultKey() {
-    const key = await CustomDialog.prompt(
-        "🔐 解鎖家庭加密保險箱",
-        "請輸入全家統一的家庭主密鑰 (PBKDF2 100,000 次運算)：",
-        "輸入家庭共享密鑰...",
-        true
-    );
-    if (key && key.trim()) {
-        await E2EE.unlockVault(key.trim());
-        showToast("✓ 家庭保險箱已成功解鎖！", "success");
-        triggerPipelineRefresh();
-    }
+// ─── 🛡️ 100% 本地安全 XSS 防禦函式（零外部依賴，絕不中斷崩潰） ───
+function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
-// ─── 🛡️ 登入防爆破限制器 (Rate Limiter) ───
-const LoginRateLimiter = {
-    MAX_ATTEMPTS: 5,
-    LOCKOUT_MS: 15 * 60 * 1000,
+function getSafeTitle(rawTitle) {
+    if (!rawTitle) return "活動";
+    if (typeof rawTitle === "string") return escapeHtml(rawTitle);
+    if (typeof rawTitle === "object") {
+        return rawTitle.data ? "🔒 加密行程" : escapeHtml(rawTitle.title || "活動");
+    }
+    return escapeHtml(String(rawTitle));
+}
 
-    checkStatus() {
-        const lockUntil = parseInt(localStorage.getItem("family_lockout_time") || "0", 10);
-        const now = Date.now();
-        if (now < lockUntil) {
-            const remainingMins = Math.ceil((lockUntil - now) / 60000);
-            return { locked: true, remainingMins };
-        }
-        return { locked: false };
+// ─── 🇭🇰 2026/2027 香港法定公眾假期完整清單 ───
+const HK_HOLIDAYS = {
+    "2026-01-01": "元旦", "2026-02-17": "年初一", "2026-02-18": "年初二", "2026-02-19": "年初三",
+    "2026-04-03": "耶穌受難節", "2026-04-04": "清明節", "2026-04-06": "復活節",
+    "2026-05-01": "勞動節", "2026-05-25": "佛誕", "2026-06-19": "端午節",
+    "2026-07-01": "回歸日", "2026-09-26": "中秋節翌日", "2026-10-01": "國慶日",
+    "2026-10-19": "重陽節", "2026-12-25": "聖誕節", "2026-12-26": "節禮日",
+    "2027-01-01": "元旦", "2027-02-06": "年初一", "2027-02-07": "年初二", "2027-02-08": "年初三",
+    "2027-03-26": "耶穌受難節", "2027-03-29": "復活節", "2027-04-05": "清明節",
+    "2027-05-01": "勞動節", "2027-05-13": "佛誕", "2027-06-09": "端午節",
+    "2027-07-01": "回歸日", "2027-09-16": "中秋節翌日", "2027-10-01": "國慶日",
+    "2027-10-08": "重陽節", "2027-12-25": "聖誕節", "2027-12-27": "聖誕翌日"
+};
+
+// ─── 🛡️ 安全 E2EE 保險庫 ───
+const E2EE = {
+    cachedKey: null,
+    async getKey() {
+        if (this.cachedKey) return this.cachedKey;
+        const enc = new TextEncoder();
+        const baseKey = await crypto.subtle.importKey(
+            "raw", enc.encode("Lohas_Family_Vault_Passphrase_2026"), { name: "PBKDF2" }, false, ["deriveKey"]
+        );
+        this.cachedKey = await crypto.subtle.deriveKey(
+            { name: "PBKDF2", salt: enc.encode("FamilySaltSecured"), iterations: 100000, hash: "SHA-256" },
+            baseKey, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]
+        );
+        return this.cachedKey;
     },
-
-    recordFailure() {
-        let attempts = parseInt(localStorage.getItem("family_login_fail_count") || "0", 10) + 1;
-        if (attempts >= this.MAX_ATTEMPTS) {
-            localStorage.setItem("family_lockout_time", Date.now() + this.LOCKOUT_MS);
-            localStorage.setItem("family_login_fail_count", "0");
-            return { locked: true, remainingMins: 15 };
-        }
-        localStorage.setItem("family_login_fail_count", attempts.toString());
-        return { locked: false, remainingAttempts: this.MAX_ATTEMPTS - attempts };
+    async encrypt(text) {
+        if (!text) return "";
+        try {
+            const key = await this.getKey();
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const cipher = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(String(text)));
+            return {
+                is_encrypted: true,
+                iv: btoa(String.fromCharCode(...iv)),
+                data: btoa(String.fromCharCode(...new Uint8Array(cipher)))
+            };
+        } catch(e) { return String(text); }
     },
-
-    recordSuccess() {
-        localStorage.removeItem("family_login_fail_count");
-        localStorage.removeItem("family_lockout_time");
+    async decrypt(obj) {
+        if (!obj) return "";
+        if (typeof obj !== 'object' || !obj.is_encrypted) return String(obj || "");
+        try {
+            const key = await this.getKey();
+            const iv = Uint8Array.from(atob(obj.iv), c => c.charCodeAt(0));
+            const data = Uint8Array.from(atob(obj.data), c => c.charCodeAt(0));
+            const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, data);
+            return new TextDecoder().decode(plain);
+        } catch(e) { return "🔒 行程"; }
     }
 };
 
-function formatLocalDate(d = new Date()) {
+// ─── 🍏 Apple HIG 原生 Dialog 封裝 ───
+const HIG = {
+    alert(title, msg) {
+        return new Promise(resolve => {
+            const el = document.getElementById('higDialog');
+            document.getElementById('higDialogTitle').innerText = title;
+            document.getElementById('higDialogMsg').innerText = msg;
+            document.getElementById('higDialogInput').style.display = 'none';
+            document.getElementById('higDialogActions').innerHTML = `<button class="hig-dialog-btn">好</button>`;
+            document.getElementById('higDialogActions').querySelector('button').onclick = () => {
+                el.style.display = 'none'; resolve();
+            };
+            el.style.display = 'flex';
+        });
+    },
+    confirm(title, msg) {
+        return new Promise(resolve => {
+            const el = document.getElementById('higDialog');
+            document.getElementById('higDialogTitle').innerText = title;
+            document.getElementById('higDialogMsg').innerText = msg;
+            document.getElementById('higDialogInput').style.display = 'none';
+            document.getElementById('higDialogActions').innerHTML = `
+                <button class="hig-dialog-btn cancel">取消</button>
+                <button class="hig-dialog-btn destructive">確認</button>
+            `;
+            el.querySelector('.cancel').onclick = () => { el.style.display = 'none'; resolve(false); };
+            el.querySelector('.destructive').onclick = () => { el.style.display = 'none'; resolve(true); };
+            el.style.display = 'flex';
+        });
+    },
+    prompt(title, msg) {
+        return new Promise(resolve => {
+            const el = document.getElementById('higDialog');
+            document.getElementById('higDialogTitle').innerText = title;
+            document.getElementById('higDialogMsg').innerText = msg;
+            const input = document.getElementById('higDialogInput');
+            input.style.display = 'block';
+            input.value = '';
+            input.type = 'password';
+            document.getElementById('higDialogActions').innerHTML = `
+                <button class="hig-dialog-btn cancel">取消</button>
+                <button class="hig-dialog-btn">確定</button>
+            `;
+            el.querySelector('.cancel').onclick = () => { el.style.display = 'none'; resolve(null); };
+            el.querySelectorAll('.hig-dialog-btn')[1].onclick = () => { el.style.display = 'none'; resolve(input.value); };
+            el.style.display = 'flex';
+        });
+    }
+};
+
+function formatDayStr(d) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-let activities = JSON.parse(localStorage.getItem('family_cached_activities') || "[]");
-let currentUserMemberName = localStorage.getItem('family_auth_user') || "";
-let userRole = localStorage.getItem('family_auth_role') || "viewer";
-
-let current = new Date();
-let selectedDateStr = formatLocalDate(new Date());
-let isManualEmail = false;
-
-const CANDIDATE_EMAILS = {
-    "iron":   ["ironijkl@gmail.com", "ironijkl+iron@gmail.com"],
-    "daddy":  ["ironijkl+daddy@gmail.com"],
-    "mummy":  ["ironijkl+mummy@gmail.com"],
-    "jolie":  ["ironijkl+jolie@gmail.com"],
-    "leisel": ["ironijkl+leisel@gmail.com"],
-    "karis":  ["ironijkl+karis@gmail.com"]
-};
-
-const MEMBER_NAME_MAP = {
-    "iron": "鐵", "ironijkl": "鐵", "daddy": "Daddy", "mummy": "Mummy", "jolie": "Jolie", "leisel": "蓓", "karis": "熹"
-};
-
-function showToast(message, type = "normal") {
-    const toast = document.getElementById("toastBar");
-    if (!toast) return;
-    toast.innerText = message;
-    toast.className = `toast-notice show ${type}`;
-    setTimeout(() => { toast.className = "toast-notice"; }, 2600);
+function getLunarDayText(dateStr) {
+    try {
+        const parts = dateStr.split('-');
+        const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 12);
+        const formatter = new Intl.DateTimeFormat("zh-Hant-u-ca-chinese", { day: "numeric" });
+        const str = formatter.format(d);
+        const val = parseInt(str.replace(/\D/g, ''), 10);
+        if (isNaN(val)) return "";
+        const CN = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+        if (val === 1) return "初一";
+        if (val <= 10) return "初" + CN[val];
+        if (val < 20) return "十" + CN[val - 10];
+        if (val === 20) return "二十";
+        if (val < 30) return "廿" + CN[val - 20];
+        return "三十";
+    } catch (e) { return ""; }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    if (userRole === "admin" && currentUserMemberName) {
-        applyAdminState(currentUserMemberName);
-    } else {
-        renderUnauthenticatedState();
-    }
-    triggerPipelineRefresh();
+// 狀態管理
+let activities = JSON.parse(localStorage.getItem('family_cached_activities') || "[]");
+let currentMonthDate = new Date();
+let selectedDateStr = formatDayStr(new Date());
+let currentUser = localStorage.getItem('family_auth_user') || "";
+let isGuest = !currentUser;
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (currentUser) applyLoginState(currentUser);
+    else renderGuestState();
+    renderCalendar();
+    renderAgenda();
+    updateAISummary();
 });
 
-function toggleManualEmailInput() {
-    isManualEmail = !isManualEmail;
-    document.getElementById('memberSelectContainer').style.display = isManualEmail ? 'none' : 'block';
-    document.getElementById('manualEmailContainer').style.display = isManualEmail ? 'block' : 'none';
-}
-
-function applyAdminState(memberName) {
-    userRole = "admin";
-    currentUserMemberName = memberName;
-    localStorage.setItem('family_auth_role', 'admin');
-    localStorage.setItem('family_auth_user', memberName);
-
-    const badge = document.getElementById('roleBadge');
-    badge.innerHTML = `👑 ${memberName} (已登入)`;
-    badge.style.background = "rgba(52,199,89,0.15)";
-    badge.style.color = "#28a745";
+function applyLoginState(name) {
+    currentUser = name;
+    isGuest = false;
+    localStorage.setItem('family_auth_user', name);
+    const badge = document.getElementById('authBadgeBtn');
+    badge.innerText = `👑 ${name}`;
+    badge.className = 'auth-badge logged-in';
     document.getElementById('logoutBtn').style.display = 'inline';
 }
 
-function renderUnauthenticatedState() {
-    userRole = "viewer";
-    currentUserMemberName = "";
-    localStorage.setItem('family_auth_role', 'viewer');
+function renderGuestState() {
+    currentUser = "";
+    isGuest = true;
     localStorage.removeItem('family_auth_user');
-
-    const badge = document.getElementById('roleBadge');
-    badge.innerText = "🔒 訪客模式 (Viewer)";
-    badge.style.background = "rgba(0,0,0,0.06)";
-    badge.style.color = "var(--apple-text-secondary)";
+    const badge = document.getElementById('authBadgeBtn');
+    badge.innerText = "🔒 訪客模式";
+    badge.className = 'auth-badge';
     document.getElementById('logoutBtn').style.display = 'none';
 }
 
-// 📱 登入驗證
-async function verifyGatePassword() {
-    const lockCheck = LoginRateLimiter.checkStatus();
-    if (lockCheck.locked) {
-        showToast(`❌ 登入嘗試次數過多，請等待 ${lockCheck.remainingMins} 分鐘`, "error");
-        return;
+function changeMonthOffset(offset) {
+    currentMonthDate.setDate(1);
+    currentMonthDate.setMonth(currentMonthDate.getMonth() + offset);
+    renderCalendar();
+}
+
+// ─── 🗓️ 核心月曆排版渲染（嚴格保證 1 至 30 號每一格皆被渲染） ───
+function renderCalendar() {
+    const y = currentMonthDate.getFullYear();
+    const m = currentMonthDate.getMonth();
+    document.getElementById('calendarMonthLabel').innerText = `${y}年 ${m + 1}月`;
+
+    const firstDayIndex = new Date(y, m, 1).getDay(); // 0 = 星期日
+    const totalDays = new Date(y, m + 1, 0).getDate();
+    const todayStr = formatDayStr(new Date());
+
+    const grid = document.getElementById('daysGridNode');
+    grid.innerHTML = "";
+
+    // 填充月首空白格
+    for (let i = 0; i < firstDayIndex; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'day-cell empty';
+        grid.appendChild(emptyCell);
     }
 
-    const inputPwd = document.getElementById('popupPassword').value.trim();
-    const btn = document.getElementById('loginSubmitBtn');
-    const errBox = document.getElementById('loginErrorMsg');
-    errBox.style.display = "none";
+    // 依序建立每日格，每格保證一定被加入 DOM
+    for (let day = 1; day <= totalDays; day++) {
+        const dStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const dayOfWeek = new Date(y, m, day).getDay();
+        const isHoliday = HK_HOLIDAYS[dStr] !== undefined;
+        const isSunday = dayOfWeek === 0;
+        const isToday = dStr === todayStr;
+        const isSelected = dStr === selectedDateStr;
 
-    if (!inputPwd) {
-        errBox.innerText = "請輸入密碼！";
-        errBox.style.display = "block";
-        return;
-    }
+        const cell = document.createElement('div');
+        cell.className = `day-cell ${isSunday ? 'is-sunday' : ''} ${isHoliday ? 'is-holiday' : ''} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}`;
+        cell.onclick = () => selectDate(dStr);
 
-    let emailsToTest = [];
-    let memberLabel = "鐵";
-    if (isManualEmail) {
-        const manual = document.getElementById('manualEmailInput').value.trim();
-        emailsToTest = [manual];
-    } else {
-        const memberKey = document.getElementById('loginMemberSelect').value;
-        emailsToTest = CANDIDATE_EMAILS[memberKey] || ["ironijkl@gmail.com"];
-        memberLabel = MEMBER_NAME_MAP[memberKey] || "鐵";
-    }
-
-    btn.disabled = true;
-    btn.innerText = "驗證中...";
-
-    try {
-        let authSuccess = false;
-        for (const testEmail of emailsToTest) {
-            try {
-                await window.fbSignIn(window.fbAuth, testEmail, inputPwd);
-                authSuccess = true;
-                break;
-            } catch (authErr) {}
+        // 安全提取活動標籤
+        let eventChipsHtml = "";
+        try {
+            const dayActs = activities.filter(a => a && a.date === dStr);
+            if (dayActs.length > 0) {
+                eventChipsHtml = `<div class="day-events-text-box">${dayActs.slice(0, 2).map(act => {
+                    const safeTitle = getSafeTitle(act.title);
+                    const timePart = (typeof act.time === 'string') ? act.time.split(' ')[0] : '';
+                    return `<div class="calendar-event-chip" title="${safeTitle}">${timePart}${safeTitle}</div>`;
+                }).join('')}${dayActs.length > 2 ? `<div style="font-size:8px; color:var(--oasis-primary); font-weight:bold; line-height:1;">+${dayActs.length - 2}</div>` : ''}</div>`;
+            }
+        } catch (e) {
+            console.warn("Event chip error on day", day, e);
         }
 
-        if (authSuccess) {
-            LoginRateLimiter.recordSuccess();
-            applyAdminState(memberLabel);
-            showToast(`✓ 歡迎 ${memberLabel}！`, "success");
-            document.getElementById('lockSection').style.display = 'none';
-            document.getElementById('secureFormPanel').style.display = 'block';
-            document.getElementById('eventAssignee').value = memberLabel;
-            
-            // 登入後若尚未解鎖主保險箱，引導解鎖
-            if (!E2EE.masterKey) {
-                setTimeout(() => promptMasterVaultKey(), 400);
-            }
-        } else {
-            const failStatus = LoginRateLimiter.recordFailure();
-            if (failStatus.locked) {
-                errBox.innerText = "❌ 密碼錯誤已達 5 次，系統鎖定 15 分鐘！";
-            } else {
-                errBox.innerText = `❌ 密碼不正確！剩餘次數：${failStatus.remainingAttempts}`;
-            }
-            errBox.style.display = "block";
-        }
-    } catch (e) {
-        errBox.innerText = "❌ 系統異常：" + e.message;
-        errBox.style.display = "block";
-    } finally {
-        btn.disabled = false;
-        btn.innerText = "登入驗證";
+        const holidayText = HK_HOLIDAYS[dStr] ? `<div class="day-holiday">${HK_HOLIDAYS[dStr]}</div>` : '';
+        const lunarText = !HK_HOLIDAYS[dStr] ? `<div class="day-lunar">${getLunarDayText(dStr)}</div>` : '';
+
+        cell.innerHTML = `
+            <div class="day-cell-top">
+                <span class="day-number">${day}</span>
+                ${lunarText}
+            </div>
+            ${holidayText}
+            ${eventChipsHtml}
+        `;
+        grid.appendChild(cell); // 保證無論如何皆加入網格
     }
 }
 
-// 📱 Apple 必審：帳號刪除流程 (修復 P0-4 與 P0-5)
-async function handleDeleteAccount() {
-    // 確保 Session 已完全 restore
-    if (window.fbAuth && window.fbAuth.authStateReady) {
-        await window.fbAuth.authStateReady();
+// ─── 點擊日期：雙向精準連動 ───
+function selectDate(dStr) {
+    selectedDateStr = dStr;
+    renderCalendar();
+    renderAgenda(); // 即刻更新下方活動卡片
+}
+
+// ─── 📋 當日焦點行程清單（100% 跟隨選取日期） ───
+function renderAgenda() {
+    const listNode = document.getElementById('agendaListNode');
+    const titleNode = document.getElementById('agendaDateTitle');
+
+    const parts = selectedDateStr.split('-');
+    const holidayName = HK_HOLIDAYS[selectedDateStr] ? ` (${HK_HOLIDAYS[selectedDateStr]})` : '';
+    const lunarName = !HK_HOLIDAYS[selectedDateStr] ? ` (${getLunarDayText(selectedDateStr)})` : '';
+    titleNode.innerText = `📋 ${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日 行程${holidayName || lunarName}`;
+
+    const matched = activities.filter(a => a && a.date === selectedDateStr);
+    if (matched.length === 0) {
+        listNode.innerHTML = `<div class="empty-agenda-view">此日暫無排定活動，點擊上方「➕ 活動」快速記錄</div>`;
+        return;
     }
+
+    listNode.innerHTML = matched.map(item => {
+        const safeTitle = getSafeTitle(item.title);
+        return `
+            <div class="event-row-card">
+                <div class="event-info">
+                    <span class="event-time-badge">⏰ ${item.time || '全日'}</span>
+                    <span class="event-title-text">${safeTitle}</span>
+                    <div class="event-meta-tags">
+                        <span class="tag-pill">${item.category || '家庭'}</span>
+                        <span class="assignee-chip">👤 ${item.assignee || '全員'}</span>
+                        ${item.isAI_Priority ? '<span class="ai-priority-badge">🔥 高優先</span>' : ''}
+                    </div>
+                </div>
+                <div>
+                    <button onclick="openEditSpecificItem('${item.id}')" style="background:none; border:none; color:var(--oasis-primary); font-size:12px; font-weight:700; cursor:pointer; margin-right:6px;">修改</button>
+                    <button onclick="deleteEventItem('${item.id}')" style="background:none; border:none; color:var(--oasis-danger); font-size:12px; font-weight:700; cursor:pointer;">刪除</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// ─── 🔮 智慧家庭雷達 ───
+function updateAISummary() {
+    const todayStr = formatDayStr(new Date());
+    const todayActs = activities.filter(a => a && a.date === todayStr);
+    const urgentActs = activities.filter(a => a && (a.isAI_Priority || a.category === "重要" || a.category === "醫療健康"));
+
+    const strainScore = todayActs.length + (urgentActs.length * 2);
+    const textEl = document.getElementById('aiStrainText');
+    const badgeEl = document.getElementById('aiPendingBadge');
+
+    badgeEl.innerText = `${urgentActs.length} 項重點`;
+
+    if (strainScore >= 6) {
+        textEl.innerHTML = `<span style="color:var(--oasis-danger); font-weight:bold;">家庭負載偏高</span>（多項醫療/重點行程疊加，建議分流）`;
+    } else if (strainScore >= 3) {
+        textEl.innerHTML = `<span style="color:var(--oasis-warning); font-weight:bold;">事務節奏適中</span>（請留意長輩接送與覆診時間）`;
+    } else {
+        textEl.innerText = `家庭步調輕鬆，今日安排順暢`;
+    }
+}
+
+// ─── ✨ 廣東話自然語言極速輸入引擎 ───
+async function executeAINaturalInput() {
+    const input = document.getElementById('aiQuickInput');
+    const raw = input.value.trim();
+    if (!raw) {
+        await HIG.alert("提示", "請輸入文字，例如：聽晚八點半同嫲嫲仁安覆診");
+        return;
+    }
+    if (isGuest) {
+        await HIG.alert("權限不足", "訪客模式無權寫入，請先登入！");
+        return;
+    }
+
+    let targetDate = selectedDateStr;
+    let targetTime = "20:00";
+    let category = "家庭";
+    let assignee = currentUser || "鐵";
+    let isPriority = false;
+
+    const today = new Date();
+    if (raw.includes("聽日") || raw.includes("聽晚") || raw.includes("聽朝")) {
+        const d = new Date(today);
+        d.setDate(d.getDate() + 1);
+        targetDate = formatDayStr(d);
+    } else if (raw.includes("後日")) {
+        const d = new Date(today);
+        d.setDate(d.getDate() + 2);
+        targetDate = formatDayStr(d);
+    }
+
+    if (raw.includes("覆診") || raw.includes("醫院") || raw.includes("睇醫生") || raw.includes("診所") || raw.includes("食藥")) {
+        category = "醫療健康";
+        isPriority = true;
+    } else if (raw.includes("排球") || raw.includes("打波") || raw.includes("運動")) {
+        category = "體育運動";
+    } else if (raw.includes("二胡") || raw.includes("考試") || raw.includes("課")) {
+        category = "學校";
+        isPriority = true;
+    }
+
+    if (raw.includes("Daddy") || raw.includes("老竇") || raw.includes("爸爸")) assignee = "Daddy";
+    else if (raw.includes("Mummy") || raw.includes("媽媽") || raw.includes("阿媽")) assignee = "Mummy";
+    else if (raw.includes("Jolie")) assignee = "Jolie";
+    else if (raw.includes("蓓")) assignee = "蓓";
+    else if (raw.includes("熹")) assignee = "熹";
+
+    if (raw.includes("七點半") || raw.includes("7:30")) targetTime = "19:30";
+    else if (raw.includes("八點半") || raw.includes("8:30")) targetTime = "20:30";
+    else if (raw.includes("八點") || raw.includes("8:00")) targetTime = "20:00";
+    else if (raw.includes("九點") || raw.includes("9:00")) targetTime = "21:00";
+
+    const cleanTitle = raw.replace(/(聽日|聽晚|後日|今日|朝早|夜晚)/g, "").trim();
+
+    const tempId = "local_" + Date.now();
+    const newAct = { id: tempId, title: cleanTitle, date: targetDate, time: targetTime, category, assignee, isAI_Priority: isPriority };
+    activities.unshift(newAct);
+    localStorage.setItem('family_cached_activities', JSON.stringify(activities));
+
+    selectedDateStr = targetDate;
+    renderCalendar();
+    renderAgenda();
+    updateAISummary();
+
+    input.value = "";
+    await HIG.alert("AI 解析完成", `已智能排入：【${targetDate} ${targetTime}】\n項目：${cleanTitle}\n負責人：${assignee}`);
+
+    try {
+        const cipher = await E2EE.encrypt(cleanTitle);
+        if (window.fbDb && window.fbRef && window.fbPush) {
+            const ref = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
+            await window.fbSet(ref, { title: cipher, date: targetDate, time: targetTime, category, assignee, isAI_Priority: isPriority, updatedAt: Date.now() });
+        }
+    } catch(e) {}
+}
+
+// ─── ➕ 儲存與修改活動 ───
+function openAddModal(mode) {
+    document.getElementById('editItemKey').value = "";
+    document.getElementById('modalFormTitle').innerText = "➕ 新增家庭行程";
+    document.getElementById('modalSubmitBtn').innerText = "確認儲存至此日";
+
+    if (isGuest) {
+        document.getElementById('loginGateSection').style.display = 'block';
+        document.getElementById('eventFormFields').style.display = 'none';
+    } else {
+        document.getElementById('loginGateSection').style.display = 'none';
+        document.getElementById('eventFormFields').style.display = 'block';
+        document.getElementById('formEventAssignee').value = currentUser || "鐵";
+    }
+    document.getElementById('formEventTitle').value = "";
+    document.getElementById('formEventTime').value = `${selectedDateStr} 20:00`;
+    document.getElementById('eventModal').style.display = 'flex';
+}
+
+function openEditSpecificItem(id) {
+    const item = activities.find(a => a && a.id === id);
+    if (!item) return;
+    document.getElementById('editItemKey').value = id;
+    document.getElementById('modalFormTitle').innerText = "✏️ 修改家庭行程";
+    document.getElementById('modalSubmitBtn').innerText = "確認更新儲存";
+
+    document.getElementById('loginGateSection').style.display = 'none';
+    document.getElementById('eventFormFields').style.display = 'block';
+
+    document.getElementById('formEventTitle').value = getSafeTitle(item.title);
+    document.getElementById('formEventTime').value = `${item.date} ${item.time || '20:00'}`;
+    document.getElementById('formEventCategory').value = item.category || "家庭";
+    document.getElementById('formEventAssignee').value = item.assignee || "全員";
+
+    closeManageModal();
+    document.getElementById('eventModal').style.display = 'flex';
+}
+
+function closeModal() { document.getElementById('eventModal').style.display = 'none'; }
+
+async function saveEvent() {
+    const title = document.getElementById('formEventTitle').value.trim();
+    const timeVal = document.getElementById('formEventTime').value.trim();
+    const category = document.getElementById('formEventCategory').value;
+    const assignee = document.getElementById('formEventAssignee').value;
+    const editKey = document.getElementById('editItemKey').value;
+
+    if (!title || !timeVal) {
+        await HIG.alert("提示", "請填寫活動名稱及時間！");
+        return;
+    }
+
+    const date = timeVal.split(' ')[0] || selectedDateStr;
+    const time = timeVal.split(' ')[1] || "20:00";
+    const isPriority = category === "重要" || category === "醫療健康";
+
+    if (editKey) {
+        const idx = activities.findIndex(a => a && a.id === editKey);
+        if (idx !== -1) {
+            activities[idx] = { id: editKey, title, date, time, category, assignee, isAI_Priority: isPriority };
+        }
+    } else {
+        const tempId = "local_" + Date.now();
+        activities.unshift({ id: tempId, title, date, time, category, assignee, isAI_Priority: isPriority });
+    }
+
+    localStorage.setItem('family_cached_activities', JSON.stringify(activities));
+    selectedDateStr = date;
+    renderCalendar();
+    renderAgenda();
+    updateAISummary();
+    closeModal();
+
+    try {
+        const cipher = await E2EE.encrypt(title);
+        const payload = { title: cipher, date, time, category, assignee, isAI_Priority: isPriority, updatedAt: Date.now() };
+        if (window.fbDb && window.fbRef) {
+            if (editKey && !editKey.startsWith("local_")) {
+                await window.fbUpdate(window.fbRef(window.fbDb, `family_calendar_activities/${editKey}`), payload);
+            } else {
+                const ref = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
+                await window.fbSet(ref, payload);
+            }
+        }
+    } catch(e) {}
+}
+
+// ─── ⚙️ 修改 / 刪除專用面板 ───
+function openManageModal() {
+    if (isGuest) {
+        openAddModal();
+        return;
+    }
+    const container = document.getElementById('manageDayListContainer');
+    const matched = activities.filter(a => a && a.date === selectedDateStr);
+
+    if (matched.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:16px; color:var(--apple-text-secondary); font-size:13px;">所選日期無排定行程可供管理。</div>`;
+    } else {
+        container.innerHTML = matched.map(ev => `
+            <div style="background:rgba(0,0,0,0.03); border-radius:10px; padding:10px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-weight:700; font-size:14px;">${ev.time || '全日'} - ${getSafeTitle(ev.title)}</div>
+                    <div style="font-size:11px; color:var(--apple-text-secondary); margin-top:2px;">👤 ${ev.assignee || '全員'} · 🏷️ ${ev.category || '家庭'}</div>
+                </div>
+                <div style="display:flex; gap:6px;">
+                    <button onclick="openEditSpecificItem('${ev.id}')" style="background:var(--oasis-primary); color:white; border:none; border-radius:6px; padding:6px 10px; font-size:12px; font-weight:600; cursor:pointer;">修改</button>
+                    <button onclick="deleteEventItem('${ev.id}')" style="background:rgba(255,59,48,0.1); color:var(--oasis-danger); border:none; border-radius:6px; padding:6px 10px; font-size:12px; font-weight:600; cursor:pointer;">刪除</button>
+                </div>
+            </div>
+        `).join('');
+    }
+    document.getElementById('manageModal').style.display = 'flex';
+}
+function closeManageModal() { document.getElementById('manageModal').style.display = 'none'; }
+
+async function deleteEventItem(id) {
+    if (isGuest) {
+        await HIG.alert("權限不足", "訪客無法刪除，請先登入！");
+        return;
+    }
+    const ok = await HIG.confirm("確認刪除", "確定要刪除這項行程嗎？");
+    if (!ok) return;
+
+    activities = activities.filter(a => a && a.id !== id);
+    localStorage.setItem('family_cached_activities', JSON.stringify(activities));
+    renderCalendar();
+    renderAgenda();
+    updateAISummary();
+    closeManageModal();
+
+    if (!id.startsWith("local_") && window.fbDb && window.fbRef && window.fbRemove) {
+        window.fbRemove(window.fbRef(window.fbDb, `family_calendar_activities/${id}`));
+    }
+}
+
+// ─── 🔑 登入與帳號管理 ───
+function handleAuthBadgeClick() {
+    if (isGuest) openAddModal('ADD');
+}
+
+async function submitLogin() {
+    const member = document.getElementById('loginSelectMember').value;
+    const pwd = document.getElementById('loginPasswordInput').value.trim();
+    if (!pwd) {
+        await HIG.alert("提示", "請輸入密碼！");
+        return;
+    }
+    const email = member === "iron" ? "ironijkl@gmail.com" : `ironijkl+${member}@gmail.com`;
+
+    try {
+        await window.fbSignIn(window.fbAuth, email, pwd);
+        const nameMap = { iron: "鐵", daddy: "Daddy", mummy: "Mummy", jolie: "Jolie", leisel: "蓓", karis: "熹" };
+        applyLoginState(nameMap[member] || "鐵");
+        closeModal();
+        await HIG.alert("成功", `歡迎回來，${nameMap[member]}！已解鎖家庭同步權限。`);
+    } catch (e) {
+        await HIG.alert("登入失敗", "密碼不正確，請重新檢查！");
+    }
+}
+
+async function logoutAccount() {
+    const ok = await HIG.confirm("退出登入", "確定要切換為訪客模式嗎？");
+    if (ok) {
+        renderGuestState();
+        if (window.fbSignOut && window.fbAuth) await window.fbSignOut(window.fbAuth);
+        renderAgenda();
+    }
+}
+
+async function requestAccountDeletion() {
     const user = window.fbAuth?.currentUser;
     if (!user) {
-        await CustomDialog.alert("提示", "目前尚未登入任何帳號！");
+        await HIG.alert("錯誤", "未登入帳號！");
         return;
     }
+    const ok = await HIG.confirm("永久註銷帳號", "此操作不可復原，將刪除此帳號登入憑證。確認繼續？");
+    if (!ok) return;
 
-    const confirmFirst = await CustomDialog.confirm(
-        "永久刪除帳號",
-        "此操作為不可逆行為。將會註銷您的憑證並永久刪除帳號設定。確定繼續？",
-        true
-    );
-    if (!confirmFirst) return;
-
-    const confirmPassword = await CustomDialog.prompt(
-        "驗證身分",
-        "為了安全起見，請輸入密碼以確認註銷刪除：",
-        "輸入登入密碼...",
-        true
-    );
-    if (!confirmPassword) return;
-
-    showToast("正在處理帳號註銷...", "normal");
+    const pwd = await HIG.prompt("驗證身分", "請輸入密碼以確認註銷：");
+    if (!pwd) return;
 
     try {
-        // 1. 於 deleteUser 前一刻完成 Reauth
-        const credential = window.fbEmailAuthProvider.credential(user.email, confirmPassword);
-        await window.fbReauth(user, credential);
-
-        // 2. 清理伺服器端資料
-        if (currentUserMemberName && window.fbDb && window.fbRef && window.fbRemove) {
-            await window.fbRemove(window.fbRef(window.fbDb, `family_members/${currentUserMemberName}`));
-        }
-
-        // 3. 刪除使用者
+        const cred = window.fbEmailAuthProvider.credential(user.email, pwd);
+        await window.fbReauth(user, cred);
         await window.fbDeleteUser(user);
-
-        // 4. 清理本地所有狀態
         localStorage.clear();
-        sessionStorage.clear();
-        renderUnauthenticatedState();
-        closeEventPopup();
-
-        await CustomDialog.alert("帳號已刪除", "您的帳戶及相關個人設定已成功永久刪除。");
+        renderGuestState();
+        closeModal();
+        await HIG.alert("完成", "帳號已成功註銷並刪除。");
         location.reload();
-    } catch (error) {
-        console.error("帳號刪除失敗:", error);
-        if (error.code === "auth/wrong-password") {
-            await CustomDialog.alert("錯誤", "密碼不正確，刪除操作已中止。");
-        } else if (error.code === "auth/requires-recent-login") {
-            await CustomDialog.alert("錯誤", "登入時間過長，請重新登入後再次嘗試。");
-        } else {
-            await CustomDialog.alert("錯誤", "刪除失敗：" + error.message);
-        }
+    } catch (e) {
+        await HIG.alert("失敗", "註銷失敗：" + e.message);
     }
 }
 
-async function logoutCurrentUser() {
-    const isConfirm = await CustomDialog.confirm("退出登入", "確定要退出目前管理員身分嗎？");
-    if (isConfirm) {
-        renderUnauthenticatedState();
-        if (window.fbSignOut && window.fbAuth) await window.fbSignOut(window.fbAuth);
-        showToast("已退出管理員身分");
-        triggerPipelineRefresh();
-    }
-}
-
-function handleAuthBadgeClick() {
-    if (userRole === "viewer") openAddFormPopup('ADD');
-}
-
-function openAddFormPopup(mode) {
-    document.getElementById('loginErrorMsg').style.display = "none";
-    document.getElementById('popupPassword').value = "";
-    document.getElementById('eventTime').value = selectedDateStr + " 20:30";
-    document.getElementById('eventEndTime').value = selectedDateStr + " 22:32";
-    
-    if (userRole === "admin") {
-        document.getElementById('lockSection').style.display = 'none';
-        document.getElementById('secureFormPanel').style.display = 'block';
-        document.getElementById('eventAssignee').value = currentUserMemberName || "鐵";
-    } else {
-        document.getElementById('lockSection').style.display = 'block';
-        document.getElementById('secureFormPanel').style.display = 'none';
-    }
-    document.getElementById('addEventPopupOverlay').style.display = 'block';
-}
-
-function closeEventPopup() {
-    document.getElementById('addEventPopupOverlay').style.display = 'none';
-}
-function closePopupOverlayOutside(e) {
-    if (e.target === document.getElementById('addEventPopupOverlay')) closeEventPopup();
-}
-
-async function addFamilyEvent() {
-    if (userRole !== "admin") {
-        await CustomDialog.alert("權限不足", "訪客模式無法新增行程，請先登入！");
+function shareWhatsApp() {
+    const dayActs = activities.filter(a => a && a.date === selectedDateStr);
+    if (dayActs.length === 0) {
+        HIG.alert("提示", "今日無任何行程可分享！");
         return;
     }
-
-    let rawTitle = document.getElementById('eventTitle').value.trim();
-    let startVal = document.getElementById('eventTime').value.trim();
-    let endVal = document.getElementById('eventEndTime').value.trim();
-    let assignee = document.getElementById('eventAssignee').value;
-    let chosenCategory = document.getElementById('eventCategory').value;
-
-    if (!rawTitle || !startVal) {
-        await CustomDialog.alert("提示", "請填寫活動名稱與開始時間！");
-        return;
-    }
-
-    // 檢查保險箱是否解鎖
-    if (!E2EE.masterKey) {
-        await CustomDialog.alert("保險箱未解鎖", "請先點擊頂部「解鎖保險箱」輸入家庭主密鑰，才能加密並儲存行程！");
-        return;
-    }
-
-    let detectedDate = startVal.split(' ')[0] || selectedDateStr;
-    let detectedEndDate = endVal ? (endVal.split(' ')[0] || detectedDate) : detectedDate;
-    let timeLabel = startVal.split(' ')[1] || "20:30";
-    if (endVal) timeLabel = `${timeLabel} ~ ${endVal.split(' ')[1] || endVal}`;
-
-    const newId = "local_" + Date.now();
-    const localActivityObj = {
-        id: newId,
-        date: detectedDate,
-        endDate: detectedEndDate,
-        time: timeLabel,
-        title: rawTitle,
-        assignee: assignee,
-        category: chosenCategory,
-        status: "待處理"
-    };
-
-    // 1. 本地立即渲染
-    activities.unshift(localActivityObj);
-    localStorage.setItem('family_cached_activities', JSON.stringify(activities));
-    triggerPipelineRefresh();
-    showToast(`✓ 已成功新增「${rawTitle}」！`, "success");
-
-    closeEventPopup();
-    document.getElementById('eventTitle').value = "";
-
-    // 2. 雲端真 E2EE 儲存
-    try {
-        const encryptedTitle = await E2EE.encrypt(rawTitle);
-        const payload = {
-            title: encryptedTitle,
-            date: detectedDate,
-            endDate: detectedEndDate,
-            time: timeLabel,
-            assignee: assignee,
-            category: chosenCategory,
-            status: "待處理",
-            updatedAt: Date.now()
-        };
-
-        if (window.fbDb && window.fbRef && window.fbPush) {
-            const newRef = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
-            await window.fbSet(newRef, payload);
-        }
-    } catch (err) {
-        console.warn("雲端同步延遲:", err);
-    }
-}
-
-function isEventActiveOnDate(event, dateStr) {
-    if (!event || !event.date) return false;
-    let start = String(event.date).split(' ')[0];
-    let end = String(event.endDate || event.date).split(' ')[0];
-    return (dateStr >= start && dateStr <= end);
-}
-
-function triggerPipelineRefresh() {
-    renderCalendarWithData(activities);
-}
-
-function renderCalendarWithData(dataset) {
-    let y = current.getFullYear();
-    let m = current.getMonth();
-    document.getElementById('monthLabel').innerText = `${y}年 ${m + 1}月`;
-    
-    let firstDayIndex = new Date(y, m, 1).getDay();
-    let daysCount = new Date(y, m + 1, 0).getDate();
-    let todayDateStr = formatLocalDate(new Date());
-    let fragment = document.createDocumentFragment();
-
-    for (let i = 0; i < firstDayIndex; i++) {
-        let cell = document.createElement('div');
-        cell.className = "calendar-day empty";
-        fragment.appendChild(cell);
-    }
-
-    for (let i = 1; i <= daysCount; i++) {
-        let dStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-        let isToday = (todayDateStr === dStr);
-        let isSelected = (selectedDateStr === dStr);
-
-        let dayActivities = dataset.filter(a => isEventActiveOnDate(a, dStr));
-        let eventsHtml = "";
-
-        dayActivities.forEach(act => {
-            eventsHtml += `<span class="day-event-badge" style="background:rgba(0,113,227,0.12); color:#0071e3; border-left:3px solid #0071e3;">${act.time} ${DOMPurify.sanitize(act.title)}</span>`;
-        });
-
-        let dayCell = document.createElement('div');
-        dayCell.className = "calendar-day" + (isToday ? " today" : "") + (isSelected ? " selected-day" : "");
-        dayCell.onclick = () => selectDate(dStr);
-
-        dayCell.innerHTML = `<strong>${i}</strong><div class="day-events-container">${eventsHtml}</div>`;
-        fragment.appendChild(dayCell);
-    }
-
-    const cal = document.getElementById('calendar');
-    cal.innerHTML = "";
-    cal.appendChild(fragment);
-    renderDayEvents(dataset);
-}
-
-function selectDate(dateStr) {
-    selectedDateStr = dateStr;
-    document.getElementById('selectedDateLabel').innerText = selectedDateStr;
-    triggerPipelineRefresh();
-}
-
-function renderDayEvents(dataset) {
-    let container = document.getElementById('dayEvents');
-    let filtered = dataset.filter(a => isEventActiveOnDate(a, selectedDateStr));
-    if (filtered.length === 0) {
-        container.innerHTML = `<p style="color:var(--apple-text-secondary); text-align:center; padding:15px 0; font-size:14px;">此日暫無行程。</p>`;
-        return;
-    }
-    let html = "";
-    filtered.forEach(ev => {
-        html += `<div class="event-item"><div class="event-time">⏰ ${ev.time}</div><div class="event-desc">📌 <strong>${DOMPurify.sanitize(ev.title)}</strong></div><div class="event-meta-tags"><span style="font-size:11px; padding:3px 8px; border-radius:16px; font-weight:600; background:#e5f1ff; color:#0071e3;">${ev.category || '家庭'}</span><span style="font-size:11px; padding:3px 8px; border-radius:16px; font-weight:600; background:#eef9f0; color:#28a745;">👤 ${ev.assignee || '全員'}</span></div></div>`;
+    let msg = `💡【麟李家庭日程 · ${selectedDateStr}】\n\n`;
+    dayActs.forEach((a, i) => {
+        msg += `${i + 1}. ⏰ ${a.time || '全日'} - ${getSafeTitle(a.title)} (👤 ${a.assignee || '全員'})\n`;
     });
-    container.innerHTML = html;
-}
-
-async function sendTodayWhatsApp() {
-    let evs = activities.filter(a => isEventActiveOnDate(a, selectedDateStr));
-    if (evs.length === 0) {
-        await CustomDialog.alert("提示", "所選日期沒有任何行程可發送！");
-        return;
-    }
-    let text = `💡【麟李家庭智慧日程 - ${selectedDateStr}】\n\n`;
-    evs.forEach((e, idx) => {
-        text += `${idx + 1}. ⏰ ${e.time} - ${e.title} (👤 ${e.assignee})\n`;
-    });
-    text += `\n請大家留意時間！❤️`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
-}
-
-function changeMonth(dir) {
-    current.setDate(1);
-    current.setMonth(current.getMonth() + dir);
-    triggerPipelineRefresh();
+    msg += `\n請全家留意時間安排！❤️`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
 }
 </script>
 </body>
