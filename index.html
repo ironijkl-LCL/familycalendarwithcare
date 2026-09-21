@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#f2f2f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="description" content="麟李家庭智慧管理系統 - 結合 Dify AI 真實收據辨識、私人保密、手勢縮放、原生選取器與即時日曆同步">
+<meta name="description" content="麟李家庭智慧管理系統 - 結合 Dify AI 視覺辨識、絕對私人保密、手勢縮放、原生選取器與即時日曆同步">
 <title>Family OS - 麟李家庭智慧管理系統</title>
 
 <link rel="manifest" href="manifest.json">
@@ -47,7 +47,7 @@ body {
 
 input, textarea, select { font-size: 16px !important; }
 
-/* ─── 頂部導航列 (嚴格避開 iPhone 瀏海、動態島與狀態列) ─── */
+/* ─── 頂部導航列 (徹底避開 iPhone 瀏海、動態島與 5:47 狀態列時間) ─── */
 header {
     background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(20px);
@@ -91,7 +91,7 @@ header {
     padding: 4px;
 }
 
-/* ─── 主畫面垂直自適應佈局 ─── */
+/* ─── 主畫面佈局 ─── */
 .main-layout {
     flex: 1;
     display: flex;
@@ -1434,6 +1434,8 @@ async function recognizeReceiptWithDify(file) {
         const result = await workflowRes.json();
         if (result.data && result.data.outputs) {
             return result.data.outputs;
+        } else if (result.outputs) {
+            return result.outputs;
         } else {
             throw new Error("Dify 回傳格式異常");
         }
@@ -1484,7 +1486,7 @@ function openExpenseModal(editItem = null) {
         document.getElementById('expenseDateInput').value = selectedDateStr;
         document.getElementById('expenseTimeInput').value = "12:30";
         document.getElementById('expenseVisibilitySelect').value = "public";
-        document.getElementById('expenseCategorySelect').value = "日常開支";
+        document.getElementById('expenseCategorySelect').value = "家庭餐飲";
         document.getElementById('expensePayerSelect').value = currentUser || "鐵";
         
         const preview = document.getElementById('receiptPreviewImg');
@@ -1504,7 +1506,7 @@ function closeExpenseModal() {
     document.getElementById('expenseModal').style.display = "none";
 }
 
-// 🎯 真實收據圖片選取事件
+// 🎯 真實收據圖片選取事件（深層相容各類輸出並自動填充）
 async function handleReceiptFileChange(input) {
     const file = input.files && input.files[0];
     if (!file) return;
@@ -1516,17 +1518,43 @@ async function handleReceiptFileChange(input) {
     preview.src = URL.createObjectURL(file);
     preview.style.display = "block";
 
-    // 調用真實 Dify.ai Vision 視覺模型
-    const difyData = await recognizeReceiptWithDify(file);
+    const difyRaw = await recognizeReceiptWithDify(file);
     const statusEl = document.getElementById('receiptOcrStatus');
 
-    if (difyData) {
-        statusEl.innerText = "✓ Dify 辨識完成！已自動提取實付總額與商號";
-        if (difyData.merchant) document.getElementById('expenseMerchantInput').value = difyData.merchant;
-        if (difyData.amount) document.getElementById('expenseAmountInput').value = difyData.amount;
-        if (difyData.date) document.getElementById('expenseDateInput').value = difyData.date;
-        if (difyData.time) document.getElementById('expenseTimeInput').value = difyData.time;
-        if (difyData.category) document.getElementById('expenseCategorySelect').value = difyData.category;
+    if (!difyRaw) {
+        statusEl.innerText = "⚠️ 未能取得 Dify 回傳資料，請檢查網路或手動輸入";
+        return;
+    }
+
+    // 深層穿透解析
+    let data = difyRaw;
+    if (typeof data === 'string') {
+        try { data = JSON.parse(data.replace(/```json|```/g, '').trim()); } catch(e){}
+    }
+    if (data.text && typeof data.text === 'string') {
+        try { data = JSON.parse(data.text.replace(/```json|```/g, '').trim()); } catch(e){}
+    }
+    if (data.result && typeof data.result === 'object') {
+        data = data.result;
+    }
+
+    const merchant = data.merchant || data.title || data.shop_name || "";
+    const amount = parseFloat(data.amount || data.total || data.grand_total || 0);
+    const date = data.date || selectedDateStr;
+    const time = data.time || "12:30";
+    const category = data.category || "家庭餐飲";
+
+    if (merchant) document.getElementById('expenseMerchantInput').value = merchant;
+    if (!isNaN(amount) && amount > 0) document.getElementById('expenseAmountInput').value = amount;
+    if (date) document.getElementById('expenseDateInput').value = date;
+    if (time) document.getElementById('expenseTimeInput').value = time;
+    if (category) document.getElementById('expenseCategorySelect').value = category;
+
+    if (merchant || amount > 0) {
+        statusEl.innerText = `✓ Dify 辨識完成！已自動提取：${merchant} (HK$ ${amount})`;
+    } else {
+        statusEl.innerText = "⚠️ 已連線但未讀取到商戶或金額";
+        await HIG.alert("Dify 原始回傳排查", JSON.stringify(difyRaw, null, 2));
     }
 }
 
@@ -1889,7 +1917,7 @@ async function saveEvent() {
     // 💡 關鍵升級：儲存後立即彈出「已儲存」原生提示
     await HIG.alert(
         editKey ? "已更新" : "已儲存", 
-        editKey ? `行程【${title}】已成功更新！` : `行程【${title}】已成功儲存至 ${date}！\n可見度：${isPrivate ? '🔒 不公開 (僅自己可見)' : '🌐 全家公開'}`
+        editKey ? `行程【${title}】已成功更新！` : `已儲存：行程【${title}】已成功儲存至 ${date}！\n可見度：${isPrivate ? '🔒 不公開 (僅自己可見)' : '🌐 全家公開'}`
     );
 
     try {
