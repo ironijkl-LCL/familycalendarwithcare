@@ -2,15 +2,12 @@
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
-<!-- 修正 4：符合 Apple 無障礙標準，移除 user-scalable=no 與 maximum-scale=1.0 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#f2f2f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="description" content="麟李家庭智慧管理系統 - 結合 Dify AI 視覺辨識、絕對私人保密、原生選取器與即時日曆同步">
+<meta name="description" content="麟李家庭智慧管理系統 - 結合 Dify AI 視覺辨識、廣東話語音輸入、商戶預算雷達、絕對私人保密與即時日曆同步">
 <title>Family OS - 麟李家庭智慧管理系統</title>
-
-<!-- 修正 5：移除不存在的 manifest.json 與 icon 標籤，圖示改由 Xcode Assets.xcassets 統一提供 -->
 
 <style>
 :root {
@@ -132,7 +129,7 @@ header {
 .btn-purple { background: #5856d6; }
 .btn-wa { background: #25d366; }
 
-/* 🔮 排程列與狀態列 */
+/* 🔮 排程列、麥克風語音鍵與狀態列 */
 .ai-compact-bar {
     background: #ffffff;
     border: 1px solid var(--apple-border);
@@ -140,9 +137,33 @@ header {
     padding: 3px 6px;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     flex-shrink: 0;
 }
+.ai-speech-mic-btn {
+    background: rgba(0, 0, 0, 0.04);
+    border: none;
+    font-size: 15px;
+    cursor: pointer;
+    padding: 5px 7px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    line-height: 1;
+}
+.ai-speech-mic-btn.recording-pulse {
+    background: rgba(255, 59, 48, 0.15);
+    color: #ff3b30;
+    animation: micPulse 1.2s infinite ease-in-out;
+}
+@keyframes micPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); filter: drop-shadow(0 0 6px rgba(255, 59, 48, 0.6)); }
+    100% { transform: scale(1); }
+}
+
 .ai-nlp-input {
     flex: 1;
     border: none;
@@ -157,7 +178,7 @@ header {
     color: #ffffff;
     border: none;
     border-radius: 6px;
-    padding: 4px 8px;
+    padding: 5px 8px;
     font-size: 11px;
     font-weight: 600;
     cursor: pointer;
@@ -571,7 +592,6 @@ header {
 }
 .submit-btn-block:active { opacity: 0.85; }
 
-/* 修正 2：Sign in with Apple 官方樣式按鈕 */
 .apple-signin-btn {
     width: 100%;
     padding: 11px;
@@ -650,7 +670,6 @@ header {
 
   const app = initializeApp(firebaseConfig);
 
-  // 修正 1：徹底移除 capacitor: 協議的 debug token，僅限 localhost 本地瀏覽器開發使用
   if (location.hostname === "localhost") {
       self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
   }
@@ -687,7 +706,6 @@ header {
   window.fbUpdate = update;
   window.fbRemove = remove;
 
-  // 監聽 Firebase 登入身分
   onAuthStateChanged(auth, async (user) => {
       if (user) {
           const email = (user.email || "").toLowerCase();
@@ -752,7 +770,6 @@ header {
     <div class="header-status-group">
         <button id="authBadgeBtn" class="auth-badge" onclick="handleAuthBadgeClick()">🔒 訪客模式</button>
         <button id="logoutBtn" class="account-action-btn logout-btn" onclick="logoutAccount()">登出</button>
-        <!-- 修正 3：App Store Guideline 5.1.1(v) 要求必須提供的刪除帳號入口 -->
         <button id="deleteAccountBtn" class="account-action-btn delete-acc-btn" onclick="requestAccountDeletion()">註銷</button>
     </div>
 </header>
@@ -767,8 +784,10 @@ header {
         <button class="btn-wa" onclick="shareWhatsApp()">💬 WA</button>
     </div>
 
+    <!-- 🔮 P0 廣東話語音輸入直接整合於排程列 -->
     <div class="ai-compact-bar">
-        <input type="text" id="aiQuickInput" class="ai-nlp-input" placeholder="✨ 輸入日程或開支（例如：日常開支百佳280蚊、聽晚仁安覆診）...">
+        <button id="speechBtn" class="ai-speech-mic-btn" onclick="toggleSpeechRecognition()" title="點擊開始廣東話語音輸入">🎙️</button>
+        <input type="text" id="aiQuickInput" class="ai-nlp-input" placeholder="✨ 講或寫：百佳買咗280蚊、聽晚仁安覆診...">
         <button class="ai-nlp-btn" onclick="executeAINaturalInput()">AI 排程</button>
     </div>
 
@@ -835,7 +854,6 @@ header {
             <input type="password" id="loginPasswordInput" class="form-input" placeholder="輸入成員專屬密碼...">
             <button class="submit-btn-block" onclick="submitLogin()">登入驗證身分</button>
 
-            <!-- 修正 2：符合 Guideline 4.8 的 Sign in with Apple 按鈕 -->
             <div style="display:flex; align-items:center; margin:10px 0 2px;">
                 <div style="flex:1; height:1px; background:var(--apple-border);"></div>
                 <span style="font-size:11px; color:var(--apple-text-secondary); padding:0 8px;">或</span>
@@ -905,7 +923,7 @@ header {
         <label for="receiptFileInput" id="receiptUploadLabelBox" class="receipt-upload-label">
             <div style="font-size:26px;">📸</div>
             <div style="font-size:13px; font-weight:700; color:#b45309; margin-top:4px;">點擊影相 / 上傳收據</div>
-            <div style="font-size:11px; color:var(--apple-text-secondary); margin-top:2px;">AI 雲端安全提取實付總額、商戶名及明細</div>
+            <div style="font-size:11px; color:var(--apple-text-secondary); margin-top:2px;">AI 雲端安全提取實付總額、商戶名並自動匹配類別</div>
             <img id="receiptPreviewImg" class="receipt-preview-img" alt="收據預覽">
         </label>
 
@@ -914,7 +932,7 @@ header {
         </div>
 
         <label class="form-label">商戶 / 店舖名稱：</label>
-        <input type="text" id="expenseMerchantInput" class="form-input" placeholder="例如：百佳超級市場 / 萬寧 / 那個">
+        <input type="text" id="expenseMerchantInput" class="form-input" placeholder="例如：百佳超級市場 / 萬寧 / 那個" oninput="handleMerchantInputBlur(this.value)">
 
         <label class="form-label">實付金額 (HKD - 含服務費總額)：</label>
         <input type="number" step="0.1" id="expenseAmountInput" class="form-input" placeholder="例如：535">
@@ -979,6 +997,136 @@ header {
 </div>
 
 <script>
+// ─── P1 核心：香港本地商戶自動分類字典 ───
+const HK_MERCHANT_MAP = {
+    "超市日用": [
+        "百佳", "parkn", "fusion", "taste", "惠康", "wellcome", "market place", 
+        "360", "優品360", "759", "阿布泰", "大生", "佳寶", "u購", "donki", "一田", "citysuper", "無印", "muji"
+    ],
+    "家庭餐飲": [
+        "大快活", "大家樂", "美心", "麥當勞", "mcdonald", "kfc", "肯德基", "那個", "元氣", "壽司郎", "sushiro",
+        "譚仔", "三哥", "太興", "星巴克", "starbucks", "敏華", "翠華", "壽司", "酒樓", "茶餐廳", "麵家", "冰室"
+    ],
+    "醫療健康": [
+        "萬寧", "mannings", "屈臣氏", "watsons", "仁安", "養和", "浸會", "卓健", "尚至", "診所", "醫院", 
+        "牙醫", "物理治療", "藥房", "同仁堂", "余仁生", "覆診"
+    ],
+    "交通出行": [
+        "港鐵", "mtr", "九巴", "kmb", "城巴", "citybus", "hketoll", "易通行", "加德士", "caltex", 
+        "shell", "esso", "中石化", "sinopec", "泊車", "停車場", "的士", "uber", "高鐵"
+    ],
+    "水電煤雜費": [
+        "中電", "clp", "港燈", "煤氣", "towngas", "水務署", "香港寬頻", "hkbn", "網上行", "hkt", 
+        "csl", "smartone", "3香港", "中國移動", "管理費"
+    ]
+};
+
+function autoDetectCategoryByMerchant(merchantName) {
+    if (!merchantName) return "日常開支";
+    const clean = String(merchantName).toLowerCase();
+    for (const [category, keywords] of Object.entries(HK_MERCHANT_MAP)) {
+        if (keywords.some(k => clean.includes(k))) return category;
+    }
+    return "日常開支";
+}
+
+function handleMerchantInputBlur(val) {
+    const detected = autoDetectCategoryByMerchant(val);
+    const catSelect = document.getElementById('expenseCategorySelect');
+    if (detected !== "日常開支" && catSelect) {
+        catSelect.value = detected;
+    }
+}
+
+// ─── P1 核心：月度預算警報檢查（80% 警戒與超支攔截） ───
+const MONTHLY_BUDGET = 15000; // 家庭月度基準預算（HKD）
+
+async function checkBudgetThreshold(newExpenseAmount, targetDateStr) {
+    const monthPrefix = targetDateStr.slice(0, 7); // e.g. "2026-09"
+    const currentMonthExpenses = (window.activities || [])
+        .filter(a => a && a.isExpense && a.date && a.date.startsWith(monthPrefix))
+        .reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+
+    const totalAfterAdd = currentMonthExpenses + newExpenseAmount;
+    const ratio = totalAfterAdd / MONTHLY_BUDGET;
+
+    if (ratio >= 1.0) {
+        await HIG.alert(
+            "⚠️ 預算超支警示",
+            `本月（${monthPrefix}）開支已達 HK$ ${totalAfterAdd.toFixed(1)}，已超出月度上限 HK$ ${MONTHLY_BUDGET}！請家庭成員留意支出。`
+        );
+    } else if (ratio >= 0.8) {
+        await HIG.alert(
+            "💡 預算達 80% 警戒線",
+            `本月開支已達 HK$ ${totalAfterAdd.toFixed(1)}（佔上限 ${Math.round(ratio * 100)}% / 限額 HK$ ${MONTHLY_BUDGET}）。`
+        );
+    }
+}
+
+// ─── P0 核心：廣東話語音輸入（Web Speech API） ───
+let recognitionInstance = null;
+let isVoiceRecording = false;
+
+function toggleSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        HIG.alert("功能不支援", "此設備環境未支援語音辨識，請使用系統鍵盤自帶之廣東話聽寫功能。");
+        return;
+    }
+
+    const btn = document.getElementById('speechBtn');
+    const input = document.getElementById('aiQuickInput');
+
+    if (isVoiceRecording && recognitionInstance) {
+        recognitionInstance.stop();
+        return;
+    }
+
+    try {
+        recognitionInstance = new SpeechRecognition();
+        recognitionInstance.lang = 'zh-HK'; // 鎖定香港粵語
+        recognitionInstance.interimResults = false;
+        recognitionInstance.maxAlternatives = 1;
+
+        recognitionInstance.onstart = () => {
+            isVoiceRecording = true;
+            btn.classList.add('recording-pulse');
+            input.placeholder = "🎙️ 正在聆聽廣東話語音...";
+        };
+
+        recognitionInstance.onresult = (event) => {
+            if (event.results && event.results[0]) {
+                const transcript = event.results[0][0].transcript;
+                input.value = transcript;
+                // 辨識完成後自動進入排程解析
+                executeAINaturalInput();
+            }
+        };
+
+        recognitionInstance.onerror = (e) => {
+            console.warn("廣東話語音輸入錯誤:", e.error);
+            stopSpeechState();
+        };
+
+        recognitionInstance.onend = () => {
+            stopSpeechState();
+        };
+
+        recognitionInstance.start();
+    } catch (err) {
+        console.warn("啟動語音失敗:", err);
+        stopSpeechState();
+    }
+}
+
+function stopSpeechState() {
+    isVoiceRecording = false;
+    const btn = document.getElementById('speechBtn');
+    if (btn) btn.classList.remove('recording-pulse');
+    const input = document.getElementById('aiQuickInput');
+    if (input) input.placeholder = "✨ 講或寫：百佳買咗280蚊、聽晚仁安覆診...";
+}
+
 const MEMBER_THEMES = {
     "鐵":   { color: "#0071e3", bg: "rgba(0, 113, 227, 0.12)", border: "#0071e3", icon: "👦" },
     "Daddy": { color: "#1d4ed8", bg: "rgba(29, 78, 216, 0.12)", border: "#1d4ed8", icon: "👨" },
@@ -1273,7 +1421,7 @@ function renderCalendar() {
                     }
                     const timePart = (typeof act.time === 'string') ? act.time.split(' ')[0] : '';
                     const theme = getMemberTheme(act.assignee);
-                    return `<div class="calendar-event-chip" style="background:${theme.bg}; color:${theme.color}; border-left: 2px solid${theme.border};" title="${safeTitle} (${act.assignee})">${timePart}${safeTitle}</div>`;
+                    return `<div class="calendar-event-chip" style="background:${theme.bg}; color:${theme.color}; border-left: 2px solid ${theme.border};" title="${safeTitle} (${act.assignee})">${timePart} ${safeTitle}</div>`;
                 }).join('')}${dayActs.length > 3 ? `<div style="font-size:7.5px; color:var(--oasis-primary); font-weight:bold; line-height:1;">+${dayActs.length - 3}</div>` : ''}</div>`;
             }
         } catch (e) {}
@@ -1393,24 +1541,32 @@ function renderAgenda() {
 window.renderAgenda = renderAgenda;
 
 function updateAISummary() {
+    const currentMonthPrefix = selectedDateStr.slice(0, 7);
+    const monthExpenses = (window.activities || [])
+        .filter(a => a && a.isExpense && a.date && a.date.startsWith(currentMonthPrefix))
+        .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+
     const todayStr = formatDayStr(new Date());
     const todayActs = (window.activities || []).filter(a => {
         if (!a || a.date !== todayStr) return false;
         if (a.isPrivate) return currentUser && a.assignee === currentUser;
         return true;
     });
-    const visibleExpenses = todayActs.filter(a => a.isExpense);
-    const totalExp = visibleExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
     const textEl = document.getElementById('aiStrainText');
     const badgeEl = document.getElementById('aiPendingBadge');
 
-    if (totalExp > 0) {
-        if (badgeEl) badgeEl.innerText = `今日開支 $${totalExp.toFixed(1)}`;
-        if (textEl) textEl.innerHTML = `今日開支合計 <strong>$${totalExp.toFixed(2)}</strong>，各項事務安排井然有序`;
-    } else {
-        if (badgeEl) badgeEl.innerText = `${todayActs.length} 項活動`;
-        if (textEl) textEl.innerText = `家庭步調輕鬆，今日安排順暢`;
+    const budgetRatio = (monthExpenses / MONTHLY_BUDGET) * 100;
+
+    if (badgeEl) badgeEl.innerText = `本月累計 $${monthExpenses.toFixed(0)}`;
+    if (textEl) {
+        if (budgetRatio >= 100) {
+            textEl.innerHTML = `<span style="color:var(--oasis-danger); font-weight:700;">⚠️ 本月支出 $${monthExpenses.toFixed(1)}（已超出預算限額）</span>`;
+        } else if (budgetRatio >= 80) {
+            textEl.innerHTML = `<span style="color:#b45309; font-weight:600;">💡 本月已用 ${Math.round(budgetRatio)}% 預算（目前：$${monthExpenses.toFixed(1)}）</span>`;
+        } else {
+            textEl.innerHTML = `今日 ${todayActs.length} 項日程 · 本月預算進度良好 (${Math.round(budgetRatio)}%)`;
+        }
     }
 }
 window.updateAISummary = updateAISummary;
@@ -1562,16 +1718,18 @@ async function handleReceiptFileChange(input) {
     const amount = parseFloat(data.amount || data.total || data.grand_total || 0);
     const date = data.date || selectedDateStr;
     const time = data.time || "12:30";
-    const category = data.category || "家庭餐飲";
+
+    // P1：透過香港字典自動比對分類
+    const detectedCategory = autoDetectCategoryByMerchant(merchant);
 
     if (merchant) document.getElementById('expenseMerchantInput').value = merchant;
     if (!isNaN(amount) && amount > 0) document.getElementById('expenseAmountInput').value = amount;
     if (date) document.getElementById('expenseDateInput').value = date;
     if (time) document.getElementById('expenseTimeInput').value = time;
-    if (category) document.getElementById('expenseCategorySelect').value = category;
+    document.getElementById('expenseCategorySelect').value = detectedCategory;
 
     if (merchant || amount > 0) {
-        if (statusEl) statusEl.innerText = `✓ 辨識完成！已自動提取：${merchant} (HK$ ${amount})`;
+        if (statusEl) statusEl.innerText = `✓ 提取成功：${merchant} (HK$ ${amount}) · 已自動分類為「${detectedCategory}」`;
     } else {
         if (statusEl) statusEl.innerText = "⚠️ 辨識完成但未提取到商戶或金額";
     }
@@ -1594,6 +1752,9 @@ async function saveReceiptExpense() {
         await HIG.alert("提示", "請填寫商戶名稱及有效消費金額！");
         return;
     }
+
+    // P1：觸發月度預算警報檢查
+    await checkBudgetThreshold(amountVal, date);
 
     const titleText = `${merchant} ($${amountVal})`;
 
@@ -1635,7 +1796,7 @@ async function saveReceiptExpense() {
     updateAISummary();
     closeExpenseModal();
 
-    await HIG.alert(editKey ? "已更新" : "已儲存", `開支【${merchant}】HK$ ${amountVal.toFixed(2)} 已成功儲存！\n可見度：${isPrivate ? '🔒 不公開 (僅自己可見)' : '🌐 全家公開'}`);
+    await HIG.alert(editKey ? "已更新" : "已儲存", `開支【${merchant}】HK$ ${amountVal.toFixed(2)} 已成功儲存！\n類別：${category}\n可見度：${isPrivate ? '🔒 不公開 (僅自己可見)' : '🌐 全家公開'}`);
 
     try {
         const cipher = await E2EE.encrypt(titleText);
@@ -1773,6 +1934,7 @@ async function generateLockScreenWallpaper() {
     });
 }
 
+// ─── 廣東話自然語言與語音輸入核心 ───
 async function executeAINaturalInput() {
     if (isGuest) {
         await HIG.alert("權限不足", "訪客模式為唯讀，請先登入！");
@@ -1784,10 +1946,16 @@ async function executeAINaturalInput() {
     const raw = input.value.trim();
     if (!raw) return;
 
+    // 開支匹配：例如「百佳買咗280蚊」、「大快活使咗65」
     const expenseMatch = raw.match(/(.+?)(用咗|買咗|支出|使咗|花咗)\s*(\d+(\.\d+)?)\s*(蚊|元|塊)?/);
     if (expenseMatch) {
         const merchant = expenseMatch[1].trim();
         const amount = parseFloat(expenseMatch[3]);
+        const autoCat = autoDetectCategoryByMerchant(merchant);
+
+        // P1：觸發月度預算警報檢查
+        await checkBudgetThreshold(amount, selectedDateStr);
+
         const titleText = `${merchant} ($${amount})`;
         const tempId = "exp_" + Date.now();
 
@@ -1797,7 +1965,7 @@ async function executeAINaturalInput() {
             time: "12:30",
             title: titleText,
             assignee: currentUser || "鐵",
-            category: "日常開支",
+            category: autoCat,
             isExpense: true,
             isPrivate: false,
             amount: amount
@@ -1807,25 +1975,36 @@ async function executeAINaturalInput() {
         renderAgenda();
         updateAISummary();
         input.value = "";
-        await HIG.alert("已儲存", `已成功儲存開支：\n${merchant} - HK$ ${amount.toFixed(2)}`);
+        await HIG.alert("開支已儲存", `已記錄：${merchant} - HK$ ${amount.toFixed(2)}\n類別自動匹配為【${autoCat}】`);
         return;
     }
 
+    // 日程匹配：辨識日期與成員
     let targetDate = selectedDateStr;
     let targetTime = "20:00";
     const today = new Date();
     if (raw.includes("聽日") || raw.includes("聽晚")) {
         const d = new Date(today); d.setDate(d.getDate() + 1); targetDate = formatDayStr(d);
+        if (raw.includes("聽晚")) targetTime = "19:30";
     }
-    const cleanTitle = raw.replace(/(聽日|聽晚|今日)/g, "").trim();
+
+    // 辨識人名
+    let matchedAssignee = currentUser || "鐵";
+    const members = ["Daddy", "Mummy", "Jolie", "蓓", "熹", "鐵"];
+    for (const m of members) {
+        if (raw.includes(m)) { matchedAssignee = m; break; }
+    }
+
+    const cleanTitle = raw.replace(/(聽日|聽晚|今日|Daddy|Mummy|Jolie|蓓|熹|鐵)/g, "").trim();
     const tempId = "local_" + Date.now();
+
     window.activities.unshift({
         id: tempId,
-        title: cleanTitle,
+        title: cleanTitle || "行程",
         date: targetDate,
         time: targetTime,
-        category: "家庭",
-        assignee: currentUser || "鐵",
+        category: autoDetectCategoryByMerchant(cleanTitle) === "日常開支" ? "家庭" : autoDetectCategoryByMerchant(cleanTitle),
+        assignee: matchedAssignee,
         isPrivate: false
     });
     localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
@@ -1833,7 +2012,7 @@ async function executeAINaturalInput() {
     renderCalendar();
     renderAgenda();
     input.value = "";
-    await HIG.alert("已儲存", `已成功排入行程：\n【${targetDate}】${cleanTitle}`);
+    await HIG.alert("行程已排定", `已成功安排：\n【${targetDate} ${targetTime}】${cleanTitle} (👤 ${matchedAssignee})`);
 }
 
 function handleTopAddClick() {
@@ -2022,7 +2201,6 @@ async function submitLogin() {
     }
 }
 
-// 修正 2：Sign in with Apple 登入邏輯（符合 Guideline 4.8）
 async function signInWithApple() {
     try {
         const provider = new window.fbOAuthProvider('apple.com');
@@ -2051,7 +2229,6 @@ async function logoutAccount() {
     }
 }
 
-// 修正 3：帳號刪除流程（符合 Guideline 5.1.1(v)）
 async function requestAccountDeletion() {
     if (isGuest || !window.fbAuth.currentUser) return;
 
@@ -2069,7 +2246,6 @@ async function requestAccountDeletion() {
         renderGuestState();
         await HIG.alert("帳號已成功刪除", "您的帳號與安全憑證已徹底移除。");
     } catch (err) {
-        // 需重新驗證時要求輸入密碼
         if (err.code === "auth/requires-recent-login") {
             const reauthPwd = await HIG.prompt("安全驗證", "為保障帳號安全，請輸入當前密碼以授權註銷：", "", true);
             if (!reauthPwd) return;
