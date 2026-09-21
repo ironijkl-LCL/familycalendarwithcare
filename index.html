@@ -1142,7 +1142,15 @@ const MemberE2EE = {
             );
 
             const rawPrivKey = await crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
-            const exportedPubKey = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
+            const rawJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
+
+            // 嚴格精簡公鑰欄位：剔除空陣列 key_ops，避免 Firebase RTDB 拋出內部斷言錯誤
+            const exportedPubKey = {
+                kty: rawJwk.kty,
+                crv: rawJwk.crv,
+                x: rawJwk.x,
+                y: rawJwk.y
+            };
 
             const salt = crypto.getRandomValues(new Uint8Array(16));
             const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -1209,14 +1217,12 @@ const MemberE2EE = {
             if (snap.exists()) pubKeyJwk = snap.val();
         }
 
-        // 若無公鑰則自動回退為全家共用密鑰
         if (!pubKeyJwk) return await E2EE.encrypt(text);
 
         const targetPubKey = await crypto.subtle.importKey(
             "jwk", pubKeyJwk, { name: "ECDH", namedCurve: "P-256" }, false, []
         );
 
-        // 生成臨時金鑰對
         const ephemPair = await crypto.subtle.generateKey(
             { name: "ECDH", namedCurve: "P-256" }, true, ["deriveKey"]
         );
@@ -1241,7 +1247,12 @@ const MemberE2EE = {
         return {
             is_ecdh: true,
             owner: targetMember,
-            ephem: ephemPubKeyJwk,
+            ephem: {
+                kty: ephemPubKeyJwk.kty,
+                crv: ephemPubKeyJwk.crv,
+                x: ephemPubKeyJwk.x,
+                y: ephemPubKeyJwk.y
+            },
             iv: btoa(String.fromCharCode(...iv)),
             data: btoa(String.fromCharCode(...new Uint8Array(cipher)))
         };
@@ -1475,7 +1486,7 @@ async function checkBudgetThreshold(newExpenseAmount, targetDateStr) {
     }
 }
 
-// ─── Dify 收據辨識 ───
+// ─── Dify 收據辨識（強化巢狀解包與正則容錯提取） ───
 async function handleReceiptFileChange(input) {
     const file = input.files && input.files[0];
     if (!file) return;
@@ -1518,17 +1529,64 @@ async function handleReceiptFileChange(input) {
 
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const dataRes = await response.json();
-        let data = dataRes.outputs || {};
-        if (typeof data === 'string') {
-            try { data = JSON.parse(data.replace(/```json|```/g, '').trim()); } catch(e){}
+
+        // 1. 解開 Dify 巢狀 outputs
+        let rawOutputs = dataRes.outputs || {};
+        let payloadStr = "";
+
+        if (typeof rawOutputs === "string") {
+            payloadStr = rawOutputs;
+        } else if (rawOutputs.text && typeof rawOutputs.text === "string") {
+            payloadStr = rawOutputs.text;
+        } else if (rawOutputs.result) {
+            payloadStr = typeof rawOutputs.result === "string" ? rawOutputs.result : JSON.stringify(rawOutputs.result);
+        } else if (rawOutputs.output) {
+            payloadStr = typeof rawOutputs.output === "string" ? rawOutputs.output : JSON.stringify(rawOutputs.output);
+        } else {
+            payloadStr = JSON.stringify(rawOutputs);
         }
 
-        const merchant = data.merchant || data.title || data.shop_name || "";
-        const amount = parseFloat(data.amount || data.total || data.grand_total || 0);
-        const date = data.date || selectedDateStr;
-        const time = data.time || "12:30";
+        // 2. 清理 Markdown 標記
+        const cleanJsonStr = payloadStr.replace(/```json/gi, "").replace(/```/g, "").trim();
+
+        let data = {};
+        try {
+            data = JSON.parse(cleanJsonStr);
+        } catch (e) {
+            console.warn("JSON.parse 失敗，啟動正則容錯提取:", e);
+        }
+
+        // 3. 商戶名稱提取
+        let merchant = data.merchant || data.title || data.shop_name || "";
+        if (!merchant) {
+            const mMatch = cleanJsonStr.match(/["']?(?:merchant|shop_name|title|商戶|店鋪|店名)["']?\s*[:=]\s*["']?([^"',\n}]+)["']?/i);
+            if (mMatch) merchant = mMatch[1].trim();
+        }
+
+        // 4. 實付金額提取
+        let amount = parseFloat(data.amount || data.total || data.grand_total || 0);
+        if (isNaN(amount) || amount === 0) {
+            const aMatch = cleanJsonStr.match(/["']?(?:amount|total|grand_total|實付|金額|總額|總計)["']?\s*[:=]\s*["']?([0-9]+(?:\.[0-9]+)?)["']?/i);
+            if (aMatch) amount = parseFloat(aMatch[1]);
+        }
+
+        // 5. 日期與時間提取
+        let date = data.date || "";
+        if (!date) {
+            const dMatch = cleanJsonStr.match(/["']?(?:date|日期)["']?\s*[:=]\s*["']?([0-9]{4}-[0-9]{2}-[0-9]{2})["']?/i);
+            if (dMatch) date = dMatch[1].trim();
+        }
+        if (!date) date = selectedDateStr;
+
+        let time = data.time || "12:30";
+        if (!data.time) {
+            const tMatch = cleanJsonStr.match(/["']?(?:time|時間)["']?\s*[:=]\s*["']?([0-9]{1,2}:[0-9]{2})["']?/i);
+            if (tMatch) time = tMatch[1].trim();
+        }
+
         const detectedCategory = autoDetectCategoryByMerchant(merchant);
 
+        // 6. 填入表單欄位
         if (merchant) document.getElementById('expenseMerchantInput').value = merchant;
         if (!isNaN(amount) && amount > 0) document.getElementById('expenseAmountInput').value = amount;
         if (date) document.getElementById('expenseDateInput').value = date;
@@ -1605,7 +1663,6 @@ async function saveEvent() {
     updateAISummary();
     closeModal();
 
-    // 加密路徑：私密使用非對稱 ECDH，公開使用全家金鑰
     let cipherTitle = title;
     if (isPrivate) {
         cipherTitle = await MemberE2EE.encryptWithPublicKey(title, assignee);
@@ -2367,7 +2424,6 @@ async function submitLogin() {
         const nameMap = { iron: "鐵", daddy: "Daddy", mummy: "Mummy", jolie: "Jolie", leisel: "熹", karis: "蓓" };
         const memberName = nameMap[member] || "鐵";
 
-        // 初始化/解鎖專屬 ECDH 私鑰
         const keyUnlocked = await MemberE2EE.initMemberKeys(memberName, pwd);
         if (!keyUnlocked) {
             await HIG.alert("金鑰警告", "密碼不相符，無法解密專屬安全私鑰庫！");
