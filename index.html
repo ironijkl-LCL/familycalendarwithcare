@@ -737,20 +737,19 @@ header {
       }
   });
 
-  // 實時同步資料庫（全負載零知識解密與隔離）
+  // 實時同步資料庫（帶離線暫存保護與全負載解密）
   window.startFirebaseSync = function() {
       if (!window.fbDb || !window.fbRef || !window.fbOnValue) return;
       const actRef = window.fbRef(window.fbDb, "family_calendar_activities");
       window.fbOnValue(actRef, async (snapshot) => {
           const data = snapshot.val();
-          const list = [];
+          const cloudList = [];
           if (data) {
               for (let key in data) {
                   const item = data[key];
                   if (!item) continue;
 
                   if (item.isPrivate) {
-                      // 零知識隔離：如果不是主人，直接略過（不佔格子、不洩漏時間）
                       if (!currentUser || item.owner !== currentUser) continue;
 
                       try {
@@ -768,7 +767,7 @@ header {
                               inner = { title: decryptedJsonStr || "🔒 私人行程", date: selectedDateStr, time: "20:00" };
                           }
 
-                          list.push({
+                          cloudList.push({
                               id: key,
                               date: inner.date || "",
                               time: inner.time || "20:00",
@@ -784,9 +783,8 @@ header {
                           console.warn("私密封套解密略過:", err);
                       }
                   } else {
-                      // 公開行程：全家共用密鑰解密標題
                       const title = window.E2EE ? await window.E2EE.decrypt(item.title) : (item.title || "活動");
-                      list.push({
+                      cloudList.push({
                           id: key,
                           date: item.date || "",
                           time: item.time || "20:00",
@@ -801,8 +799,15 @@ header {
                   }
               }
           }
-          window.activities = list;
+
+          // 🚨 漏洞 5 修復防線：保留本機離線隊列中尚未完成傳輸的 tempId 活動，避免被雲端快照洗掉
+          const offlineQueue = window.OfflineQueue ? window.OfflineQueue.getQueue() : [];
+          const pendingTempIds = new Set(offlineQueue.filter(q => q.tempId).map(q => q.tempId));
+          const pendingLocalItems = (window.activities || []).filter(a => pendingTempIds.has(a.id));
+
+          window.activities = [...pendingLocalItems, ...cloudList];
           localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
+
           if (window.renderCalendar) window.renderCalendar();
           if (window.renderAgenda) window.renderAgenda();
           if (window.updateAISummary) window.updateAISummary();
@@ -983,7 +988,6 @@ header {
             <input type="password" id="loginPasswordInput" class="form-input" placeholder="輸入成員專屬密碼...">
             <button class="submit-btn-block" onclick="submitLogin()">登入驗證身分</button>
 
-            <!-- 🚨 漏洞 3 修復：符合 Apple 審核之原生 Sign in with Apple 按鈕 -->
             <div style="display:flex; align-items:center; margin:10px 0 2px;">
                 <div style="flex:1; height:1px; background:var(--apple-border);"></div>
                 <span style="font-size:11px; color:var(--apple-text-secondary); padding:0 8px;">或</span>
@@ -1202,7 +1206,6 @@ const MemberE2EE = {
             const rawPrivKey = await crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
             const rawJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
 
-            // 嚴格精簡欄位（移除 key_ops）
             const exportedPubKey = {
                 kty: rawJwk.kty,
                 crv: rawJwk.crv,
@@ -1385,23 +1388,14 @@ const E2EE = {
 };
 window.E2EE = E2EE;
 
-// ─── Loading HUD 控制器 ───
-const LoadingHUD = {
-    show(title, subtitle) {
-        const hud = document.getElementById('higLoadingHud');
-        document.getElementById('higHudTitle').innerText = title || "處理中...";
-        document.getElementById('higHudSubtitle').innerText = subtitle || "";
-        hud.style.display = "flex";
-    },
-    update(subtitle) {
-        document.getElementById('higHudSubtitle').innerText = subtitle || "";
-    },
-    hide() {
-        document.getElementById('higLoadingHud').style.display = "none";
-    }
-};
+// ─── 🚨 漏洞 5 核心修復：本地 Temp ID 轉換 Real ID 原子調和函數 ───
+function reconcileActivityId(tempId, realKey) {
+    if (!tempId || !realKey || tempId === realKey) return;
+    window.activities = (window.activities || []).map(a => a.id === tempId ? { ...a, id: realKey } : a);
+    localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
+}
 
-// ─── 離線事務佇列 (Offline Queue) ───
+// ─── 離線事務佇列 (Offline Queue 升級支援 CREATE 調和) ───
 const OfflineQueue = {
     getQueue() { return JSON.parse(localStorage.getItem('family_offline_queue') || "[]"); },
     push(action) {
@@ -1430,9 +1424,16 @@ const OfflineQueue = {
         const remaining = [];
         for (const item of q) {
             try {
-                if (item.type === 'SET') await window.fbSet(window.fbRef(window.fbDb, item.path), item.data);
-                else if (item.type === 'UPDATE') await window.fbUpdate(window.fbRef(window.fbDb, item.path), item.data);
-                else if (item.type === 'REMOVE') await window.fbRemove(window.fbRef(window.fbDb, item.path));
+                if (item.type === 'CREATE') {
+                    // 離線建立項回放：由 Firebase 生成合法 key 並立即調和本地 tempId
+                    const newRef = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
+                    await window.fbSet(newRef, item.data);
+                    reconcileActivityId(item.tempId, newRef.key);
+                } else if (item.type === 'UPDATE') {
+                    await window.fbUpdate(window.fbRef(window.fbDb, item.path), item.data);
+                } else if (item.type === 'REMOVE') {
+                    await window.fbRemove(window.fbRef(window.fbDb, item.path));
+                }
             } catch(e) {
                 remaining.push(item);
             }
@@ -1440,12 +1441,29 @@ const OfflineQueue = {
         localStorage.setItem('family_offline_queue', JSON.stringify(remaining));
         this.updatePill();
         if (remaining.length === 0) {
-            HIG.alert("同步完成", "離線期間的變更已同步至雲端！");
+            HIG.alert("同步完成", "離線期間建立與修改的項目已安全推送至雲端！");
         }
     }
 };
+window.OfflineQueue = OfflineQueue;
 window.addEventListener('online', () => OfflineQueue.flush());
 window.addEventListener('offline', () => OfflineQueue.updatePill());
+
+// ─── Loading HUD 控制器 ───
+const LoadingHUD = {
+    show(title, subtitle) {
+        const hud = document.getElementById('higLoadingHud');
+        document.getElementById('higHudTitle').innerText = title || "處理中...";
+        document.getElementById('higHudSubtitle').innerText = subtitle || "";
+        hud.style.display = "flex";
+    },
+    update(subtitle) {
+        document.getElementById('higHudSubtitle').innerText = subtitle || "";
+    },
+    hide() {
+        document.getElementById('higLoadingHud').style.display = "none";
+    }
+};
 
 // ─── 6 秒撤銷 Toast ───
 let undoTimer = null;
@@ -1670,7 +1688,7 @@ async function checkConcurrencyConflict(editKey, formLoadedUpdatedAt) {
     return false;
 }
 
-// ─── 儲存行程（全負載零知識加密實作） ───
+// ─── 儲存行程（全負載零知識加密 + 漏洞 5 Temp ID 立即調和） ───
 async function saveEvent() {
     if (isGuest) return;
     const title = document.getElementById('formEventTitle').value.trim();
@@ -1693,49 +1711,19 @@ async function saveEvent() {
     }
 
     const nowTs = Date.now();
+    const tempId = editKey || ("local_" + nowTs);
     let payload = null;
 
     if (isPrivate) {
-        const privateEnvelope = {
-            title,
-            date,
-            time,
-            category,
-            assignee,
-            isExpense: false
-        };
+        const privateEnvelope = { title, date, time, category, assignee, isExpense: false };
         const encrypted = await MemberE2EE.encryptWithPublicKey(JSON.stringify(privateEnvelope), assignee);
-        payload = {
-            encrypted,
-            isPrivate: true,
-            owner: assignee,
-            updatedAt: nowTs
-        };
+        payload = { encrypted, isPrivate: true, owner: assignee, updatedAt: nowTs };
     } else {
         const cipherTitle = await E2EE.encrypt(title);
-        payload = {
-            title: cipherTitle,
-            date,
-            time,
-            category,
-            assignee,
-            isPrivate: false,
-            isExpense: false,
-            updatedAt: nowTs
-        };
+        payload = { title: cipherTitle, date, time, category, assignee, isPrivate: false, isExpense: false, updatedAt: nowTs };
     }
 
-    const localItem = {
-        id: editKey || ("local_" + nowTs),
-        title,
-        date,
-        time,
-        category,
-        assignee,
-        isPrivate,
-        isExpense: false,
-        updatedAt: nowTs
-    };
+    const localItem = { id: tempId, title, date, time, category, assignee, isPrivate, isExpense: false, updatedAt: nowTs };
 
     if (editKey) {
         const idx = window.activities.findIndex(a => a && a.id === editKey);
@@ -1753,11 +1741,12 @@ async function saveEvent() {
 
     if (!navigator.onLine) {
         OfflineQueue.push({
-            type: editKey && !editKey.startsWith("local_") ? "UPDATE" : "SET",
-            path: editKey && !editKey.startsWith("local_") ? `family_calendar_activities/${editKey}` : `family_calendar_activities/local_${nowTs}`,
+            type: editKey && !editKey.startsWith("local_") ? "UPDATE" : "CREATE",
+            tempId: tempId,
+            path: `family_calendar_activities/${editKey}`,
             data: payload
         });
-        await HIG.alert("離線暫存", "已暫存至手機本機！當連上網絡時會自動同步。");
+        await HIG.alert("離線暫存", "已暫存至手機！當連上網絡時會自動同步。");
         return;
     }
 
@@ -1768,14 +1757,16 @@ async function saveEvent() {
             } else {
                 const newRef = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
                 await window.fbSet(newRef, payload);
+                // 🚨 漏洞 5 修復：即時原子調和 tempId → Real ID
+                reconcileActivityId(tempId, newRef.key);
             }
         }
     } catch(e) {
-        OfflineQueue.push({ type: "UPDATE", path: `family_calendar_activities/${editKey}`, data: payload });
+        OfflineQueue.push({ type: "UPDATE", path: `family_calendar_activities/${editKey || tempId}`, data: payload });
     }
 }
 
-// ─── 儲存開支（全負載零知識加密實作） ───
+// ─── 儲存開支（全負載零知識加密 + 漏洞 5 Temp ID 立即調和） ───
 async function saveReceiptExpense() {
     if (isGuest) return;
 
@@ -1803,53 +1794,19 @@ async function saveReceiptExpense() {
 
     const titleText = `${merchant} ($${amountVal})`;
     const nowTs = Date.now();
+    const tempId = editKey || ("exp_" + nowTs);
     let payload = null;
 
     if (isPrivate) {
-        const privateEnvelope = {
-            title: titleText,
-            merchant,
-            amount: amountVal,
-            date,
-            time,
-            category,
-            assignee: payer,
-            isExpense: true
-        };
+        const privateEnvelope = { title: titleText, merchant, amount: amountVal, date, time, category, assignee: payer, isExpense: true };
         const encrypted = await MemberE2EE.encryptWithPublicKey(JSON.stringify(privateEnvelope), payer);
-        payload = {
-            encrypted,
-            isPrivate: true,
-            owner: payer,
-            updatedAt: nowTs
-        };
+        payload = { encrypted, isPrivate: true, owner: payer, updatedAt: nowTs };
     } else {
         const cipherTitle = await E2EE.encrypt(titleText);
-        payload = {
-            title: cipherTitle,
-            date,
-            time,
-            category,
-            assignee: payer,
-            isExpense: true,
-            amount: amountVal,
-            isPrivate: false,
-            updatedAt: nowTs
-        };
+        payload = { title: cipherTitle, date, time, category, assignee: payer, isExpense: true, amount: amountVal, isPrivate: false, updatedAt: nowTs };
     }
 
-    const localItem = {
-        id: editKey || ("exp_" + nowTs),
-        date,
-        time,
-        title: titleText,
-        assignee: payer,
-        category,
-        isExpense: true,
-        amount: amountVal,
-        isPrivate,
-        updatedAt: nowTs
-    };
+    const localItem = { id: tempId, date, time, title: titleText, assignee: payer, category, isExpense: true, amount: amountVal, isPrivate, updatedAt: nowTs };
 
     if (editKey) {
         const idx = window.activities.findIndex(a => a && a.id === editKey);
@@ -1867,8 +1824,9 @@ async function saveReceiptExpense() {
 
     if (!navigator.onLine) {
         OfflineQueue.push({
-            type: editKey && !editKey.startsWith("exp_") ? "UPDATE" : "SET",
-            path: editKey && !editKey.startsWith("exp_") ? `family_calendar_activities/${editKey}` : `family_calendar_activities/exp_${nowTs}`,
+            type: editKey && !editKey.startsWith("exp_") ? "UPDATE" : "CREATE",
+            tempId: tempId,
+            path: `family_calendar_activities/${editKey}`,
             data: payload
         });
         await HIG.alert("離線暫存", "開支已暫存於本機！");
@@ -1882,11 +1840,140 @@ async function saveReceiptExpense() {
             } else {
                 const newRef = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
                 await window.fbSet(newRef, payload);
+                // 🚨 漏洞 5 修復：即時原子調和 tempId → Real ID
+                reconcileActivityId(tempId, newRef.key);
             }
         }
     } catch(e) {
-        OfflineQueue.push({ type: "UPDATE", path: `family_calendar_activities/${editKey}`, data: payload });
+        OfflineQueue.push({ type: "UPDATE", path: `family_calendar_activities/${editKey || tempId}`, data: payload });
     }
+}
+
+// ─── 廣東話語音自然排程（雲端推送與 ID 調和補齊） ───
+async function executeAINaturalInput() {
+    if (isGuest) {
+        await HIG.alert("權限不足", "訪客模式為唯讀，請先登入！");
+        openAddModal('LOGIN');
+        return;
+    }
+
+    const input = document.getElementById('aiQuickInput');
+    const raw = input.value.trim();
+    if (!raw) return;
+
+    const expenseMatch = raw.match(/(.+?)(用咗|買咗|支出|使咗|花咗)\s*(\d+(\.\d+)?)\s*(蚊|元|塊)?/);
+    if (expenseMatch) {
+        const merchant = expenseMatch[1].trim();
+        const amount = parseFloat(expenseMatch[3]);
+        const autoCat = autoDetectCategoryByMerchant(merchant);
+
+        await checkBudgetThreshold(amount, selectedDateStr);
+
+        const titleText = `${merchant} ($${amount})`;
+        const nowTs = Date.now();
+        const tempId = "exp_" + nowTs;
+
+        window.activities.unshift({
+            id: tempId,
+            date: selectedDateStr,
+            time: "12:30",
+            title: titleText,
+            assignee: currentUser || "鐵",
+            category: autoCat,
+            isExpense: true,
+            isPrivate: false,
+            amount: amount,
+            updatedAt: nowTs
+        });
+        localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
+        renderCalendar();
+        renderAgenda();
+        updateAISummary();
+        input.value = "";
+
+        const cipherTitle = await E2EE.encrypt(titleText);
+        const payload = {
+            title: cipherTitle,
+            date: selectedDateStr,
+            time: "12:30",
+            category: autoCat,
+            assignee: currentUser || "鐵",
+            isExpense: true,
+            amount,
+            isPrivate: false,
+            updatedAt: nowTs
+        };
+
+        if (navigator.onLine && window.fbDb) {
+            const newRef = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
+            await window.fbSet(newRef, payload);
+            reconcileActivityId(tempId, newRef.key);
+        } else {
+            OfflineQueue.push({ type: 'CREATE', tempId, data: payload });
+        }
+
+        await HIG.alert("開支已儲存", `已記錄：${merchant} - HK$ ${amount.toFixed(2)}\n類別自動匹配為【${autoCat}】`);
+        return;
+    }
+
+    let targetDate = selectedDateStr;
+    let targetTime = "20:00";
+    const today = new Date();
+    if (raw.includes("聽日") || raw.includes("聽晚")) {
+        const d = new Date(today); d.setDate(d.getDate() + 1); targetDate = formatDayStr(d);
+        if (raw.includes("聽晚")) targetTime = "19:30";
+    }
+
+    let matchedAssignee = currentUser || "鐵";
+    const members = ["Daddy", "Mummy", "Jolie", "蓓", "熹", "鐵"];
+    for (const m of members) {
+        if (raw.includes(m)) { matchedAssignee = m; break; }
+    }
+
+    const cleanTitle = raw.replace(/(聽日|聽晚|今日|Daddy|Mummy|Jolie|蓓|熹|鐵)/g, "").trim();
+    const nowTs = Date.now();
+    const tempId = "local_" + nowTs;
+    const finalTitle = cleanTitle || "行程";
+    const cat = autoDetectCategoryByMerchant(finalTitle) === "日常開支" ? "家庭" : autoDetectCategoryByMerchant(finalTitle);
+
+    window.activities.unshift({
+        id: tempId,
+        title: finalTitle,
+        date: targetDate,
+        time: targetTime,
+        category: cat,
+        assignee: matchedAssignee,
+        isPrivate: false,
+        isExpense: false,
+        updatedAt: nowTs
+    });
+    localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
+    selectedDateStr = targetDate;
+    renderCalendar();
+    renderAgenda();
+    input.value = "";
+
+    const cipherTitle = await E2EE.encrypt(finalTitle);
+    const payload = {
+        title: cipherTitle,
+        date: targetDate,
+        time: targetTime,
+        category: cat,
+        assignee: matchedAssignee,
+        isPrivate: false,
+        isExpense: false,
+        updatedAt: nowTs
+    };
+
+    if (navigator.onLine && window.fbDb) {
+        const newRef = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
+        await window.fbSet(newRef, payload);
+        reconcileActivityId(tempId, newRef.key);
+    } else {
+        OfflineQueue.push({ type: 'CREATE', tempId, data: payload });
+    }
+
+    await HIG.alert("行程已排定", `已成功安排：\n【${targetDate} ${targetTime}】${finalTitle} (👤 ${matchedAssignee})`);
 }
 
 // ─── 刪除行程 ───
@@ -2324,7 +2411,7 @@ function renderCalendar() {
         let eventChipsHtml = "";
         const dayActs = (window.activities || []).filter(a => {
             if (!a || a.date !== dStr) return false;
-            if (a.isPrivate) return currentUser && a.assignee === currentUser;
+            if (a.isPrivate) return currentUser && (a.assignee === currentUser || a.owner === currentUser);
             return true;
         });
 
@@ -2371,7 +2458,7 @@ function renderAgenda() {
 
     const matched = (window.activities || []).filter(a => {
         if (!a || a.date !== selectedDateStr) return false;
-        if (a.isPrivate) return currentUser && a.assignee === currentUser;
+        if (a.isPrivate) return currentUser && (a.assignee === currentUser || a.owner === currentUser);
         return true;
     });
 
@@ -2570,14 +2657,12 @@ async function submitLogin() {
     }
 }
 
-// ─── 🚨 漏洞 3 修復：原生 Sign in with Apple（ASAuthorizationController） ───
 async function signInWithApple() {
     LoadingHUD.show("Apple 登入中", "正在調用 iOS 原生安全驗證...");
     try {
         const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
         const AppleSignInPlugin = window.Capacitor?.Plugins?.SignInWithApple;
 
-        // 若在 iOS 實機且已載入原生插件：直接調用 ASAuthorizationController
         if (isNative && AppleSignInPlugin) {
             const result = await AppleSignInPlugin.authorize({
                 clientId: 'com.lohascare.familycalendar',
@@ -2603,7 +2688,6 @@ async function signInWithApple() {
             }
         }
 
-        // 桌面瀏覽器測試回退方案
         const provider = new window.fbOAuthProvider('apple.com');
         provider.addScope('email');
         provider.addScope('name');
@@ -2633,7 +2717,6 @@ async function logoutAccount() {
     }
 }
 
-// ─── 🚨 漏洞 4 修復：Apple Guideline 5.1.1(v) 級聯帳號與個人數據徹底清除 ───
 async function requestAccountDeletion() {
     if (isGuest || !currentUser) return;
 
@@ -2647,7 +2730,6 @@ async function requestAccountDeletion() {
     const memberToDelete = currentUser;
 
     try {
-        // 1. 刪除 RTDB 中所有由該成員擁有或指派的行程與開支
         if (window.fbDb && window.fbRef && window.fbGet && window.fbRemove) {
             const actSnap = await window.fbGet(window.fbRef(window.fbDb, 'family_calendar_activities'));
             if (actSnap.exists()) {
@@ -2664,7 +2746,6 @@ async function requestAccountDeletion() {
             LoadingHUD.update("第 2/4 步：正在清除非對稱公鑰與記憶層...");
             await window.fbRemove(window.fbRef(window.fbDb, `family_public_keys/${memberToDelete}`));
 
-            // 刪除該成員的記憶層提醒
             const insightSnap = await window.fbGet(window.fbRef(window.fbDb, 'family_insights'));
             if (insightSnap.exists()) {
                 const allInsights = insightSnap.val();
