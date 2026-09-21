@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Family OS - 麟李家庭智慧管理系統</title>
 
-<!-- DOMPurify 防護相容層（防止 iOS WebKit 報錯） -->
+<!-- DOMPurify 防護相容層 -->
 <script>
   if (typeof window.DOMPurify === 'undefined') {
     window.DOMPurify = {
@@ -619,6 +619,26 @@ header {
 }
 .submit-btn-block:active { opacity: 0.85; }
 
+/* ─── Apple Sign-In 原生按鈕 ─── */
+.apple-signin-btn {
+    width: 100%;
+    padding: 11px;
+    background: #000000;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.apple-signin-btn:active { background: #1c1c1e; }
+.apple-logo-icon { width: 16px; height: 16px; fill: currentColor; }
+
 /* ─── HIG 對話框 ─── */
 .hig-dialog-overlay {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -644,7 +664,7 @@ header {
   import { 
     initializeAuth, browserLocalPersistence, inMemoryPersistence, getAuth, 
     signInWithEmailAndPassword, signOut, deleteUser, reauthenticateWithCredential, 
-    EmailAuthProvider, OAuthProvider, signInWithPopup, onAuthStateChanged 
+    EmailAuthProvider, OAuthProvider, signInWithPopup, signInWithCredential, onAuthStateChanged 
   } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
   import { getDatabase, ref, onValue, set, push, update, remove, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -688,6 +708,7 @@ header {
   window.fbEmailAuthProvider = EmailAuthProvider;
   window.fbOAuthProvider = OAuthProvider;
   window.fbSignInWithPopup = signInWithPopup;
+  window.fbSignInWithCredential = signInWithCredential;
   window.fbDb = db;
   window.fbRef = ref;
   window.fbOnValue = onValue;
@@ -716,7 +737,7 @@ header {
       }
   });
 
-  // 實時同步資料庫與解密流程
+  // 實時同步資料庫（全負載零知識解密與隔離）
   window.startFirebaseSync = function() {
       if (!window.fbDb || !window.fbRef || !window.fbOnValue) return;
       const actRef = window.fbRef(window.fbDb, "family_calendar_activities");
@@ -726,32 +747,58 @@ header {
           if (data) {
               for (let key in data) {
                   const item = data[key];
-                  let title = "活動";
+                  if (!item) continue;
 
-                  // 依可見度與加密格式解密
                   if (item.isPrivate) {
-                      if (item.title && typeof item.title === 'object' && item.title.is_ecdh) {
-                          title = await window.MemberE2EE.decryptWithPrivateKey(item.title);
-                      } else {
-                          title = window.E2EE ? await window.E2EE.decrypt(item.title) : "🔒 私人行程";
+                      // 零知識隔離：如果不是主人，直接略過（不佔格子、不洩漏時間）
+                      if (!currentUser || item.owner !== currentUser) continue;
+
+                      try {
+                          let decryptedJsonStr = "";
+                          if (item.encrypted && typeof item.encrypted === 'object' && item.encrypted.is_ecdh) {
+                              decryptedJsonStr = await window.MemberE2EE.decryptWithPrivateKey(item.encrypted);
+                          } else if (typeof item.encrypted === 'string') {
+                              decryptedJsonStr = item.encrypted;
+                          }
+
+                          let inner = {};
+                          try {
+                              inner = JSON.parse(decryptedJsonStr);
+                          } catch (e) {
+                              inner = { title: decryptedJsonStr || "🔒 私人行程", date: selectedDateStr, time: "20:00" };
+                          }
+
+                          list.push({
+                              id: key,
+                              date: inner.date || "",
+                              time: inner.time || "20:00",
+                              title: inner.title || "私密行程",
+                              assignee: inner.assignee || item.owner || currentUser,
+                              category: inner.category || "家庭",
+                              isExpense: !!inner.isExpense,
+                              amount: inner.amount || 0,
+                              isPrivate: true,
+                              updatedAt: item.updatedAt || 0
+                          });
+                      } catch (err) {
+                          console.warn("私密封套解密略過:", err);
                       }
                   } else {
-                      title = window.E2EE ? await window.E2EE.decrypt(item.title) : (item.title || "活動");
+                      // 公開行程：全家共用密鑰解密標題
+                      const title = window.E2EE ? await window.E2EE.decrypt(item.title) : (item.title || "活動");
+                      list.push({
+                          id: key,
+                          date: item.date || "",
+                          time: item.time || "20:00",
+                          title: title || "活動",
+                          assignee: item.assignee || "全員",
+                          category: item.category || "家庭",
+                          isExpense: item.isExpense || false,
+                          amount: item.amount || 0,
+                          isPrivate: false,
+                          updatedAt: item.updatedAt || 0
+                      });
                   }
-
-                  list.push({
-                      id: key,
-                      date: item.date || "",
-                      time: item.time || "20:00",
-                      title: title || "活動",
-                      assignee: item.assignee || "全員",
-                      category: item.category || "家庭",
-                      isExpense: item.isExpense || false,
-                      amount: item.amount || 0,
-                      isPrivate: item.isPrivate || false,
-                      isAI_Priority: item.isAI_Priority || false,
-                      updatedAt: item.updatedAt || 0
-                  });
               }
           }
           window.activities = list;
@@ -819,12 +866,12 @@ header {
 
 <body>
 
-<!-- Apple HIG 漸進式 Loading HUD -->
+<!-- Apple HIG 全螢幕 Loading HUD -->
 <div id="higLoadingHud" class="hig-loading-hud">
     <div class="hig-hud-box">
         <div class="hig-hud-spinner"></div>
-        <div id="higHudTitle" class="hig-hud-title">AI 分析收據中</div>
-        <div id="higHudSubtitle" class="hig-hud-subtitle">正在上傳影像至安全沙盒...</div>
+        <div id="higHudTitle" class="hig-hud-title">處理中...</div>
+        <div id="higHudSubtitle" class="hig-hud-subtitle">請稍候...</div>
     </div>
 </div>
 
@@ -935,6 +982,20 @@ header {
             </select>
             <input type="password" id="loginPasswordInput" class="form-input" placeholder="輸入成員專屬密碼...">
             <button class="submit-btn-block" onclick="submitLogin()">登入驗證身分</button>
+
+            <!-- 🚨 漏洞 3 修復：符合 Apple 審核之原生 Sign in with Apple 按鈕 -->
+            <div style="display:flex; align-items:center; margin:10px 0 2px;">
+                <div style="flex:1; height:1px; background:var(--apple-border);"></div>
+                <span style="font-size:11px; color:var(--apple-text-secondary); padding:0 8px;">或</span>
+                <div style="flex:1; height:1px; background:var(--apple-border);"></div>
+            </div>
+            
+            <button class="apple-signin-btn" onclick="signInWithApple()">
+                <svg class="apple-logo-icon" viewBox="0 0 170 170">
+                    <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.04-7.58-7.71-11.65-14.01-6.19-9.56-11.06-20.73-14.6-33.51-3.55-12.78-5.32-24.31-5.32-34.6 0-14.78 3.79-26.68 11.37-35.7 7.58-9.02 17.06-13.62 28.44-13.79 4.35 0 9.28 1.13 14.79 3.39 5.51 2.26 9.4 3.44 11.66 3.54 2.04 0 6.13-1.25 12.28-3.76 6.15-2.51 11.45-3.62 15.91-3.33 12.3.67 21.9 5.09 28.79 13.26-10.92 6.64-16.27 15.69-16.06 27.15.21 9.02 3.65 16.59 10.32 22.7 6.67 6.11 14.58 9.54 23.73 10.28-2.61 7.74-5.83 15.69-9.66 23.86zM119.22 33.02c0-7.39 2.66-14.46 7.98-21.21 5.32-6.75 11.96-11.02 19.92-12.81.42 2.12.63 4.13.63 6.03 0 7.4-2.73 14.54-8.19 21.42-5.46 6.88-12.18 11.05-20.16 12.51-.07-1.9-.18-3.88-.18-5.94z"/>
+                </svg>
+                透過 Apple 登入
+            </button>
         </div>
 
         <div id="eventFormFields">
@@ -950,7 +1011,7 @@ header {
             <label class="form-label">可見度權限：</label>
             <select id="formEventVisibility" class="form-input">
                 <option value="public">🌐 公開 (全家人可見)</option>
-                <option value="private">🔒 不公開 (零知識專屬公鑰加密)</option>
+                <option value="private">🔒 不公開 (全負載零知識加密 · 隱蔽時間)</option>
             </select>
 
             <label class="form-label">活動分類：</label>
@@ -1012,7 +1073,7 @@ header {
         <label class="form-label">開支可見度：</label>
         <select id="expenseVisibilitySelect" class="form-input">
             <option value="public">🌐 公開 (全家人可見)</option>
-            <option value="private">🔒 不公開 (零知識專屬公鑰加密)</option>
+            <option value="private">🔒 不公開 (全負載零知識加密 · 隱蔽金額與商戶)</option>
         </select>
 
         <label class="form-label">支出類別：</label>
@@ -1113,7 +1174,6 @@ const MemberE2EE = {
     activePrivateKey: null,
     activeMember: null,
 
-    // 透過密碼衍生 AES-GCM 封裝金鑰
     async deriveKeyFromPassword(password, salt) {
         const enc = new TextEncoder();
         const keyMaterial = await crypto.subtle.importKey(
@@ -1128,13 +1188,11 @@ const MemberE2EE = {
         );
     },
 
-    // 首次登入生成 ECDH 金鑰對，或解鎖本機現有私鑰
     async initMemberKeys(memberName, password) {
         this.activeMember = memberName;
         let record = await KeyVaultDB.getKey(memberName);
 
         if (!record) {
-            // 首次登入：生成 ECDH P-256 金鑰對
             const keyPair = await crypto.subtle.generateKey(
                 { name: "ECDH", namedCurve: "P-256" },
                 true,
@@ -1144,7 +1202,7 @@ const MemberE2EE = {
             const rawPrivKey = await crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
             const rawJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
 
-            // 嚴格精簡公鑰欄位：剔除空陣列 key_ops，避免 Firebase RTDB 拋出內部斷言錯誤
+            // 嚴格精簡欄位（移除 key_ops）
             const exportedPubKey = {
                 kty: rawJwk.kty,
                 crv: rawJwk.crv,
@@ -1168,7 +1226,6 @@ const MemberE2EE = {
                 publicKey: exportedPubKey
             });
 
-            // 上傳 Public Key 至 Firebase RTDB
             if (window.fbDb && window.fbRef && window.fbSet) {
                 await window.fbSet(
                     window.fbRef(window.fbDb, `family_public_keys/${memberName}`),
@@ -1179,7 +1236,6 @@ const MemberE2EE = {
             this.activePrivateKey = keyPair.privateKey;
             return true;
         } else {
-            // 非首次：從 IndexedDB 取出並用密碼解密
             try {
                 const salt = new Uint8Array(record.salt);
                 const iv = new Uint8Array(record.iv);
@@ -1199,13 +1255,12 @@ const MemberE2EE = {
                 );
                 return true;
             } catch (e) {
-                console.error("私鑰解密失敗（密碼可能不相符）:", e);
+                console.error("私鑰解密失敗:", e);
                 return false;
             }
         }
     },
 
-    // 使用目標成員 Public Key 進行 ECIES 協商加密
     async encryptWithPublicKey(text, targetMember) {
         if (!text) return "";
         let pubKeyJwk = null;
@@ -1258,7 +1313,6 @@ const MemberE2EE = {
         };
     },
 
-    // 使用自身 Private Key 解密
     async decryptWithPrivateKey(cipherObj) {
         if (!cipherObj) return "";
         if (typeof cipherObj !== "object" || !cipherObj.is_ecdh) {
@@ -1298,7 +1352,7 @@ const MemberE2EE = {
 };
 window.MemberE2EE = MemberE2EE;
 
-// ─── 全家共用 E2EE 引擎（公開行程與向下相容） ───
+// ─── 全家共用 E2EE 引擎（公開行程標題保護） ───
 const E2EE = {
     cachedKey: null,
     async getKey() {
@@ -1486,7 +1540,7 @@ async function checkBudgetThreshold(newExpenseAmount, targetDateStr) {
     }
 }
 
-// ─── Dify 收據辨識（強化巢狀解包與正則容錯提取） ───
+// ─── Dify 收據辨識 ───
 async function handleReceiptFileChange(input) {
     const file = input.files && input.files[0];
     if (!file) return;
@@ -1530,7 +1584,6 @@ async function handleReceiptFileChange(input) {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const dataRes = await response.json();
 
-        // 1. 解開 Dify 巢狀 outputs
         let rawOutputs = dataRes.outputs || {};
         let payloadStr = "";
 
@@ -1546,7 +1599,6 @@ async function handleReceiptFileChange(input) {
             payloadStr = JSON.stringify(rawOutputs);
         }
 
-        // 2. 清理 Markdown 標記
         const cleanJsonStr = payloadStr.replace(/```json/gi, "").replace(/```/g, "").trim();
 
         let data = {};
@@ -1556,21 +1608,18 @@ async function handleReceiptFileChange(input) {
             console.warn("JSON.parse 失敗，啟動正則容錯提取:", e);
         }
 
-        // 3. 商戶名稱提取
         let merchant = data.merchant || data.title || data.shop_name || "";
         if (!merchant) {
             const mMatch = cleanJsonStr.match(/["']?(?:merchant|shop_name|title|商戶|店鋪|店名)["']?\s*[:=]\s*["']?([^"',\n}]+)["']?/i);
             if (mMatch) merchant = mMatch[1].trim();
         }
 
-        // 4. 實付金額提取
         let amount = parseFloat(data.amount || data.total || data.grand_total || 0);
         if (isNaN(amount) || amount === 0) {
             const aMatch = cleanJsonStr.match(/["']?(?:amount|total|grand_total|實付|金額|總額|總計)["']?\s*[:=]\s*["']?([0-9]+(?:\.[0-9]+)?)["']?/i);
             if (aMatch) amount = parseFloat(aMatch[1]);
         }
 
-        // 5. 日期與時間提取
         let date = data.date || "";
         if (!date) {
             const dMatch = cleanJsonStr.match(/["']?(?:date|日期)["']?\s*[:=]\s*["']?([0-9]{4}-[0-9]{2}-[0-9]{2})["']?/i);
@@ -1586,7 +1635,6 @@ async function handleReceiptFileChange(input) {
 
         const detectedCategory = autoDetectCategoryByMerchant(merchant);
 
-        // 6. 填入表單欄位
         if (merchant) document.getElementById('expenseMerchantInput').value = merchant;
         if (!isNaN(amount) && amount > 0) document.getElementById('expenseAmountInput').value = amount;
         if (date) document.getElementById('expenseDateInput').value = date;
@@ -1612,10 +1660,9 @@ async function checkConcurrencyConflict(editKey, formLoadedUpdatedAt) {
         const remoteUpdatedAt = remoteItem.updatedAt || 0;
 
         if (remoteUpdatedAt > Number(formLoadedUpdatedAt)) {
-            const decTitle = window.E2EE ? await window.E2EE.decrypt(remoteItem.title) : remoteItem.title;
             const proceed = await HIG.confirm(
                 "⚠️ 偵測到修改衝突！", 
-                `此行程在剛才已被其他家人修改過！\n\n【對方最新內容】\n名稱：${decTitle}\n時間：${remoteItem.time}\n\n是否確認以你的版本強制覆蓋？`
+                `此行程在剛才已被其他家人修改過！\n\n是否確認以你的最新版本覆蓋？`
             );
             return !proceed;
         }
@@ -1623,7 +1670,7 @@ async function checkConcurrencyConflict(editKey, formLoadedUpdatedAt) {
     return false;
 }
 
-// ─── 儲存行程（整合非對稱 E2EE） ───
+// ─── 儲存行程（全負載零知識加密實作） ───
 async function saveEvent() {
     if (isGuest) return;
     const title = document.getElementById('formEventTitle').value.trim();
@@ -1646,14 +1693,55 @@ async function saveEvent() {
     }
 
     const nowTs = Date.now();
+    let payload = null;
+
+    if (isPrivate) {
+        const privateEnvelope = {
+            title,
+            date,
+            time,
+            category,
+            assignee,
+            isExpense: false
+        };
+        const encrypted = await MemberE2EE.encryptWithPublicKey(JSON.stringify(privateEnvelope), assignee);
+        payload = {
+            encrypted,
+            isPrivate: true,
+            owner: assignee,
+            updatedAt: nowTs
+        };
+    } else {
+        const cipherTitle = await E2EE.encrypt(title);
+        payload = {
+            title: cipherTitle,
+            date,
+            time,
+            category,
+            assignee,
+            isPrivate: false,
+            isExpense: false,
+            updatedAt: nowTs
+        };
+    }
+
+    const localItem = {
+        id: editKey || ("local_" + nowTs),
+        title,
+        date,
+        time,
+        category,
+        assignee,
+        isPrivate,
+        isExpense: false,
+        updatedAt: nowTs
+    };
+
     if (editKey) {
         const idx = window.activities.findIndex(a => a && a.id === editKey);
-        if (idx !== -1) {
-            window.activities[idx] = { ...window.activities[idx], title, date, time, category, assignee, isPrivate, updatedAt: nowTs };
-        }
+        if (idx !== -1) window.activities[idx] = localItem;
     } else {
-        const tempId = "local_" + nowTs;
-        window.activities.unshift({ id: tempId, title, date, time, category, assignee, isPrivate, updatedAt: nowTs });
+        window.activities.unshift(localItem);
     }
 
     localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
@@ -1662,15 +1750,6 @@ async function saveEvent() {
     renderAgenda();
     updateAISummary();
     closeModal();
-
-    let cipherTitle = title;
-    if (isPrivate) {
-        cipherTitle = await MemberE2EE.encryptWithPublicKey(title, assignee);
-    } else {
-        cipherTitle = await E2EE.encrypt(title);
-    }
-
-    const payload = { title: cipherTitle, date, time, category, assignee, isPrivate, updatedAt: nowTs };
 
     if (!navigator.onLine) {
         OfflineQueue.push({
@@ -1696,7 +1775,7 @@ async function saveEvent() {
     }
 }
 
-// ─── 儲存開支 ───
+// ─── 儲存開支（全負載零知識加密實作） ───
 async function saveReceiptExpense() {
     if (isGuest) return;
 
@@ -1724,15 +1803,59 @@ async function saveReceiptExpense() {
 
     const titleText = `${merchant} ($${amountVal})`;
     const nowTs = Date.now();
+    let payload = null;
+
+    if (isPrivate) {
+        const privateEnvelope = {
+            title: titleText,
+            merchant,
+            amount: amountVal,
+            date,
+            time,
+            category,
+            assignee: payer,
+            isExpense: true
+        };
+        const encrypted = await MemberE2EE.encryptWithPublicKey(JSON.stringify(privateEnvelope), payer);
+        payload = {
+            encrypted,
+            isPrivate: true,
+            owner: payer,
+            updatedAt: nowTs
+        };
+    } else {
+        const cipherTitle = await E2EE.encrypt(titleText);
+        payload = {
+            title: cipherTitle,
+            date,
+            time,
+            category,
+            assignee: payer,
+            isExpense: true,
+            amount: amountVal,
+            isPrivate: false,
+            updatedAt: nowTs
+        };
+    }
+
+    const localItem = {
+        id: editKey || ("exp_" + nowTs),
+        date,
+        time,
+        title: titleText,
+        assignee: payer,
+        category,
+        isExpense: true,
+        amount: amountVal,
+        isPrivate,
+        updatedAt: nowTs
+    };
 
     if (editKey) {
         const idx = window.activities.findIndex(a => a && a.id === editKey);
-        if (idx !== -1) {
-            window.activities[idx] = { ...window.activities[idx], date, time, title: titleText, assignee: payer, category, isExpense: true, amount: amountVal, isPrivate, updatedAt: nowTs };
-        }
+        if (idx !== -1) window.activities[idx] = localItem;
     } else {
-        const tempId = "exp_" + nowTs;
-        window.activities.unshift({ id: tempId, date, time, title: titleText, assignee: payer, category, isExpense: true, amount: amountVal, isPrivate, updatedAt: nowTs });
+        window.activities.unshift(localItem);
     }
 
     localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
@@ -1741,15 +1864,6 @@ async function saveReceiptExpense() {
     renderAgenda();
     updateAISummary();
     closeExpenseModal();
-
-    let cipherTitle = titleText;
-    if (isPrivate) {
-        cipherTitle = await MemberE2EE.encryptWithPublicKey(titleText, payer);
-    } else {
-        cipherTitle = await E2EE.encrypt(titleText);
-    }
-
-    const payload = { title: cipherTitle, date, time, category, assignee: payer, isExpense: true, amount: amountVal, isPrivate, updatedAt: nowTs };
 
     if (!navigator.onLine) {
         OfflineQueue.push({
@@ -2062,6 +2176,25 @@ const HIG = {
             el.querySelector('.destructive').onclick = () => { el.style.display = 'none'; resolve(true); };
             el.style.display = 'flex';
         });
+    },
+    prompt(title, msg, defaultVal = '', isPassword = false) {
+        return new Promise(resolve => {
+            const el = document.getElementById('higDialog');
+            document.getElementById('higDialogTitle').innerText = title;
+            document.getElementById('higDialogMsg').innerText = msg;
+            const input = document.getElementById('higDialogInput');
+            input.style.display = 'block';
+            input.value = defaultVal;
+            input.type = isPassword ? 'password' : 'text';
+            input.placeholder = isPassword ? '請輸入密碼以授權...' : '';
+            document.getElementById('higDialogActions').innerHTML = `
+                <button class="hig-dialog-btn cancel">取消</button>
+                <button class="hig-dialog-btn">確定</button>
+            `;
+            el.querySelector('.cancel').onclick = () => { el.style.display = 'none'; resolve(null); };
+            el.querySelectorAll('.hig-dialog-btn')[1].onclick = () => { el.style.display = 'none'; resolve(input.value); };
+            el.style.display = 'flex';
+        });
     }
 };
 
@@ -2283,6 +2416,7 @@ function renderAgenda() {
                             <span class="expense-amount-badge">💰 HK$ ${Number(item.amount).toFixed(2)}</span>
                             <span class="assignee-chip" style="background:${theme.bg}; color:${theme.color}; border:1px solid ${theme.border};">${theme.icon} 由 ${item.assignee} 支付</span>
                             <span class="tag-pill">${item.category || '日常開支'}</span>
+                            ${item.isPrivate ? '<span class="private-owner-badge">🔒 零知識私密</span>' : ''}
                         </div>
                     </div>
                     ${actionButtonsHtml}
@@ -2298,7 +2432,7 @@ function renderAgenda() {
                     <div class="event-meta-tags">
                         <span class="assignee-chip" style="background:${theme.bg}; color:${theme.color}; border:1px solid ${theme.border};">${theme.icon} ${item.assignee || '全員'}</span>
                         <span class="tag-pill">${item.category || '家庭'}</span>
-                        ${item.isPrivate ? '<span class="private-owner-badge">🔒 私人保密 (零知識加密)</span>' : ''}
+                        ${item.isPrivate ? '<span class="private-owner-badge">🔒 零知識私密</span>' : ''}
                     </div>
                 </div>
                 ${actionButtonsHtml}
@@ -2409,7 +2543,6 @@ function closeManageModal() { document.getElementById('manageModal').style.displ
 
 function handleAuthBadgeClick() { if (isGuest) openAddModal('LOGIN'); }
 
-// 登入處理：驗證身分並解鎖 ECDH 金鑰庫
 async function submitLogin() {
     const member = document.getElementById('loginSelectMember').value;
     const pwd = document.getElementById('loginPasswordInput').value.trim();
@@ -2437,6 +2570,59 @@ async function submitLogin() {
     }
 }
 
+// ─── 🚨 漏洞 3 修復：原生 Sign in with Apple（ASAuthorizationController） ───
+async function signInWithApple() {
+    LoadingHUD.show("Apple 登入中", "正在調用 iOS 原生安全驗證...");
+    try {
+        const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
+        const AppleSignInPlugin = window.Capacitor?.Plugins?.SignInWithApple;
+
+        // 若在 iOS 實機且已載入原生插件：直接調用 ASAuthorizationController
+        if (isNative && AppleSignInPlugin) {
+            const result = await AppleSignInPlugin.authorize({
+                clientId: 'com.lohascare.familycalendar',
+                redirectURI: 'https://familycalender-a62ae.firebaseapp.com/__/auth/handler',
+                scopes: 'email name'
+            });
+
+            if (result && result.response && result.response.identityToken) {
+                const provider = new window.fbOAuthProvider('apple.com');
+                const credential = provider.credential({
+                    idToken: result.response.identityToken,
+                    rawNonce: result.response.nonce
+                });
+
+                const userCred = await window.fbSignInWithCredential(window.fbAuth, credential);
+                const user = userCred.user;
+                const displayName = user.displayName || user.email?.split('@')[0] || "成員";
+                LoadingHUD.hide();
+                applyLoginState(displayName);
+                closeModal();
+                await HIG.alert("Apple 登入成功", `歡迎回來，${displayName}！`);
+                return;
+            }
+        }
+
+        // 桌面瀏覽器測試回退方案
+        const provider = new window.fbOAuthProvider('apple.com');
+        provider.addScope('email');
+        provider.addScope('name');
+        const result = await window.fbSignInWithPopup(window.fbAuth, provider);
+        const user = result.user;
+        const displayName = user.displayName || user.email?.split('@')[0] || "成員";
+        LoadingHUD.hide();
+        applyLoginState(displayName);
+        closeModal();
+        await HIG.alert("Apple 登入成功", `歡迎回來，${displayName}！`);
+    } catch (error) {
+        LoadingHUD.hide();
+        console.warn("Apple 登入未完成或取消:", error);
+        if (error.code !== "auth/popup-closed-by-user") {
+            await HIG.alert("登入未完成", "可隨時改用上方家庭成員帳號與密碼登入。");
+        }
+    }
+}
+
 async function logoutAccount() {
     const ok = await HIG.confirm("退出登入", "確定切換為訪客模式？");
     if (ok) {
@@ -2444,6 +2630,95 @@ async function logoutAccount() {
         MemberE2EE.activeMember = null;
         renderGuestState();
         if (window.fbSignOut && window.fbAuth) await window.fbSignOut(window.fbAuth);
+    }
+}
+
+// ─── 🚨 漏洞 4 修復：Apple Guideline 5.1.1(v) 級聯帳號與個人數據徹底清除 ───
+async function requestAccountDeletion() {
+    if (isGuest || !currentUser) return;
+
+    const ok = await HIG.confirm(
+        "永久註銷帳號與清除個人資料", 
+        "【符合 Apple 5.1.1 隱私規範】\n此操作將永久刪除此帳號的身分憑證，並同步清空雲端 Realtime Database 中所有由你建立的行程、開支、非對稱公鑰與個人設備私鑰。此操作無法復原，確認繼續？"
+    );
+    if (!ok) return;
+
+    LoadingHUD.show("正在註銷帳號", "第 1/4 步：正在清除雲端行程與開支記錄...");
+    const memberToDelete = currentUser;
+
+    try {
+        // 1. 刪除 RTDB 中所有由該成員擁有或指派的行程與開支
+        if (window.fbDb && window.fbRef && window.fbGet && window.fbRemove) {
+            const actSnap = await window.fbGet(window.fbRef(window.fbDb, 'family_calendar_activities'));
+            if (actSnap.exists()) {
+                const allActs = actSnap.val();
+                const deletePromises = [];
+                for (const [key, item] of Object.entries(allActs)) {
+                    if (item.owner === memberToDelete || item.assignee === memberToDelete) {
+                        deletePromises.push(window.fbRemove(window.fbRef(window.fbDb, `family_calendar_activities/${key}`)));
+                    }
+                }
+                await Promise.all(deletePromises);
+            }
+
+            LoadingHUD.update("第 2/4 步：正在清除非對稱公鑰與記憶層...");
+            await window.fbRemove(window.fbRef(window.fbDb, `family_public_keys/${memberToDelete}`));
+
+            // 刪除該成員的記憶層提醒
+            const insightSnap = await window.fbGet(window.fbRef(window.fbDb, 'family_insights'));
+            if (insightSnap.exists()) {
+                const allInsights = insightSnap.val();
+                const insightPromises = [];
+                for (const [key, item] of Object.entries(allInsights)) {
+                    if (item.assignee === memberToDelete) {
+                        insightPromises.push(window.fbRemove(window.fbRef(window.fbDb, `family_insights/${key}`)));
+                    }
+                }
+                await Promise.all(insightPromises);
+            }
+        }
+
+        LoadingHUD.update("第 3/4 步：正在銷毀本機安全密鑰庫...");
+        try {
+            const db = await KeyVaultDB.open();
+            const tx = db.transaction(KeyVaultDB.storeName, "readwrite");
+            tx.objectStore(KeyVaultDB.storeName).delete(memberToDelete);
+        } catch (e) {}
+
+        window.activities = window.activities.filter(a => a.assignee !== memberToDelete && a.owner !== memberToDelete);
+        localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
+
+        LoadingHUD.update("第 4/4 步：正在向 Firebase Auth 註銷身分憑證...");
+        const user = window.fbAuth.currentUser;
+        if (user) {
+            try {
+                await window.fbDeleteUser(user);
+            } catch (authErr) {
+                if (authErr.code === "auth/requires-recent-login") {
+                    LoadingHUD.hide();
+                    const reauthPwd = await HIG.prompt("安全驗證", "為符合安全規範，請輸入密碼以授權註銷：", "", true);
+                    if (!reauthPwd) {
+                        await HIG.alert("註銷中斷", "未能完成驗證，雲端資料已清理，但 Auth 帳號暫時保留。");
+                        renderGuestState();
+                        return;
+                    }
+                    LoadingHUD.show("正在完成註銷", "正在重新授權並銷毀帳號憑據...");
+                    const cred = window.fbEmailAuthProvider.credential(user.email, reauthPwd);
+                    await window.fbReauth(user, cred);
+                    await window.fbDeleteUser(user);
+                } else {
+                    throw authErr;
+                }
+            }
+        }
+
+        LoadingHUD.hide();
+        renderGuestState();
+        await HIG.alert("帳號與個人資料已徹底註銷", "所有行程、開支、非對稱公鑰與身分憑證已全數從雲端與本機清除。");
+    } catch (err) {
+        LoadingHUD.hide();
+        console.error("註銷過程出錯:", err);
+        await HIG.alert("註銷失敗", err.message || "發生未知錯誤，請稍後重試。");
     }
 }
 
