@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#f2f2f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="description" content="麟李家庭智慧管理系統 - 支援高精度收據記帳、絕對私人保密、手勢縮放與日曆即時同步">
+<meta name="description" content="麟李家庭智慧管理系統 - 結合 Firebase 雲端金鑰、Dify AI 收據辨識、私人保密、手勢縮放與即時日曆同步">
 <title>Family OS - 麟李家庭智慧管理系統</title>
 
 <link rel="manifest" href="manifest.json">
@@ -47,7 +47,7 @@ body {
 
 input, textarea, select { font-size: 16px !important; }
 
-/* ─── 頂部導航列 (避開 iPhone 瀏海與動態島) ─── */
+/* ─── 頂部導航列 (嚴格避開 iPhone 狀態列 5:47 與動態島) ─── */
 header {
     background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(20px);
@@ -91,7 +91,7 @@ header {
     padding: 4px;
 }
 
-/* ─── 主畫面垂直自適應佈局 ─── */
+/* ─── 主畫面佈局 ─── */
 .main-layout {
     flex: 1;
     display: flex;
@@ -101,7 +101,7 @@ header {
     gap: 6px;
 }
 
-/* 🎯 自適應單排微縮工具列 */
+/* 🎯 自適應單排極簡工具列 */
 .adaptive-toolbar {
     display: flex;
     gap: 5px;
@@ -163,7 +163,7 @@ header {
     white-space: nowrap;
 }
 
-/* 🗓️ 上層：月曆卡片（支援雙指縮放） */
+/* 🗓️ 上層：月曆卡片（支援雙指開合手勢縮放） */
 .calendar-card {
     background: var(--apple-card);
     border-radius: 14px;
@@ -595,19 +595,19 @@ header {
 
 <!-- Firebase SDK -->
 <script type="module">
-  import { initializeApp } from "[https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js](https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js)";
-  import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "[https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check.js](https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check.js)";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check.js";
   import { 
     initializeAuth, browserLocalPersistence, inMemoryPersistence, getAuth, 
     signInWithEmailAndPassword, signOut, deleteUser, reauthenticateWithCredential, 
     EmailAuthProvider, onAuthStateChanged 
-  } from "[https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js](https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js)";
-  import { getDatabase, ref, onValue, set, push, update, remove } from "[https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js](https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js)";
+  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getDatabase, ref, onValue, set, push, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAasqW8TgacCLLNuhg_I1ItVQlDfAHatc0",
     authDomain: "familycalender-a62ae.firebaseapp.com",
-    databaseURL: "[https://familycalender-a62ae-default-rtdb.firebaseio.com](https://familycalender-a62ae-default-rtdb.firebaseio.com)",
+    databaseURL: "https://familycalender-a62ae-default-rtdb.firebaseio.com",
     projectId: "familycalender-a62ae",
     storageBucket: "familycalender-a62ae.firebasestorage.app",
     messagingSenderId: "161867987572",
@@ -650,6 +650,22 @@ header {
   window.fbUpdate = update;
   window.fbRemove = remove;
 
+  // 🔑 從 Firebase Realtime Database 自動載入 Dify API Key
+  window.loadSystemSecrets = function() {
+      if (!window.fbDb || !window.fbRef || !window.fbOnValue) return;
+      const secretRef = window.fbRef(window.fbDb, "system_secrets/dify_api_key");
+      window.fbOnValue(secretRef, (snapshot) => {
+          const val = snapshot.val();
+          if (val) {
+              const cleanKey = String(val).replace(/^Bearer\s+/i, '').replace(/["']/g, '').trim();
+              window.cachedDifyApiKey = cleanKey;
+              console.log("✓ Dify API Key 已從 Firebase 秘密庫安全載入");
+          }
+      }, (err) => {
+          console.warn("讀取 system_secrets 狀態:", err.code);
+      });
+  };
+
   onAuthStateChanged(auth, async (user) => {
       if (user) {
           const email = user.email || "";
@@ -662,8 +678,10 @@ header {
 
           applyLoginState(memberName);
           window.startFirebaseSync();
+          window.loadSystemSecrets();
       } else {
           renderGuestState();
+          window.cachedDifyApiKey = "";
       }
   });
 
@@ -804,7 +822,7 @@ header {
                 <input type="time" id="nativeEventTime">
             </div>
 
-            <!-- 🔒 公開 / 不公開 可見度權限 -->
+            <!-- 🔒 可見度權限 -->
             <label class="form-label">可見度權限：</label>
             <select id="formEventVisibility" class="form-input">
                 <option value="public">🌐 公開 (全家人可見)</option>
@@ -838,7 +856,7 @@ header {
     </div>
 </div>
 
-<!-- 🧾 家庭支出輸入彈窗（高精度解析 + 🔒 不公開） -->
+<!-- 🧾 家庭支出輸入彈窗（連通 Dify Vision + 🔒 不公開） -->
 <div id="expenseModal" class="popup-overlay" onclick="if(event.target===this)closeExpenseModal()">
     <div class="popup-card">
         <button class="popup-close-x" onclick="closeExpenseModal()">&times;</button>
@@ -850,16 +868,16 @@ header {
         <label for="receiptFileInput" id="receiptUploadLabelBox" class="receipt-upload-label">
             <div style="font-size:26px;">📸</div>
             <div style="font-size:13px; font-weight:700; color:#b45309; margin-top:4px;">點擊影相 / 上傳收據</div>
-            <div style="font-size:11px; color:var(--apple-text-secondary); margin-top:2px;">AI 精準提取實付總額、商戶名及明細</div>
+            <div style="font-size:11px; color:var(--apple-text-secondary); margin-top:2px;">Dify AI 精準提取實付總額、商戶名及明細</div>
             <img id="receiptPreviewImg" class="receipt-preview-img" alt="收據預覽">
         </label>
 
         <div id="receiptOcrStatus" style="font-size:12px; color:var(--oasis-ai-purple); font-weight:bold; display:none; margin:6px 0; text-align:center;">
-            ✨ AI 正在快速解析收據圖像...
+            ✨ Dify AI 正在真實辨識收據圖像...
         </div>
 
         <label class="form-label">商戶 / 店舖名稱：</label>
-        <input type="text" id="expenseMerchantInput" class="form-input" placeholder="例如：那個 / 百佳超級市場">
+        <input type="text" id="expenseMerchantInput" class="form-input" placeholder="例如：百佳超級市場 / 萬寧 / 那個">
 
         <label class="form-label">實付金額 (HKD - 含服務費總額)：</label>
         <input type="number" step="0.1" id="expenseAmountInput" class="form-input" placeholder="例如：535">
@@ -1049,7 +1067,7 @@ let selectedDateStr = formatDayStr(new Date());
 let currentUser = localStorage.getItem('family_auth_user') || "";
 let isGuest = !currentUser;
 
-// ─── 🔍 雙指縮放與縮放等級管理 ───
+// ─── 🔍 雙指縮放等級 ───
 let currentCalZoom = parseFloat(localStorage.getItem('family_cal_zoom') || "1.0");
 
 function applyCalendarZoom(factor) {
@@ -1140,7 +1158,7 @@ function changeMonthOffset(offset) {
     renderCalendar();
 }
 
-// ─── 🗓️ 月曆渲染（嚴格落實：私密行程僅自己可見，他人完全看不到） ───
+// ─── 🗓️ 月曆渲染（嚴格落實：不公開行程僅自己可見，他人/訪客 0 殘留） ───
 function renderCalendar() {
     const y = currentMonthDate.getFullYear();
     const m = currentMonthDate.getMonth();
@@ -1173,7 +1191,7 @@ function renderCalendar() {
 
         let eventChipsHtml = "";
         try {
-            // 🔒 嚴格過濾：若為不公開，非本人完全不可見！
+            // 🔒 嚴格可見性過濾：若設為不公開，非本人完全看不見！
             const dayActs = activities.filter(a => {
                 if (!a || a.date !== dStr) return false;
                 if (a.isPrivate) {
@@ -1228,7 +1246,7 @@ function renderAgenda() {
     const lunarName = !HK_HOLIDAYS[selectedDateStr] ? ` (${getLunarDayText(selectedDateStr)})` : '';
     titleNode.innerText = `📋 ${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日 行程${holidayName || lunarName}`;
 
-    // 🔒 嚴格可見性過濾（他人或訪客看不見任何不公開項目）
+    // 🔒 嚴格可見性過濾
     const matched = activities.filter(a => {
         if (!a || a.date !== selectedDateStr) return false;
         if (a.isPrivate) {
@@ -1331,7 +1349,83 @@ function updateAISummary() {
     }
 }
 
-// ─── 🧾 影相/上傳收據與【高精度解析】 ───
+// ─── 🧾 真正調用 Dify.ai Vision 視覺模型辨識收據 ───
+async function recognizeReceiptWithDify(file) {
+    const apiKey = window.cachedDifyApiKey || "";
+    const statusEl = document.getElementById('receiptOcrStatus');
+    statusEl.style.display = "block";
+
+    if (!apiKey) {
+        statusEl.innerText = "⚠️ 尚未讀取到 Dify API Key，請確保已登入成員帳戶";
+        await HIG.alert("未檢測到授權", "請先以家庭成員帳戶登入，系統會自動從 Firebase 安全同步 Dify 辨識金鑰！");
+        return null;
+    }
+
+    statusEl.innerText = "✨ 正在上傳收據圖像至 Dify 視覺模型...";
+
+    try {
+        // 1. 上傳收據圖片到 Dify 伺服器
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('user', currentUser || 'family_user');
+
+        const uploadRes = await fetch('https://api.dify.ai/v1/files/upload', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: formData
+        });
+
+        if (!uploadRes.ok) {
+            throw new Error(`Dify 文件上傳失敗 (HTTP ${uploadRes.status})`);
+        }
+
+        const uploadData = await uploadRes.json();
+        const fileId = uploadData.id;
+
+        statusEl.innerText = "✨ Dify 正在解析全單商戶名、實付總額與消費項目...";
+
+        // 2. 執行 Dify 視覺分析工作流
+        const workflowRes = await fetch('https://api.dify.ai/v1/workflows/run', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                inputs: {
+                    receipt_image: {
+                        type: 'image',
+                        transfer_method: 'local_file',
+                        upload_file_id: fileId
+                    },
+                    title: "",
+                    assignee: currentUser || "全員",
+                    date: selectedDateStr
+                },
+                response_mode: 'blocking',
+                user: currentUser || 'family_user'
+            })
+        });
+
+        if (!workflowRes.ok) {
+            throw new Error(`Dify 工作流調用失敗 (HTTP ${workflowRes.status})`);
+        }
+
+        const result = await workflowRes.json();
+        if (result.data && result.data.outputs) {
+            return result.data.outputs;
+        } else {
+            throw new Error("Dify 回傳格式異常");
+        }
+    } catch (err) {
+        console.warn("Dify 辨識失敗:", err);
+        statusEl.innerText = "⚠️ Dify 連線未成功，已切換為手動確認";
+        return null;
+    }
+}
+
 function handleTopExpenseClick() {
     if (isGuest) {
         HIG.alert("權限不足", "訪客模式為唯讀，請先驗證家庭成員身分！");
@@ -1370,7 +1464,7 @@ function openExpenseModal(editItem = null) {
         document.getElementById('expenseMerchantInput').value = "";
         document.getElementById('expenseAmountInput').value = "";
         document.getElementById('expenseDateInput').value = selectedDateStr;
-        document.getElementById('expenseTimeInput').value = "13:37";
+        document.getElementById('expenseTimeInput').value = "12:30";
         document.getElementById('expenseVisibilitySelect').value = "public";
         document.getElementById('expenseCategorySelect').value = "家庭餐飲";
         document.getElementById('expensePayerSelect').value = currentUser || "鐵";
@@ -1385,21 +1479,17 @@ function openExpenseModal(editItem = null) {
         document.getElementById('receiptFileInput').value = "";
     }
 
-    document.getElementById('expenseModal').style.display = "flex";
+    document.getElementById('expenseModal').style.display = 'flex';
 }
 
 function closeExpenseModal() {
-    document.getElementById('expenseModal').style.display = "none";
+    document.getElementById('expenseModal').style.display = 'none';
 }
 
-// 🎯 高精度收據圖片處理（針對「那個」AIRSIDE收據特化解析）
-function handleReceiptFileChange(input) {
+// 🎯 真實收據圖片選取事件
+async function handleReceiptFileChange(input) {
     const file = input.files && input.files[0];
     if (!file) return;
-
-    const statusEl = document.getElementById('receiptOcrStatus');
-    statusEl.style.display = "block";
-    statusEl.innerText = "✨ AI 正在高精度辨識收據商戶與實付總額...";
 
     const preview = document.getElementById('receiptPreviewImg');
     if (preview.src && preview.src.startsWith('blob:')) {
@@ -1408,22 +1498,18 @@ function handleReceiptFileChange(input) {
     preview.src = URL.createObjectURL(file);
     preview.style.display = "block";
 
-    // 模擬或對接 Dify Vision 辨識結果
-    setTimeout(() => {
-        statusEl.innerText = "✓ 收據解析完成！已自動鎖定「Grand Total」實付總額與商號";
-        
-        // 針對香港經典商戶與 AIRSIDE收據的精準解析模型
-        const detectedMerchant = "那個";
-        const detectedGrandTotal = 535.0; // 準確提取 Grand Total（含加一）而非 486
-        const detectedDate = "2026-09-20";
-        const detectedTime = "13:37"; // 付款時間
+    // 調用真實 Dify.ai Vision 視覺模型
+    const difyData = await recognizeReceiptWithDify(file);
+    const statusEl = document.getElementById('receiptOcrStatus');
 
-        document.getElementById('expenseMerchantInput').value = detectedMerchant;
-        document.getElementById('expenseAmountInput').value = detectedGrandTotal;
-        document.getElementById('expenseDateInput').value = detectedDate;
-        document.getElementById('expenseTimeInput').value = detectedTime;
-        document.getElementById('expenseCategorySelect').value = "家庭餐飲";
-    }, 450);
+    if (difyData) {
+        statusEl.innerText = "✓ Dify 辨識完成！已自動提取實付總額與商號";
+        if (difyData.merchant) document.getElementById('expenseMerchantInput').value = difyData.merchant;
+        if (difyData.amount) document.getElementById('expenseAmountInput').value = difyData.amount;
+        if (difyData.date) document.getElementById('expenseDateInput').value = difyData.date;
+        if (difyData.time) document.getElementById('expenseTimeInput').value = difyData.time;
+        if (difyData.category) document.getElementById('expenseCategorySelect').value = difyData.category;
+    }
 }
 
 // 儲存開支（支援 🔒 不公開）
@@ -1441,7 +1527,7 @@ async function saveReceiptExpense() {
     const isPrivate = document.getElementById('expenseVisibilitySelect').value === "private";
 
     if (!merchant || isNaN(amountVal) || amountVal <= 0) {
-        await HIG.alert("提示", "請填寫商戶名稱及有效消費金額（例如：535）！");
+        await HIG.alert("提示", "請填寫商戶名稱及有效消費金額！");
         return;
     }
 
@@ -1542,7 +1628,6 @@ async function generateLockScreenWallpaper() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     let startY = 640;
-    // 壁紙嚴格遵守可見性規則（不將不公開項目暴露到共享背景）
     const dayActs = activities.filter(a => {
         if (!a || a.date !== selectedDateStr) return false;
         if (a.isPrivate) return currentUser && a.assignee === currentUser;
@@ -1883,7 +1968,7 @@ function shareWhatsApp() {
         msg += `${i + 1}. ${a.isExpense ? '💰 [開支]' : '⏰ ' + (a.time || '全日')} ${getSafeTitle(a.title)} (👤 ${a.assignee})\n`;
     });
     msg += `\n請全家留意安排！❤️`;
-    window.open(`[https://api.whatsapp.com/send?text=$](https://api.whatsapp.com/send?text=$){encodeURIComponent(msg)}`, '_blank');
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
 }
 </script>
 </body>
