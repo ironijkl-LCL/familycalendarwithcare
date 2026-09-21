@@ -2,13 +2,23 @@
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
-<!-- 符合 Apple 無障礙標準，移除鎖死縮放限制 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#f2f2f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="description" content="麟李家庭智慧管理系統 - 結合 Dify AI 視覺辨識、廣東話語音輸入、商戶預算雷達、財務分帳、日曆雙向同步與家庭記憶層">
 <title>Family OS - 麟李家庭智慧管理系統</title>
+
+<!-- DOMPurify 防護相容層（防止 iOS WebKit 報錯） -->
+<script>
+  if (typeof window.DOMPurify === 'undefined') {
+    window.DOMPurify = {
+      sanitize: function(str) {
+        if (typeof str !== 'string') return str;
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+      }
+    };
+  }
+</script>
 
 <style>
 :root {
@@ -63,6 +73,16 @@ header {
 .header-title { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
 .header-status-group { display: flex; align-items: center; gap: 6px; }
 
+.network-status-badge {
+    display: none;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    background: rgba(255, 149, 0, 0.15);
+    color: #b45309;
+}
+
 .auth-badge {
     font-size: 12px;
     background: rgba(0, 0, 0, 0.05);
@@ -99,7 +119,7 @@ header {
     gap: 6px;
 }
 
-/* 🎯 工具列 */
+/* 🎯 自適應工具列 */
 .adaptive-toolbar {
     display: flex;
     gap: 4px;
@@ -197,12 +217,7 @@ header {
     font-size: 11.5px;
     flex-shrink: 0;
 }
-.memory-insight-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-}
+.memory-insight-content { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .memory-insight-text { color: var(--apple-text); font-weight: 600; flex: 1; }
 .memory-insight-btn {
     background: var(--oasis-primary);
@@ -238,7 +253,7 @@ header {
     font-size: 10px;
 }
 
-/* 🗓️ 上層：月曆卡片 */
+/* 🗓️ 月曆卡片 */
 .calendar-card {
     background: var(--apple-card);
     border-radius: 14px;
@@ -317,7 +332,6 @@ header {
 }
 .day-cell:active { background: rgba(0, 0, 0, 0.05); }
 .day-cell.empty { background: transparent !important; pointer-events: none; }
-
 .day-cell.today { border: 1.5px solid var(--oasis-warning); }
 .day-cell.today .day-number { color: var(--oasis-warning); font-weight: 800; }
 .day-cell.selected {
@@ -341,7 +355,6 @@ header {
 .day-number { font-size: calc(11px * var(--cal-zoom)); font-weight: 700; }
 .day-cell.is-holiday .day-number,
 .day-cell.is-sunday .day-number { color: var(--oasis-danger); }
-
 .day-lunar { font-size: calc(8px * var(--cal-zoom)); color: var(--apple-text-secondary); transform: scale(0.85); transform-origin: right center; }
 .day-holiday {
     font-size: calc(8px * var(--cal-zoom));
@@ -354,14 +367,7 @@ header {
     transform-origin: left center;
 }
 
-.day-events-text-box {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    margin-top: 1px;
-    overflow: hidden;
-    flex: 1;
-}
+.day-events-text-box { display: flex; flex-direction: column; gap: 1px; margin-top: 1px; overflow: hidden; flex: 1; }
 .calendar-event-chip {
     font-size: calc(8px * var(--cal-zoom));
     line-height: 1.1;
@@ -386,7 +392,7 @@ header {
     border-left: 2px solid #f59e0b;
 }
 
-/* 📋 下層：焦點日程 */
+/* 📋 焦點日程清單 */
 .agenda-card {
     background: var(--apple-card);
     border-radius: 14px;
@@ -408,7 +414,6 @@ header {
 }
 .agenda-header-titles { display: flex; flex-direction: column; gap: 2px; }
 .agenda-date-title { font-size: 13.5px; font-weight: 700; }
-
 .day-total-expense-chip {
     display: inline-flex;
     align-items: center;
@@ -467,12 +472,7 @@ header {
     color: var(--apple-text-secondary);
     font-weight: 600;
 }
-.assignee-chip {
-    font-size: 9px;
-    padding: 1px 5px;
-    border-radius: 4px;
-    font-weight: 700;
-}
+.assignee-chip { font-size: 9px; padding: 1px 5px; border-radius: 4px; font-weight: 700; }
 .expense-amount-badge {
     font-size: 11px;
     padding: 1px 5px;
@@ -491,26 +491,77 @@ header {
 }
 
 .row-actions-group { display: flex; gap: 6px; align-items: center; }
-.btn-edit-link {
-    background: none;
-    border: none;
-    color: var(--oasis-primary);
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    padding: 2px 4px;
-}
-.btn-delete-link {
-    background: none;
-    border: none;
-    color: var(--oasis-danger);
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    padding: 2px 4px;
-}
-
+.btn-edit-link { background: none; border: none; color: var(--oasis-primary); font-size: 12px; font-weight: 700; cursor: pointer; padding: 2px 4px; }
+.btn-delete-link { background: none; border: none; color: var(--oasis-danger); font-size: 12px; font-weight: 700; cursor: pointer; padding: 2px 4px; }
 .empty-agenda-view { text-align: center; padding: 16px 0; color: var(--apple-text-secondary); font-size: 12.5px; }
+
+/* ─── Apple HIG 全螢幕 Loading HUD ─── */
+.hig-loading-hud {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.38);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 12000;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+.hig-hud-box {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 18px;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+    width: 220px;
+    text-align: center;
+}
+.hig-hud-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3.5px solid rgba(0, 113, 227, 0.18);
+    border-top-color: var(--oasis-primary);
+    border-radius: 50%;
+    animation: hudSpin 0.8s linear infinite;
+}
+@keyframes hudSpin { to { transform: rotate(360deg); } }
+.hig-hud-title { font-size: 14px; font-weight: 700; color: var(--apple-text); margin: 0; }
+.hig-hud-subtitle { font-size: 11.5px; color: var(--apple-text-secondary); margin: 0; }
+
+/* ─── 6 秒復原 Snack Toast ─── */
+.undo-toast-container {
+    position: fixed;
+    bottom: max(20px, env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: #1c1c1e;
+    color: #ffffff;
+    padding: 10px 16px;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+    z-index: 11000;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-size: 13px;
+    font-weight: 600;
+}
+.undo-toast-container.show { transform: translateX(-50%) translateY(0); }
+.undo-btn-pill {
+    background: var(--oasis-warning);
+    color: #000000;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+}
 
 /* ─── 彈出視窗樣式 ─── */
 .popup-overlay {
@@ -536,16 +587,7 @@ header {
     max-height: 88vh;
     overflow-y: auto;
 }
-.popup-close-x {
-    position: absolute;
-    top: 14px; right: 16px;
-    font-size: 22px;
-    color: var(--apple-text-secondary);
-    border: none;
-    background: none;
-    cursor: pointer;
-}
-
+.popup-close-x { position: absolute; top: 14px; right: 16px; font-size: 22px; color: var(--apple-text-secondary); border: none; background: none; cursor: pointer; }
 .form-label { font-size: 13px; font-weight: 600; color: var(--apple-text-secondary); margin-top: 8px; display: block; }
 .form-input {
     width: 100%;
@@ -559,111 +601,43 @@ header {
     color: var(--apple-text);
 }
 .form-input:focus { border-color: var(--oasis-primary); background: #ffffff; }
-
 .native-picker-row { display: flex; gap: 8px; margin: 4px 0 6px; }
-.native-picker-row input[type="date"],
-.native-picker-row input[type="time"] {
-    flex: 1;
-    padding: 9px 12px;
-    border: 1px solid var(--apple-border);
-    border-radius: 10px;
-    background: rgba(0, 0, 0, 0.02);
-    font-family: inherit;
-    color: var(--apple-text);
-    outline: none;
+.native-picker-row input[type="date"], .native-picker-row input[type="time"] {
+    flex: 1; padding: 9px 12px; border: 1px solid var(--apple-border); border-radius: 10px;
+    background: rgba(0, 0, 0, 0.02); font-family: inherit; color: var(--apple-text); outline: none;
 }
 .native-picker-row input[type="date"] { flex: 1.4; }
 
 .receipt-upload-label {
-    display: block;
-    border: 2px dashed rgba(245, 158, 11, 0.5);
-    background: rgba(245, 158, 11, 0.04);
-    border-radius: 12px;
-    padding: 12px;
-    text-align: center;
-    cursor: pointer;
-    margin: 6px 0;
+    display: block; border: 2px dashed rgba(245, 158, 11, 0.5); background: rgba(245, 158, 11, 0.04);
+    border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; margin: 6px 0;
 }
-.receipt-upload-label:active { background: rgba(245, 158, 11, 0.12); }
-.receipt-preview-img {
-    max-width: 100%;
-    max-height: 120px;
-    border-radius: 8px;
-    margin-top: 6px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    display: none;
-}
-
+.receipt-preview-img { max-width: 100%; max-height: 120px; border-radius: 8px; margin-top: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none; }
 .submit-btn-block {
-    width: 100%;
-    padding: 11px;
-    background: var(--oasis-primary);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 10px;
+    width: 100%; padding: 11px; background: var(--oasis-primary); color: white; border: none; border-radius: 10px;
+    font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 10px;
 }
 .submit-btn-block:active { opacity: 0.85; }
 
-.apple-signin-btn {
-    width: 100%;
-    padding: 11px;
-    background: #000000;
-    color: #ffffff;
-    border: none;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-.apple-signin-btn:active { background: #1c1c1e; }
-.apple-logo-icon { width: 16px; height: 16px; fill: currentColor; }
-
 /* ─── HIG 對話框 ─── */
 .hig-dialog-overlay {
-    display: none;
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.35);
-    backdrop-filter: blur(8px);
-    z-index: 10000;
-    justify-content: center;
-    align-items: center;
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(8px); z-index: 10000; justify-content: center; align-items: center;
 }
 .hig-dialog-card {
-    background: rgba(255, 255, 255, 0.96);
-    backdrop-filter: blur(20px);
-    width: 270px;
-    border-radius: 14px;
-    overflow: hidden;
-    text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(20px); width: 270px; border-radius: 14px; overflow: hidden; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 .hig-dialog-header { padding: 16px 14px 10px; }
 .hig-dialog-title { font-size: 16px; font-weight: 600; margin: 0; }
 .hig-dialog-msg { font-size: 13px; color: var(--apple-text-secondary); margin-top: 4px; }
-.hig-dialog-input {
-    width: 86%; margin: 6px auto 12px; padding: 6px 8px;
-    border: 1px solid rgba(0,0,0,0.15); border-radius: 6px; box-sizing: border-box; display: block;
-}
+.hig-dialog-input { width: 86%; margin: 6px auto 12px; padding: 6px 8px; border: 1px solid rgba(0,0,0,0.15); border-radius: 6px; box-sizing: border-box; display: block; }
 .hig-dialog-actions { display: flex; border-top: 1px solid rgba(0,0,0,0.08); }
-.hig-dialog-btn {
-    flex: 1; background: none; border: none; padding: 11px 0;
-    font-size: 15px; color: var(--oasis-primary); cursor: pointer;
-}
+.hig-dialog-btn { flex: 1; background: none; border: none; padding: 11px 0; font-size: 15px; color: var(--oasis-primary); cursor: pointer; }
 .hig-dialog-btn.cancel { border-right: 1px solid rgba(0,0,0,0.08); color: var(--apple-text-secondary); }
 .hig-dialog-btn.destructive { color: var(--oasis-danger); font-weight: 600; }
 </style>
 
-<!-- Firebase SDK Module -->
+<!-- Firebase SDK 模組 -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check.js";
@@ -672,7 +646,7 @@ header {
     signInWithEmailAndPassword, signOut, deleteUser, reauthenticateWithCredential, 
     EmailAuthProvider, OAuthProvider, signInWithPopup, onAuthStateChanged 
   } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getDatabase, ref, onValue, set, push, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+  import { getDatabase, ref, onValue, set, push, update, remove, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAasqW8TgacCLLNuhg_I1ItVQlDfAHatc0",
@@ -686,7 +660,6 @@ header {
 
   const app = initializeApp(firebaseConfig);
 
-  // 僅限本機開發使用 Debug Token，生產環境自動停用以符合 Apple 審核
   if (location.hostname === "localhost") {
       self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
   }
@@ -722,6 +695,7 @@ header {
   window.fbPush = push;
   window.fbUpdate = update;
   window.fbRemove = remove;
+  window.fbGet = get;
 
   onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -736,11 +710,13 @@ header {
           if (window.applyLoginState) window.applyLoginState(memberName);
           window.startFirebaseSync();
           window.initMemoryInsightsSync();
+          window.requestNotificationPermission();
       } else {
           if (window.renderGuestState) window.renderGuestState();
       }
   });
 
+  // 實時同步資料庫與解密流程
   window.startFirebaseSync = function() {
       if (!window.fbDb || !window.fbRef || !window.fbOnValue) return;
       const actRef = window.fbRef(window.fbDb, "family_calendar_activities");
@@ -750,7 +726,19 @@ header {
           if (data) {
               for (let key in data) {
                   const item = data[key];
-                  const title = window.E2EE ? await window.E2EE.decrypt(item.title) : (item.title || "活動");
+                  let title = "活動";
+
+                  // 依可見度與加密格式解密
+                  if (item.isPrivate) {
+                      if (item.title && typeof item.title === 'object' && item.title.is_ecdh) {
+                          title = await window.MemberE2EE.decryptWithPrivateKey(item.title);
+                      } else {
+                          title = window.E2EE ? await window.E2EE.decrypt(item.title) : "🔒 私人行程";
+                      }
+                  } else {
+                      title = window.E2EE ? await window.E2EE.decrypt(item.title) : (item.title || "活動");
+                  }
+
                   list.push({
                       id: key,
                       date: item.date || "",
@@ -762,24 +750,19 @@ header {
                       amount: item.amount || 0,
                       isPrivate: item.isPrivate || false,
                       isAI_Priority: item.isAI_Priority || false,
-                      ai_tags: item.ai_tags || [],
-                      urgency_score: item.urgency_score || 0
+                      updatedAt: item.updatedAt || 0
                   });
               }
           }
-          if (list.length > 0) {
-              window.activities = list;
-              localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
-              if (window.renderCalendar) window.renderCalendar();
-              if (window.renderAgenda) window.renderAgenda();
-              if (window.updateAISummary) window.updateAISummary();
-          }
-      }, (err) => {
-          console.warn("RTDB 同步狀態:", err.code);
+          window.activities = list;
+          localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
+          if (window.renderCalendar) window.renderCalendar();
+          if (window.renderAgenda) window.renderAgenda();
+          if (window.updateAISummary) window.updateAISummary();
       });
   };
 
-  // P3：監聽家庭記憶層建議
+  // 監聽家庭記憶層建議
   window.initMemoryInsightsSync = function() {
       if (!window.fbDb || !window.fbRef || !window.fbOnValue) return;
       const insightRef = window.fbRef(window.fbDb, "family_insights");
@@ -803,6 +786,15 @@ header {
           if (activeInsight) {
               banner.style.display = "block";
               msgEl.innerText = `🧠 ${activeInsight.promptMessage}`;
+              
+              if (Notification.permission === "granted" && !sessionStorage.getItem(`notif_${insightKey}`)) {
+                  new Notification("🧠 家庭記憶層提醒", {
+                      body: activeInsight.promptMessage,
+                      icon: "icons/icon-192.png"
+                  });
+                  sessionStorage.setItem(`notif_${insightKey}`, "true");
+              }
+
               btn.onclick = async () => {
                   selectedDateStr = activeInsight.suggestedDate;
                   openAddModal('ADD');
@@ -827,9 +819,25 @@ header {
 
 <body>
 
+<!-- Apple HIG 漸進式 Loading HUD -->
+<div id="higLoadingHud" class="hig-loading-hud">
+    <div class="hig-hud-box">
+        <div class="hig-hud-spinner"></div>
+        <div id="higHudTitle" class="hig-hud-title">AI 分析收據中</div>
+        <div id="higHudSubtitle" class="hig-hud-subtitle">正在上傳影像至安全沙盒...</div>
+    </div>
+</div>
+
+<!-- 6 秒復原 Snack Toast -->
+<div id="undoToastNode" class="undo-toast-container">
+    <span id="undoToastMsg">已刪除項目</span>
+    <button class="undo-btn-pill" onclick="triggerUndoAction()">↩️ 復原 (<span id="undoCountdownSec">6</span>s)</button>
+</div>
+
 <header>
     <div class="header-title">🏠 Family OS</div>
     <div class="header-status-group">
+        <div id="networkStatusBadge" class="network-status-badge">🟡 離線暫存</div>
         <button id="authBadgeBtn" class="auth-badge" onclick="handleAuthBadgeClick()">🔒 訪客模式</button>
         <button id="logoutBtn" class="account-action-btn logout-btn" onclick="logoutAccount()">登出</button>
         <button id="deleteAccountBtn" class="account-action-btn delete-acc-btn" onclick="requestAccountDeletion()">註銷</button>
@@ -838,7 +846,6 @@ header {
 
 <div class="main-layout">
 
-    <!-- 🎯 擴展自適應單排工具列 -->
     <div class="adaptive-toolbar">
         <button class="btn-green" onclick="handleTopAddClick()">➕ 活動</button>
         <button class="btn-orange" onclick="handleTopExpenseClick()">🧾 記帳</button>
@@ -892,7 +899,7 @@ header {
         <div id="daysGridNode" class="days-grid"></div>
     </div>
 
-    <!-- 📋 焦點日程與總開支看板 -->
+    <!-- 📋 焦點日程 -->
     <div class="agenda-card">
         <div class="agenda-header">
             <div class="agenda-header-titles">
@@ -908,17 +915,16 @@ header {
 
 </div>
 
-<!-- ➕ 活動輸入與登入彈窗 -->
+<!-- ➕ 活動輸入彈窗 -->
 <div id="eventModal" class="popup-overlay" onclick="if(event.target===this)closeModal()">
     <div class="popup-card">
         <button class="popup-close-x" onclick="closeModal()">&times;</button>
         <h3 id="modalFormTitle" style="margin:0 0 10px; font-size:17px;">➕ 新增家庭行程</h3>
         <input type="hidden" id="editItemKey" value="">
+        <input type="hidden" id="editItemUpdatedAt" value="0">
 
         <div id="loginGateSection" style="display:none; background:rgba(0,0,0,0.02); padding:12px; border-radius:10px; margin-bottom:12px;">
             <p style="margin:0 0 8px; font-size:13px; color:var(--apple-text-secondary); font-weight:600;">🔒 請先驗證家庭成員身分：</p>
-            
-            <span class="form-label" style="margin-top:0;">選擇家庭成員帳戶：</span>
             <select id="loginSelectMember" class="form-input">
                 <option value="iron">👦 鐵 (iron)</option>
                 <option value="daddy">👨 Daddy</option>
@@ -929,19 +935,6 @@ header {
             </select>
             <input type="password" id="loginPasswordInput" class="form-input" placeholder="輸入成員專屬密碼...">
             <button class="submit-btn-block" onclick="submitLogin()">登入驗證身分</button>
-
-            <div style="display:flex; align-items:center; margin:10px 0 2px;">
-                <div style="flex:1; height:1px; background:var(--apple-border);"></div>
-                <span style="font-size:11px; color:var(--apple-text-secondary); padding:0 8px;">或</span>
-                <div style="flex:1; height:1px; background:var(--apple-border);"></div>
-            </div>
-            
-            <button class="apple-signin-btn" onclick="signInWithApple()">
-                <svg class="apple-logo-icon" viewBox="0 0 170 170">
-                    <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.04-7.58-7.71-11.65-14.01-6.19-9.56-11.06-20.73-14.6-33.51-3.55-12.78-5.32-24.31-5.32-34.6 0-14.78 3.79-26.68 11.37-35.7 7.58-9.02 17.06-13.62 28.44-13.79 4.35 0 9.28 1.13 14.79 3.39 5.51 2.26 9.4 3.44 11.66 3.54 2.04 0 6.13-1.25 12.28-3.76 6.15-2.51 11.45-3.62 15.91-3.33 12.3.67 21.9 5.09 28.79 13.26-10.92 6.64-16.27 15.69-16.06 27.15.21 9.02 3.65 16.59 10.32 22.7 6.67 6.11 14.58 9.54 23.73 10.28-2.61 7.74-5.83 15.69-9.66 23.86zM119.22 33.02c0-7.39 2.66-14.46 7.98-21.21 5.32-6.75 11.96-11.02 19.92-12.81.42 2.12.63 4.13.63 6.03 0 7.4-2.73 14.54-8.19 21.42-5.46 6.88-12.18 11.05-20.16 12.51-.07-1.9-.18-3.88-.18-5.94z"/>
-                </svg>
-                透過 Apple 登入
-            </button>
         </div>
 
         <div id="eventFormFields">
@@ -957,7 +950,7 @@ header {
             <label class="form-label">可見度權限：</label>
             <select id="formEventVisibility" class="form-input">
                 <option value="public">🌐 公開 (全家人可見)</option>
-                <option value="private">🔒 不公開 (僅自己頁面可見/私人保密)</option>
+                <option value="private">🔒 不公開 (零知識專屬公鑰加密)</option>
             </select>
 
             <label class="form-label">活動分類：</label>
@@ -993,6 +986,7 @@ header {
         <button class="popup-close-x" onclick="closeExpenseModal()">&times;</button>
         <h3 id="expenseModalTitle" style="margin:0 0 8px; font-size:17px; color:#b45309;">🧾 記錄家庭開支 (收據辨識)</h3>
         <input type="hidden" id="editExpenseItemKey" value="">
+        <input type="hidden" id="editExpenseItemUpdatedAt" value="0">
         
         <input type="file" id="receiptFileInput" accept="image/*" style="display:none;" onchange="handleReceiptFileChange(this)">
 
@@ -1002,10 +996,6 @@ header {
             <div style="font-size:11px; color:var(--apple-text-secondary); margin-top:2px;">AI 雲端安全提取實付總額、商戶名並自動匹配類別</div>
             <img id="receiptPreviewImg" class="receipt-preview-img" alt="收據預覽">
         </label>
-
-        <div id="receiptOcrStatus" style="font-size:12px; color:var(--oasis-ai-purple); font-weight:bold; display:none; margin:6px 0; text-align:center;">
-            ✨ 安全上傳中...
-        </div>
 
         <label class="form-label">商戶 / 店舖名稱：</label>
         <input type="text" id="expenseMerchantInput" class="form-input" placeholder="例如：百佳超級市場 / 萬寧 / 那個" oninput="handleMerchantInputBlur(this.value)">
@@ -1022,7 +1012,7 @@ header {
         <label class="form-label">開支可見度：</label>
         <select id="expenseVisibilitySelect" class="form-input">
             <option value="public">🌐 公開 (全家人可見)</option>
-            <option value="private">🔒 不公開 (僅自己頁面可見/私人保密)</option>
+            <option value="private">🔒 不公開 (零知識專屬公鑰加密)</option>
         </select>
 
         <label class="form-label">支出類別：</label>
@@ -1051,18 +1041,15 @@ header {
     </div>
 </div>
 
-<!-- 📊 P2 家庭財務結算彈窗 -->
+<!-- 📊 P2 結算彈窗 -->
 <div id="settlementModal" class="popup-overlay" onclick="if(event.target===this)closeSettlementModal()">
     <div class="popup-card">
         <button class="popup-close-x" onclick="closeSettlementModal()">&times;</button>
         <h3 style="margin:0 0 4px; font-size:17px; color:var(--oasis-primary);">📊 本月家庭財務結算</h3>
         <div id="settlementMonthTitle" style="font-size:12px; color:var(--apple-text-secondary); margin-bottom:12px;"></div>
-        
         <div id="settlementSummaryCards" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;"></div>
-        
         <h4 style="margin:8px 0 6px; font-size:14px;">💡 建議轉帳方案（最少轉帳路徑）：</h4>
         <div id="settlementTransfersList" style="background:rgba(0,0,0,0.03); border-radius:10px; padding:10px; font-size:13px; line-height:1.6; margin-bottom:12px;"></div>
-
         <button class="submit-btn-block" style="background:#34c759;" onclick="exportExpensesToCSV()">📥 匯出當月收支 CSV (Excel相容)</button>
     </div>
 </div>
@@ -1089,28 +1076,371 @@ header {
 </div>
 
 <script>
-// ─── P1：香港本地商戶自動分類字典 ───
+// ─── 本機安全金鑰庫（IndexedDB 存儲封裝） ───
+const KeyVaultDB = {
+    dbName: "FamilyOS_KeyVault",
+    storeName: "member_keys",
+    async open() {
+        return new Promise((resolve, reject) => {
+            const req = indexedDB.open(this.dbName, 1);
+            req.onupgradeneeded = () => req.result.createObjectStore(this.storeName, { keyPath: "member" });
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+    },
+    async saveKey(member, data) {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.storeName, "readwrite");
+            tx.objectStore(this.storeName).put({ member, ...data });
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+        });
+    },
+    async getKey(member) {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.storeName, "readonly");
+            const req = tx.objectStore(this.storeName).get(member);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+    }
+};
+
+// ─── 成員專屬非對稱加密引擎（ECDH P-256 + PBKDF2 + AES-GCM） ───
+const MemberE2EE = {
+    activePrivateKey: null,
+    activeMember: null,
+
+    // 透過密碼衍生 AES-GCM 封裝金鑰
+    async deriveKeyFromPassword(password, salt) {
+        const enc = new TextEncoder();
+        const keyMaterial = await crypto.subtle.importKey(
+            "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]
+        );
+        return await crypto.subtle.deriveKey(
+            { name: "PBKDF2", salt, iterations: 100000, hash: "SHA-256" },
+            keyMaterial,
+            { name: "AES-GCM", length: 256 },
+            false,
+            ["encrypt", "decrypt"]
+        );
+    },
+
+    // 首次登入生成 ECDH 金鑰對，或解鎖本機現有私鑰
+    async initMemberKeys(memberName, password) {
+        this.activeMember = memberName;
+        let record = await KeyVaultDB.getKey(memberName);
+
+        if (!record) {
+            // 首次登入：生成 ECDH P-256 金鑰對
+            const keyPair = await crypto.subtle.generateKey(
+                { name: "ECDH", namedCurve: "P-256" },
+                true,
+                ["deriveKey", "deriveBits"]
+            );
+
+            const rawPrivKey = await crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
+            const exportedPubKey = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
+
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const wrapKey = await this.deriveKeyFromPassword(password, salt);
+            const encryptedPrivKey = await crypto.subtle.encrypt(
+                { name: "AES-GCM", iv },
+                wrapKey,
+                rawPrivKey
+            );
+
+            await KeyVaultDB.saveKey(memberName, {
+                encryptedPrivKey: Array.from(new Uint8Array(encryptedPrivKey)),
+                salt: Array.from(salt),
+                iv: Array.from(iv),
+                publicKey: exportedPubKey
+            });
+
+            // 上傳 Public Key 至 Firebase RTDB
+            if (window.fbDb && window.fbRef && window.fbSet) {
+                await window.fbSet(
+                    window.fbRef(window.fbDb, `family_public_keys/${memberName}`),
+                    exportedPubKey
+                );
+            }
+
+            this.activePrivateKey = keyPair.privateKey;
+            return true;
+        } else {
+            // 非首次：從 IndexedDB 取出並用密碼解密
+            try {
+                const salt = new Uint8Array(record.salt);
+                const iv = new Uint8Array(record.iv);
+                const wrapKey = await this.deriveKeyFromPassword(password, salt);
+                const decryptedRawPrivKey = await crypto.subtle.decrypt(
+                    { name: "AES-GCM", iv },
+                    wrapKey,
+                    new Uint8Array(record.encryptedPrivKey)
+                );
+
+                this.activePrivateKey = await crypto.subtle.importKey(
+                    "pkcs8",
+                    decryptedRawPrivKey,
+                    { name: "ECDH", namedCurve: "P-256" },
+                    false,
+                    ["deriveKey", "deriveBits"]
+                );
+                return true;
+            } catch (e) {
+                console.error("私鑰解密失敗（密碼可能不相符）:", e);
+                return false;
+            }
+        }
+    },
+
+    // 使用目標成員 Public Key 進行 ECIES 協商加密
+    async encryptWithPublicKey(text, targetMember) {
+        if (!text) return "";
+        let pubKeyJwk = null;
+        const localKey = await KeyVaultDB.getKey(targetMember);
+        if (localKey && localKey.publicKey) {
+            pubKeyJwk = localKey.publicKey;
+        } else if (window.fbDb && window.fbRef && window.fbGet) {
+            const snap = await window.fbGet(window.fbRef(window.fbDb, `family_public_keys/${targetMember}`));
+            if (snap.exists()) pubKeyJwk = snap.val();
+        }
+
+        // 若無公鑰則自動回退為全家共用密鑰
+        if (!pubKeyJwk) return await E2EE.encrypt(text);
+
+        const targetPubKey = await crypto.subtle.importKey(
+            "jwk", pubKeyJwk, { name: "ECDH", namedCurve: "P-256" }, false, []
+        );
+
+        // 生成臨時金鑰對
+        const ephemPair = await crypto.subtle.generateKey(
+            { name: "ECDH", namedCurve: "P-256" }, true, ["deriveKey"]
+        );
+
+        const sharedSecretKey = await crypto.subtle.deriveKey(
+            { name: "ECDH", public: targetPubKey },
+            ephemPair.privateKey,
+            { name: "AES-GCM", length: 256 },
+            false,
+            ["encrypt"]
+        );
+
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const cipher = await crypto.subtle.encrypt(
+            { name: "AES-GCM", iv },
+            sharedSecretKey,
+            new TextEncoder().encode(String(text))
+        );
+
+        const ephemPubKeyJwk = await crypto.subtle.exportKey("jwk", ephemPair.publicKey);
+
+        return {
+            is_ecdh: true,
+            owner: targetMember,
+            ephem: ephemPubKeyJwk,
+            iv: btoa(String.fromCharCode(...iv)),
+            data: btoa(String.fromCharCode(...new Uint8Array(cipher)))
+        };
+    },
+
+    // 使用自身 Private Key 解密
+    async decryptWithPrivateKey(cipherObj) {
+        if (!cipherObj) return "";
+        if (typeof cipherObj !== "object" || !cipherObj.is_ecdh) {
+            return typeof cipherObj === "string" ? cipherObj : (cipherObj.title || "活動");
+        }
+
+        if (cipherObj.owner !== this.activeMember || !this.activePrivateKey) {
+            return "🔒 私人保密行程";
+        }
+
+        try {
+            const ephemPubKey = await crypto.subtle.importKey(
+                "jwk", cipherObj.ephem, { name: "ECDH", namedCurve: "P-256" }, false, []
+            );
+
+            const sharedSecretKey = await crypto.subtle.deriveKey(
+                { name: "ECDH", public: ephemPubKey },
+                this.activePrivateKey,
+                { name: "AES-GCM", length: 256 },
+                false,
+                ["decrypt"]
+            );
+
+            const iv = Uint8Array.from(atob(cipherObj.iv), c => c.charCodeAt(0));
+            const data = Uint8Array.from(atob(cipherObj.data), c => c.charCodeAt(0));
+
+            const plain = await crypto.subtle.decrypt(
+                { name: "AES-GCM", iv },
+                sharedSecretKey,
+                data
+            );
+            return new TextDecoder().decode(plain);
+        } catch (e) {
+            return "🔒 私人行程（解密失敗）";
+        }
+    }
+};
+window.MemberE2EE = MemberE2EE;
+
+// ─── 全家共用 E2EE 引擎（公開行程與向下相容） ───
+const E2EE = {
+    cachedKey: null,
+    async getKey() {
+        if (this.cachedKey) return this.cachedKey;
+        const enc = new TextEncoder();
+        const baseKey = await crypto.subtle.importKey("raw", enc.encode("Lohas_Family_Vault_Passphrase_2026"), { name: "PBKDF2" }, false, ["deriveKey"]);
+        this.cachedKey = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: enc.encode("FamilySaltSecured"), iterations: 100000, hash: "SHA-256" }, baseKey, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+        return this.cachedKey;
+    },
+    async encrypt(text) {
+        if (!text) return "";
+        try {
+            const key = await this.getKey();
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const cipher = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(String(text)));
+            return { is_encrypted: true, iv: btoa(String.fromCharCode(...iv)), data: btoa(String.fromCharCode(...new Uint8Array(cipher))) };
+        } catch(e) { return String(text); }
+    },
+    async decrypt(obj) {
+        if (!obj) return "";
+        if (typeof obj !== 'object' || !obj.is_encrypted) return String(obj || "");
+        try {
+            const key = await this.getKey();
+            const iv = Uint8Array.from(atob(obj.iv), c => c.charCodeAt(0));
+            const data = Uint8Array.from(atob(obj.data), c => c.charCodeAt(0));
+            const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, data);
+            return new TextDecoder().decode(plain);
+        } catch(e) { return "家庭行程"; }
+    }
+};
+window.E2EE = E2EE;
+
+// ─── Loading HUD 控制器 ───
+const LoadingHUD = {
+    show(title, subtitle) {
+        const hud = document.getElementById('higLoadingHud');
+        document.getElementById('higHudTitle').innerText = title || "處理中...";
+        document.getElementById('higHudSubtitle').innerText = subtitle || "";
+        hud.style.display = "flex";
+    },
+    update(subtitle) {
+        document.getElementById('higHudSubtitle').innerText = subtitle || "";
+    },
+    hide() {
+        document.getElementById('higLoadingHud').style.display = "none";
+    }
+};
+
+// ─── 離線事務佇列 (Offline Queue) ───
+const OfflineQueue = {
+    getQueue() { return JSON.parse(localStorage.getItem('family_offline_queue') || "[]"); },
+    push(action) {
+        const q = this.getQueue();
+        q.push({ ...action, queuedAt: Date.now() });
+        localStorage.setItem('family_offline_queue', JSON.stringify(q));
+        this.updatePill();
+    },
+    updatePill() {
+        const badge = document.getElementById('networkStatusBadge');
+        const q = this.getQueue();
+        if (!navigator.onLine || q.length > 0) {
+            badge.style.display = "inline-block";
+            badge.innerText = !navigator.onLine ? `🟡 離線中 (${q.length}項待同步)` : `🟢 同步中 (${q.length}項)...`;
+        } else {
+            badge.style.display = "none";
+        }
+    },
+    async flush() {
+        if (!navigator.onLine || !window.fbDb) return;
+        const q = this.getQueue();
+        if (q.length === 0) {
+            this.updatePill();
+            return;
+        }
+        const remaining = [];
+        for (const item of q) {
+            try {
+                if (item.type === 'SET') await window.fbSet(window.fbRef(window.fbDb, item.path), item.data);
+                else if (item.type === 'UPDATE') await window.fbUpdate(window.fbRef(window.fbDb, item.path), item.data);
+                else if (item.type === 'REMOVE') await window.fbRemove(window.fbRef(window.fbDb, item.path));
+            } catch(e) {
+                remaining.push(item);
+            }
+        }
+        localStorage.setItem('family_offline_queue', JSON.stringify(remaining));
+        this.updatePill();
+        if (remaining.length === 0) {
+            HIG.alert("同步完成", "離線期間的變更已同步至雲端！");
+        }
+    }
+};
+window.addEventListener('online', () => OfflineQueue.flush());
+window.addEventListener('offline', () => OfflineQueue.updatePill());
+
+// ─── 6 秒撤銷 Toast ───
+let undoTimer = null;
+let pendingDeleteAction = null;
+
+function showUndoToast(title, onCommitDelete) {
+    if (undoTimer) clearTimeout(undoTimer);
+    if (pendingDeleteAction) pendingDeleteAction();
+
+    pendingDeleteAction = onCommitDelete;
+    const toast = document.getElementById('undoToastNode');
+    const msg = document.getElementById('undoToastMsg');
+    const secEl = document.getElementById('undoCountdownSec');
+    
+    msg.innerText = `已刪除「${title}」`;
+    toast.classList.add('show');
+
+    let leftSec = 6;
+    secEl.innerText = leftSec;
+    const countInterval = setInterval(() => {
+        leftSec--;
+        secEl.innerText = leftSec;
+        if (leftSec <= 0) clearInterval(countInterval);
+    }, 1000);
+
+    undoTimer = setTimeout(() => {
+        toast.classList.remove('show');
+        clearInterval(countInterval);
+        if (pendingDeleteAction) {
+            pendingDeleteAction();
+            pendingDeleteAction = null;
+        }
+    }, 6000);
+}
+
+function triggerUndoAction() {
+    if (undoTimer) clearTimeout(undoTimer);
+    document.getElementById('undoToastNode').classList.remove('show');
+    window.activities = JSON.parse(localStorage.getItem('family_cached_activities_backup') || "[]");
+    localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
+    renderCalendar();
+    renderAgenda();
+    updateAISummary();
+    pendingDeleteAction = null;
+    HIG.alert("已復原", "該項目已取消刪除！");
+}
+
+window.requestNotificationPermission = async function() {
+    if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+        await Notification.requestPermission();
+    }
+};
+
+// ─── 香港商戶字典 ───
 const HK_MERCHANT_MAP = {
-    "超市日用": [
-        "百佳", "parkn", "fusion", "taste", "惠康", "wellcome", "market place", 
-        "360", "優品360", "759", "阿布泰", "大生", "佳寶", "u購", "donki", "一田", "citysuper", "無印", "muji"
-    ],
-    "家庭餐飲": [
-        "大快活", "大家樂", "美心", "麥當勞", "mcdonald", "kfc", "肯德基", "那個", "元氣", "壽司郎", "sushiro",
-        "譚仔", "三哥", "太興", "星巴克", "starbucks", "敏華", "翠華", "壽司", "酒樓", "茶餐廳", "麵家", "冰室"
-    ],
-    "醫療健康": [
-        "萬寧", "mannings", "屈臣氏", "watsons", "仁安", "養和", "浸會", "卓健", "尚至", "診所", "醫院", 
-        "牙醫", "物理治療", "藥房", "同仁堂", "余仁生", "覆診"
-    ],
-    "交通出行": [
-        "港鐵", "mtr", "九巴", "kmb", "城巴", "citybus", "hketoll", "易通行", "加德士", "caltex", 
-        "shell", "esso", "中石化", "sinopec", "泊車", "停車場", "的士", "uber", "高鐵"
-    ],
-    "水電煤雜費": [
-        "中電", "clp", "港燈", "煤氣", "towngas", "水務署", "香港寬頻", "hkbn", "網上行", "hkt", 
-        "csl", "smartone", "3香港", "中國移動", "管理費"
-    ]
+    "超市日用": ["百佳", "parkn", "fusion", "taste", "惠康", "wellcome", "market place", "360", "優品360", "759", "阿布泰", "大生", "佳寶", "u購", "donki", "一田", "citysuper", "無印", "muji"],
+    "家庭餐飲": ["大快活", "大家樂", "美心", "麥當勞", "mcdonald", "kfc", "肯德基", "那個", "元氣", "壽司郎", "sushiro", "譚仔", "三哥", "太興", "星巴克", "starbucks", "敏華", "翠華", "壽司", "酒樓", "茶餐廳", "麵家", "冰室"],
+    "醫療健康": ["萬寧", "mannings", "屈臣氏", "watsons", "仁安", "養和", "浸會", "卓健", "尚至", "診所", "醫院", "牙醫", "物理治療", "藥房", "同仁堂", "余仁生", "覆診"],
+    "交通出行": ["港鐵", "mtr", "九巴", "kmb", "城巴", "citybus", "hketoll", "易通行", "加德士", "caltex", "shell", "esso", "中石化", "sinopec", "泊車", "停車場", "的士", "uber", "高鐵"],
+    "水電煤雜費": ["中電", "clp", "港燈", "煤氣", "towngas", "水務署", "香港寬頻", "hkbn", "網上行", "hkt", "csl", "smartone", "3香港", "中國移動", "管理費"]
 };
 
 function autoDetectCategoryByMerchant(merchantName) {
@@ -1125,14 +1455,10 @@ function autoDetectCategoryByMerchant(merchantName) {
 function handleMerchantInputBlur(val) {
     const detected = autoDetectCategoryByMerchant(val);
     const catSelect = document.getElementById('expenseCategorySelect');
-    if (detected !== "日常開支" && catSelect) {
-        catSelect.value = detected;
-    }
+    if (detected !== "日常開支" && catSelect) catSelect.value = detected;
 }
 
-// ─── P1：月度預算警報檢查 ───
 const MONTHLY_BUDGET = 15000;
-
 async function checkBudgetThreshold(newExpenseAmount, targetDateStr) {
     const monthPrefix = targetDateStr.slice(0, 7);
     const currentMonthExpenses = (window.activities || [])
@@ -1143,26 +1469,369 @@ async function checkBudgetThreshold(newExpenseAmount, targetDateStr) {
     const ratio = totalAfterAdd / MONTHLY_BUDGET;
 
     if (ratio >= 1.0) {
-        await HIG.alert(
-            "⚠️ 預算超支警示",
-            `本月（${monthPrefix}）開支已達 HK$ ${totalAfterAdd.toFixed(1)}，已超出月度上限 HK$ ${MONTHLY_BUDGET}！請家庭成員留意支出。`
-        );
+        await HIG.alert("⚠️ 預算超支警示", `本月開支已達 HK$ ${totalAfterAdd.toFixed(1)}，已超出上限 HK$ ${MONTHLY_BUDGET}！`);
     } else if (ratio >= 0.8) {
-        await HIG.alert(
-            "💡 預算達 80% 警戒線",
-            `本月開支已達 HK$ ${totalAfterAdd.toFixed(1)}（佔上限 ${Math.round(ratio * 100)}% / 限額 HK$ ${MONTHLY_BUDGET}）。`
-        );
+        await HIG.alert("💡 預算達 80% 警戒線", `本月開支已達 HK$ ${totalAfterAdd.toFixed(1)}（佔上限 ${Math.round(ratio * 100)}%）。`);
     }
 }
 
-// ─── P0：廣東話語音輸入（Web Speech API） ───
+// ─── Dify 收據辨識 ───
+async function handleReceiptFileChange(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+
+    const preview = document.getElementById('receiptPreviewImg');
+    if (preview.src && preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = "block";
+
+    LoadingHUD.show("AI 分析收據中", "第 1/3 步：正在上傳影像至安全沙盒...");
+
+    try {
+        if (!window.fbAuth || !window.fbAuth.currentUser) {
+            LoadingHUD.hide();
+            await HIG.alert("需要登入", "請先以家庭成員帳戶登入後再上傳收據！");
+            return;
+        }
+
+        const idToken = await window.fbAuth.currentUser.getIdToken();
+        const base64Data = await fileToBase64(file);
+
+        LoadingHUD.update("第 2/3 步：調用視覺模型提取商戶與金額...");
+
+        const PROXY_URL = "https://asia-east1-familycalender-a62ae.cloudfunctions.net/analyzeReceipt";
+        const response = await fetch(PROXY_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${idToken}`
+            },
+            body: JSON.stringify({
+                imageBase64: base64Data,
+                mimeType: file.type || "image/jpeg",
+                filename: file.name,
+                selectedDateStr: selectedDateStr
+            })
+        });
+
+        LoadingHUD.update("第 3/3 步：比對香港商戶字典與分類...");
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const dataRes = await response.json();
+        let data = dataRes.outputs || {};
+        if (typeof data === 'string') {
+            try { data = JSON.parse(data.replace(/```json|```/g, '').trim()); } catch(e){}
+        }
+
+        const merchant = data.merchant || data.title || data.shop_name || "";
+        const amount = parseFloat(data.amount || data.total || data.grand_total || 0);
+        const date = data.date || selectedDateStr;
+        const time = data.time || "12:30";
+        const detectedCategory = autoDetectCategoryByMerchant(merchant);
+
+        if (merchant) document.getElementById('expenseMerchantInput').value = merchant;
+        if (!isNaN(amount) && amount > 0) document.getElementById('expenseAmountInput').value = amount;
+        if (date) document.getElementById('expenseDateInput').value = date;
+        if (time) document.getElementById('expenseTimeInput').value = time;
+        document.getElementById('expenseCategorySelect').value = detectedCategory;
+
+        LoadingHUD.hide();
+        await HIG.alert("辨識成功", `商戶：${merchant || "未提取"}\n實付：HK$ ${amount || 0}\n已自動分類為：【${detectedCategory}】`);
+    } catch (err) {
+        LoadingHUD.hide();
+        console.warn("OCR 失敗:", err);
+        await HIG.alert("辨識未完成", "後端未能提取收據，已自動切換為手動輸入。");
+    }
+}
+
+// ─── 樂觀並發控制 ───
+async function checkConcurrencyConflict(editKey, formLoadedUpdatedAt) {
+    if (!editKey || !window.fbDb || !window.fbGet || !navigator.onLine) return false;
+    try {
+        const snap = await window.fbGet(window.fbRef(window.fbDb, `family_calendar_activities/${editKey}`));
+        if (!snap.exists()) return false;
+        const remoteItem = snap.val();
+        const remoteUpdatedAt = remoteItem.updatedAt || 0;
+
+        if (remoteUpdatedAt > Number(formLoadedUpdatedAt)) {
+            const decTitle = window.E2EE ? await window.E2EE.decrypt(remoteItem.title) : remoteItem.title;
+            const proceed = await HIG.confirm(
+                "⚠️ 偵測到修改衝突！", 
+                `此行程在剛才已被其他家人修改過！\n\n【對方最新內容】\n名稱：${decTitle}\n時間：${remoteItem.time}\n\n是否確認以你的版本強制覆蓋？`
+            );
+            return !proceed;
+        }
+    } catch(e){}
+    return false;
+}
+
+// ─── 儲存行程（整合非對稱 E2EE） ───
+async function saveEvent() {
+    if (isGuest) return;
+    const title = document.getElementById('formEventTitle').value.trim();
+    const date = document.getElementById('nativeEventDate').value;
+    const time = document.getElementById('nativeEventTime').value || "20:00";
+    const category = document.getElementById('formEventCategory').value;
+    const assignee = document.getElementById('formEventAssignee').value;
+    const isPrivate = document.getElementById('formEventVisibility').value === "private";
+    const editKey = document.getElementById('editItemKey').value;
+    const formLoadedUpdatedAt = document.getElementById('editItemUpdatedAt').value;
+
+    if (!title || !date) {
+        await HIG.alert("提示", "請填寫活動名稱與日期！");
+        return;
+    }
+
+    if (editKey) {
+        const hasConflict = await checkConcurrencyConflict(editKey, formLoadedUpdatedAt);
+        if (hasConflict) return;
+    }
+
+    const nowTs = Date.now();
+    if (editKey) {
+        const idx = window.activities.findIndex(a => a && a.id === editKey);
+        if (idx !== -1) {
+            window.activities[idx] = { ...window.activities[idx], title, date, time, category, assignee, isPrivate, updatedAt: nowTs };
+        }
+    } else {
+        const tempId = "local_" + nowTs;
+        window.activities.unshift({ id: tempId, title, date, time, category, assignee, isPrivate, updatedAt: nowTs });
+    }
+
+    localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
+    selectedDateStr = date;
+    renderCalendar();
+    renderAgenda();
+    updateAISummary();
+    closeModal();
+
+    // 加密路徑：私密使用非對稱 ECDH，公開使用全家金鑰
+    let cipherTitle = title;
+    if (isPrivate) {
+        cipherTitle = await MemberE2EE.encryptWithPublicKey(title, assignee);
+    } else {
+        cipherTitle = await E2EE.encrypt(title);
+    }
+
+    const payload = { title: cipherTitle, date, time, category, assignee, isPrivate, updatedAt: nowTs };
+
+    if (!navigator.onLine) {
+        OfflineQueue.push({
+            type: editKey && !editKey.startsWith("local_") ? "UPDATE" : "SET",
+            path: editKey && !editKey.startsWith("local_") ? `family_calendar_activities/${editKey}` : `family_calendar_activities/local_${nowTs}`,
+            data: payload
+        });
+        await HIG.alert("離線暫存", "已暫存至手機本機！當連上網絡時會自動同步。");
+        return;
+    }
+
+    try {
+        if (window.fbDb && window.fbRef) {
+            if (editKey && !editKey.startsWith("local_")) {
+                await window.fbUpdate(window.fbRef(window.fbDb, `family_calendar_activities/${editKey}`), payload);
+            } else {
+                const newRef = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
+                await window.fbSet(newRef, payload);
+            }
+        }
+    } catch(e) {
+        OfflineQueue.push({ type: "UPDATE", path: `family_calendar_activities/${editKey}`, data: payload });
+    }
+}
+
+// ─── 儲存開支 ───
+async function saveReceiptExpense() {
+    if (isGuest) return;
+
+    const editKey = document.getElementById('editExpenseItemKey').value;
+    const merchant = document.getElementById('expenseMerchantInput').value.trim();
+    const amountVal = parseFloat(document.getElementById('expenseAmountInput').value.trim());
+    const date = document.getElementById('expenseDateInput').value;
+    const time = document.getElementById('expenseTimeInput').value || "12:30";
+    const category = document.getElementById('expenseCategorySelect').value;
+    const payer = document.getElementById('expensePayerSelect').value;
+    const isPrivate = document.getElementById('expenseVisibilitySelect').value === "private";
+    const formLoadedUpdatedAt = document.getElementById('editExpenseItemUpdatedAt').value;
+
+    if (!merchant || isNaN(amountVal) || amountVal <= 0) {
+        await HIG.alert("提示", "請填寫商戶名稱及有效消費金額！");
+        return;
+    }
+
+    if (editKey) {
+        const hasConflict = await checkConcurrencyConflict(editKey, formLoadedUpdatedAt);
+        if (hasConflict) return;
+    }
+
+    await checkBudgetThreshold(amountVal, date);
+
+    const titleText = `${merchant} ($${amountVal})`;
+    const nowTs = Date.now();
+
+    if (editKey) {
+        const idx = window.activities.findIndex(a => a && a.id === editKey);
+        if (idx !== -1) {
+            window.activities[idx] = { ...window.activities[idx], date, time, title: titleText, assignee: payer, category, isExpense: true, amount: amountVal, isPrivate, updatedAt: nowTs };
+        }
+    } else {
+        const tempId = "exp_" + nowTs;
+        window.activities.unshift({ id: tempId, date, time, title: titleText, assignee: payer, category, isExpense: true, amount: amountVal, isPrivate, updatedAt: nowTs });
+    }
+
+    localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
+    selectedDateStr = date;
+    renderCalendar();
+    renderAgenda();
+    updateAISummary();
+    closeExpenseModal();
+
+    let cipherTitle = titleText;
+    if (isPrivate) {
+        cipherTitle = await MemberE2EE.encryptWithPublicKey(titleText, payer);
+    } else {
+        cipherTitle = await E2EE.encrypt(titleText);
+    }
+
+    const payload = { title: cipherTitle, date, time, category, assignee: payer, isExpense: true, amount: amountVal, isPrivate, updatedAt: nowTs };
+
+    if (!navigator.onLine) {
+        OfflineQueue.push({
+            type: editKey && !editKey.startsWith("exp_") ? "UPDATE" : "SET",
+            path: editKey && !editKey.startsWith("exp_") ? `family_calendar_activities/${editKey}` : `family_calendar_activities/exp_${nowTs}`,
+            data: payload
+        });
+        await HIG.alert("離線暫存", "開支已暫存於本機！");
+        return;
+    }
+
+    try {
+        if (window.fbDb && window.fbRef) {
+            if (editKey && !editKey.startsWith("exp_")) {
+                await window.fbUpdate(window.fbRef(window.fbDb, `family_calendar_activities/${editKey}`), payload);
+            } else {
+                const newRef = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
+                await window.fbSet(newRef, payload);
+            }
+        }
+    } catch(e) {
+        OfflineQueue.push({ type: "UPDATE", path: `family_calendar_activities/${editKey}`, data: payload });
+    }
+}
+
+// ─── 刪除行程 ───
+async function deleteEventItem(id) {
+    if (isGuest) return;
+    const item = (window.activities || []).find(a => a && a.id === id);
+    if (!item) return;
+
+    localStorage.setItem('family_cached_activities_backup', JSON.stringify(window.activities));
+    window.activities = window.activities.filter(a => a && a.id !== id);
+    localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
+    renderCalendar();
+    renderAgenda();
+    updateAISummary();
+    closeManageModal();
+
+    showUndoToast(getSafeTitle(item.title), () => {
+        if (!id.startsWith("local_") && !id.startsWith("exp_")) {
+            if (!navigator.onLine) {
+                OfflineQueue.push({ type: "REMOVE", path: `family_calendar_activities/${id}` });
+            } else if (window.fbDb && window.fbRef && window.fbRemove) {
+                window.fbRemove(window.fbRef(window.fbDb, `family_calendar_activities/${id}`));
+            }
+        }
+    });
+}
+
+function openEditSpecificItem(id) {
+    const item = (window.activities || []).find(a => a && a.id === id);
+    if (!item) return;
+
+    document.getElementById('editItemKey').value = id;
+    document.getElementById('editItemUpdatedAt').value = item.updatedAt || 0;
+    document.getElementById('modalFormTitle').innerText = "✏️ 修改家庭行程";
+    document.getElementById('modalSubmitBtn').innerText = "確認更新儲存";
+
+    document.getElementById('loginGateSection').style.display = 'none';
+    document.getElementById('eventFormFields').style.display = 'block';
+
+    document.getElementById('formEventTitle').value = getSafeTitle(item.title);
+    document.getElementById('nativeEventDate').value = item.date || selectedDateStr;
+    document.getElementById('nativeEventTime').value = item.time || "20:00";
+    document.getElementById('formEventVisibility').value = item.isPrivate ? "private" : "public";
+    document.getElementById('formEventCategory').value = item.category || "日常開支";
+    document.getElementById('formEventAssignee').value = item.assignee || "全員";
+
+    document.getElementById('eventModal').style.display = 'flex';
+}
+
+function openExpenseModal(editItem = null) {
+    const titleEl = document.getElementById('expenseModalTitle');
+    const submitBtn = document.getElementById('expenseSubmitBtn');
+    const keyInput = document.getElementById('editExpenseItemKey');
+    const updatedInput = document.getElementById('editExpenseItemUpdatedAt');
+    const uploadBox = document.getElementById('receiptUploadLabelBox');
+
+    if (editItem) {
+        titleEl.innerText = "✏️ 修改家庭開支";
+        submitBtn.innerText = "確認更新開支";
+        keyInput.value = editItem.id;
+        updatedInput.value = editItem.updatedAt || 0;
+        uploadBox.style.display = "none";
+
+        let cleanMerchant = String(editItem.title).replace(/\s*\(\$.+?\)/, '').trim();
+        document.getElementById('expenseMerchantInput').value = cleanMerchant;
+        document.getElementById('expenseAmountInput').value = editItem.amount || "";
+        document.getElementById('expenseDateInput').value = editItem.date || selectedDateStr;
+        document.getElementById('expenseTimeInput').value = editItem.time || "12:30";
+        document.getElementById('expenseVisibilitySelect').value = editItem.isPrivate ? "private" : "public";
+        document.getElementById('expenseCategorySelect').value = editItem.category || "家庭餐飲";
+        document.getElementById('expensePayerSelect').value = editItem.assignee || currentUser || "鐵";
+    } else {
+        titleEl.innerText = "🧾 記錄家庭開支 (收據辨識)";
+        submitBtn.innerText = "確認輸送至日曆";
+        keyInput.value = "";
+        updatedInput.value = "0";
+        uploadBox.style.display = "block";
+
+        document.getElementById('expenseMerchantInput').value = "";
+        document.getElementById('expenseAmountInput').value = "";
+        document.getElementById('expenseDateInput').value = selectedDateStr;
+        document.getElementById('expenseTimeInput').value = "12:30";
+        document.getElementById('expenseVisibilitySelect').value = "public";
+        document.getElementById('expenseCategorySelect').value = "家庭餐飲";
+        document.getElementById('expensePayerSelect').value = currentUser || "鐵";
+        
+        const preview = document.getElementById('receiptPreviewImg');
+        if (preview.src && preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
+        preview.src = "";
+        preview.style.display = "none";
+        document.getElementById('receiptFileInput').value = "";
+    }
+
+    document.getElementById('expenseModal').style.display = 'flex';
+}
+
+function openEditGeneralItem(id) {
+    if (isGuest) {
+        HIG.alert("權限不足", "訪客模式無法修改！");
+        return;
+    }
+    const item = (window.activities || []).find(a => a && a.id === id);
+    if (!item) return;
+
+    if (item.isExpense) openExpenseModal(item);
+    else openEditSpecificItem(id);
+}
+
+// ─── 廣東話語音輸入 ───
 let recognitionInstance = null;
 let isVoiceRecording = false;
 
 function toggleSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-        HIG.alert("功能不支援", "此設備環境未支援 Web Speech API，請使用系統鍵盤自帶之廣東話聽寫功能。");
+        HIG.alert("功能不支援", "此環境未支援語音辨識，請使用系統鍵盤自帶之廣東話聽寫功能。");
         return;
     }
 
@@ -1194,18 +1863,10 @@ function toggleSpeechRecognition() {
             }
         };
 
-        recognitionInstance.onerror = (e) => {
-            console.warn("廣東話語音輸入錯誤:", e.error);
-            stopSpeechState();
-        };
-
-        recognitionInstance.onend = () => {
-            stopSpeechState();
-        };
-
+        recognitionInstance.onerror = () => stopSpeechState();
+        recognitionInstance.onend = () => stopSpeechState();
         recognitionInstance.start();
     } catch (err) {
-        console.warn("啟動語音失敗:", err);
         stopSpeechState();
     }
 }
@@ -1218,39 +1879,7 @@ function stopSpeechState() {
     if (input) input.placeholder = "✨ 講或寫：百佳買咗280蚊、聽晚仁安覆診...";
 }
 
-// ─── P2：AI 行程衝突偵測 ───
-function checkScheduleConflicts(dateStr, timeStr, assignee, eventTitle) {
-    if (!timeStr || timeStr === "全日") return null;
-
-    const sameDayActs = (window.activities || []).filter(a => 
-        a && a.date === dateStr && !a.isExpense && (!a.isPrivate || a.assignee === currentUser)
-    );
-
-    const warnings = [];
-
-    // 1. 同一成員自身時間衝突
-    const personalOverlap = sameDayActs.find(a => a.assignee === assignee && a.time === timeStr);
-    if (personalOverlap) {
-        warnings.push(`⚠️ 【個人重疊】${assignee} 於 ${timeStr} 已排定「${getSafeTitle(personalOverlap.title)}」`);
-    }
-
-    // 2. 跨成員接送時段衝突（子女活動 vs 家長工作/重要日程）
-    const isChild = ["Jolie", "熹", "蓓"].includes(assignee);
-    if (isChild) {
-        const busyParents = sameDayActs.filter(a => 
-            (a.assignee === "Daddy" || a.assignee === "Mummy") && 
-            a.time === timeStr && 
-            (a.category === "工作" || a.category === "重要")
-        );
-        busyParents.forEach(p => {
-            warnings.push(`🚗 【接送注意】${assignee} 於 ${timeStr} 有行程，但 ${p.assignee} 正安排「${getSafeTitle(p.title)}」，可能無法接送！`);
-        });
-    }
-
-    return warnings.length > 0 ? warnings.join("\n\n") : null;
-}
-
-// ─── P2：家庭財務結算與分帳演算法 ───
+// ─── 結算面板與 CSV 導出 ───
 function openSettlementModal() {
     const monthStr = selectedDateStr.slice(0, 7);
     document.getElementById('settlementMonthTitle').innerText = `${monthStr} 月度開支與墊支平衡`;
@@ -1296,16 +1925,10 @@ function openSettlementModal() {
         if (creditors[j].amount < 1) j++;
     }
 
-    document.getElementById('settlementTransfersList').innerHTML = transfers.length > 0 
-        ? transfers.join("<br>") 
-        : "<span style='color:var(--apple-text-secondary);'>本月各成員支出完全平衡，無須轉帳。</span>";
-
+    document.getElementById('settlementTransfersList').innerHTML = transfers.length > 0 ? transfers.join("<br>") : "<span style='color:var(--apple-text-secondary);'>本月各成員支出平衡，無須轉帳。</span>";
     document.getElementById('settlementModal').style.display = 'flex';
 }
-
-function closeSettlementModal() {
-    document.getElementById('settlementModal').style.display = 'none';
-}
+function closeSettlementModal() { document.getElementById('settlementModal').style.display = 'none'; }
 
 function exportExpensesToCSV() {
     const monthStr = selectedDateStr.slice(0, 7);
@@ -1328,10 +1951,8 @@ function exportExpensesToCSV() {
     link.click();
 }
 
-// ─── P3：一鍵喚起 iPhone 原生日曆訂閱 ───
 function subscribeAppleCalendar() {
-    const icsUrl = "webcal://asia-east1-familycalender-a62ae.cloudfunctions.net/publicIcsFeed";
-    window.location.href = icsUrl;
+    window.location.href = "webcal://asia-east1-familycalender-a62ae.cloudfunctions.net/publicIcsFeed";
 }
 
 const MEMBER_THEMES = {
@@ -1343,16 +1964,8 @@ const MEMBER_THEMES = {
     "熹":   { color: "#0d9488", bg: "rgba(13, 148, 136, 0.12)", border: "#0d9488", icon: "👶" },
     "全員": { color: "#16a34a", bg: "rgba(22, 163, 74, 0.14)", border: "#16a34a", icon: "👨‍👩‍👧‍👦" }
 };
-
-function getMemberTheme(name) {
-    return MEMBER_THEMES[name] || MEMBER_THEMES["全員"];
-}
-
-function escapeHtml(str) {
-    if (!str) return "";
-    return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-}
-
+function getMemberTheme(name) { return MEMBER_THEMES[name] || MEMBER_THEMES["全員"]; }
+function escapeHtml(str) { return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
 function getSafeTitle(rawTitle) {
     if (!rawTitle) return "活動";
     if (typeof rawTitle === "string") return escapeHtml(rawTitle);
@@ -1366,44 +1979,8 @@ const HK_HOLIDAYS = {
     "2026-05-01": "勞動節", "2026-05-25": "佛誕", "2026-06-19": "端午節",
     "2026-07-01": "回歸日", "2026-09-26": "中秋節翌日", "2026-10-01": "國慶日",
     "2026-10-19": "重陽節", "2026-12-25": "聖誕節", "2026-12-26": "節禮日",
-    "2027-01-01": "元旦", "2027-02-06": "年初一", "2027-02-07": "年初二", "2027-02-08": "年初三",
-    "2027-03-26": "耶穌受難節", "2027-03-29": "復活節", "2027-04-05": "清明節",
-    "2027-05-01": "勞動節", "2027-05-13": "佛誕", "2027-06-09": "端午節",
-    "2027-07-01": "回歸日", "2027-09-16": "中秋節翌日", "2027-10-01": "國慶日",
-    "2027-10-08": "重陽節", "2027-12-25": "聖誕節", "2027-12-27": "聖誕翌日"
+    "2027-01-01": "元旦", "2027-02-06": "年初一", "2027-02-07": "年初二", "2027-02-08": "年初三"
 };
-
-const E2EE = {
-    cachedKey: null,
-    async getKey() {
-        if (this.cachedKey) return this.cachedKey;
-        const enc = new TextEncoder();
-        const baseKey = await crypto.subtle.importKey("raw", enc.encode("Lohas_Family_Vault_Passphrase_2026"), { name: "PBKDF2" }, false, ["deriveKey"]);
-        this.cachedKey = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: enc.encode("FamilySaltSecured"), iterations: 100000, hash: "SHA-256" }, baseKey, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
-        return this.cachedKey;
-    },
-    async encrypt(text) {
-        if (!text) return "";
-        try {
-            const key = await this.getKey();
-            const iv = crypto.getRandomValues(new Uint8Array(12));
-            const cipher = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(String(text)));
-            return { is_encrypted: true, iv: btoa(String.fromCharCode(...iv)), data: btoa(String.fromCharCode(...new Uint8Array(cipher))) };
-        } catch(e) { return String(text); }
-    },
-    async decrypt(obj) {
-        if (!obj) return "";
-        if (typeof obj !== 'object' || !obj.is_encrypted) return String(obj || "");
-        try {
-            const key = await this.getKey();
-            const iv = Uint8Array.from(atob(obj.iv), c => c.charCodeAt(0));
-            const data = Uint8Array.from(atob(obj.data), c => c.charCodeAt(0));
-            const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, data);
-            return new TextDecoder().decode(plain);
-        } catch(e) { return "🔒 行程"; }
-    }
-};
-window.E2EE = E2EE;
 
 const HIG = {
     alert(title, msg) {
@@ -1428,32 +2005,10 @@ const HIG = {
             el.querySelector('.destructive').onclick = () => { el.style.display = 'none'; resolve(true); };
             el.style.display = 'flex';
         });
-    },
-    prompt(title, msg, defaultVal = '', isPassword = false) {
-        return new Promise(resolve => {
-            const el = document.getElementById('higDialog');
-            document.getElementById('higDialogTitle').innerText = title;
-            document.getElementById('higDialogMsg').innerText = msg;
-            const input = document.getElementById('higDialogInput');
-            input.style.display = 'block';
-            input.value = defaultVal;
-            input.type = isPassword ? 'password' : 'text';
-            input.placeholder = isPassword ? '請輸入密碼以驗證...' : '';
-            document.getElementById('higDialogActions').innerHTML = `
-                <button class="hig-dialog-btn cancel">取消</button>
-                <button class="hig-dialog-btn">確定</button>
-            `;
-            el.querySelector('.cancel').onclick = () => { el.style.display = 'none'; resolve(null); };
-            el.querySelectorAll('.hig-dialog-btn')[1].onclick = () => { el.style.display = 'none'; resolve(input.value); };
-            el.style.display = 'flex';
-        });
     }
 };
 
-function formatDayStr(d) {
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
+function formatDayStr(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
 function getLunarDayText(dateStr) {
     try {
         const parts = dateStr.split('-');
@@ -1477,7 +2032,6 @@ let currentMonthDate = new Date();
 let selectedDateStr = formatDayStr(new Date());
 let currentUser = localStorage.getItem('family_auth_user') || "";
 let isGuest = !currentUser;
-
 let currentCalZoom = parseFloat(localStorage.getItem('family_cal_zoom') || "1.0");
 
 function applyCalendarZoom(factor) {
@@ -1487,50 +2041,15 @@ function applyCalendarZoom(factor) {
     const badge = document.getElementById('zoomLevelIndicator');
     if (badge) badge.innerText = `🔍 ${Math.round(currentCalZoom * 100)}%`;
 }
-
 function cycleCalendarZoom() {
     if (currentCalZoom < 1.15) applyCalendarZoom(1.3);
     else if (currentCalZoom < 1.45) applyCalendarZoom(1.6);
     else applyCalendarZoom(1.0);
 }
 
-function initPinchToZoom() {
-    const card = document.getElementById('calendarCardNode');
-    if (!card) return;
-
-    let initDist = 0;
-    let startZoom = 1.0;
-
-    card.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 2) {
-            initDist = Math.hypot(
-                e.touches[0].pageX - e.touches[1].pageX,
-                e.touches[0].pageY - e.touches[1].pageY
-            );
-            startZoom = currentCalZoom;
-        }
-    }, { passive: true });
-
-    card.addEventListener('touchmove', (e) => {
-        if (e.touches.length === 2 && initDist > 0) {
-            const curDist = Math.hypot(
-                e.touches[0].pageX - e.touches[1].pageX,
-                e.touches[0].pageY - e.touches[1].pageY
-            );
-            const ratio = curDist / initDist;
-            applyCalendarZoom(startZoom * ratio);
-        }
-    }, { passive: true });
-
-    card.addEventListener('touchend', (e) => {
-        if (e.touches.length < 2) initDist = 0;
-    }, { passive: true });
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     applyCalendarZoom(currentCalZoom);
-    initPinchToZoom();
-
+    OfflineQueue.updatePill();
     if (currentUser) applyLoginState(currentUser);
     else renderGuestState();
     renderCalendar();
@@ -1613,34 +2132,27 @@ function renderCalendar() {
         cell.onclick = () => selectDate(dStr);
 
         let eventChipsHtml = "";
-        try {
-            const dayActs = (window.activities || []).filter(a => {
-                if (!a || a.date !== dStr) return false;
-                if (a.isPrivate) return currentUser && a.assignee === currentUser;
-                return true;
-            });
+        const dayActs = (window.activities || []).filter(a => {
+            if (!a || a.date !== dStr) return false;
+            if (a.isPrivate) return currentUser && a.assignee === currentUser;
+            return true;
+        });
 
-            if (dayActs.length > 0) {
-                eventChipsHtml = `<div class="day-events-text-box">${dayActs.slice(0, 3).map(act => {
-                    const safeTitle = getSafeTitle(act.title);
-                    if (act.isExpense) {
-                        return `<div class="calendar-expense-chip" title="${safeTitle}">💰 $${act.amount}${safeTitle}</div>`;
-                    }
-                    const timePart = (typeof act.time === 'string') ? act.time.split(' ')[0] : '';
-                    const theme = getMemberTheme(act.assignee);
-                    return `<div class="calendar-event-chip" style="background:${theme.bg}; color:${theme.color}; border-left: 2px solid ${theme.border};" title="${safeTitle} (${act.assignee})">${timePart} ${safeTitle}</div>`;
-                }).join('')}${dayActs.length > 3 ? `<div style="font-size:7.5px; color:var(--oasis-primary); font-weight:bold; line-height:1;">+${dayActs.length - 3}</div>` : ''}</div>`;
-            }
-        } catch (e) {}
+        if (dayActs.length > 0) {
+            eventChipsHtml = `<div class="day-events-text-box">${dayActs.slice(0, 3).map(act => {
+                const safeTitle = getSafeTitle(act.title);
+                if (act.isExpense) return `<div class="calendar-expense-chip" title="${safeTitle}">💰 $${act.amount}${safeTitle}</div>`;
+                const timePart = (typeof act.time === 'string') ? act.time.split(' ')[0] : '';
+                const theme = getMemberTheme(act.assignee);
+                return `<div class="calendar-event-chip" style="background:${theme.bg}; color:${theme.color}; border-left: 2px solid ${theme.border};" title="${safeTitle}">${timePart}${safeTitle}</div>`;
+            }).join('')}${dayActs.length > 3 ? `<div style="font-size:7.5px; color:var(--oasis-primary); font-weight:bold;">+${dayActs.length - 3}</div>` : ''}</div>`;
+        }
 
         const holidayText = HK_HOLIDAYS[dStr] ? `<div class="day-holiday">${HK_HOLIDAYS[dStr]}</div>` : '';
         const lunarText = !HK_HOLIDAYS[dStr] ? `<div class="day-lunar">${getLunarDayText(dStr)}</div>` : '';
 
         cell.innerHTML = `
-            <div class="day-cell-top">
-                <span class="day-number">${day}</span>
-                ${lunarText}
-            </div>
+            <div class="day-cell-top"><span class="day-number">${day}</span>${lunarText}</div>
             ${holidayText}
             ${eventChipsHtml}
         `;
@@ -1686,13 +2198,11 @@ function renderAgenda() {
     }
 
     if (actionsNode) {
-        actionsNode.innerHTML = isGuest 
-            ? `<span style="font-size:11px; color:var(--apple-text-secondary); font-weight:600; padding:3px 6px; background:rgba(0,0,0,0.04); border-radius:6px;">🔒 唯讀</span>`
-            : `<button class="agenda-quick-btn" onclick="openAddModal('ADD')">➕ 新增</button>`;
+        actionsNode.innerHTML = isGuest ? `<span style="font-size:11px; color:var(--apple-text-secondary); font-weight:600;">🔒 唯讀</span>` : `<button class="agenda-quick-btn" onclick="openAddModal('ADD')">➕ 新增</button>`;
     }
 
     if (matched.length === 0) {
-        listNode.innerHTML = `<div class="empty-agenda-view">${isGuest ? '此日暫無排定活動。' : '此日暫無活動或開支記錄'}</div>`;
+        listNode.innerHTML = `<div class="empty-agenda-view">此日暫無排定活動</div>`;
         return;
     }
 
@@ -1714,11 +2224,8 @@ function renderAgenda() {
                         <span class="event-title-text">${safeTitle}</span>
                         <div class="event-meta-tags">
                             <span class="expense-amount-badge">💰 HK$ ${Number(item.amount).toFixed(2)}</span>
-                            <span class="assignee-chip" style="background:${theme.bg}; color:${theme.color}; border:1px solid ${theme.border};">
-                                ${theme.icon} 由 ${item.assignee} 支付
-                            </span>
+                            <span class="assignee-chip" style="background:${theme.bg}; color:${theme.color}; border:1px solid ${theme.border};">${theme.icon} 由 ${item.assignee} 支付</span>
                             <span class="tag-pill">${item.category || '日常開支'}</span>
-                            ${item.isPrivate ? '<span class="private-owner-badge">🔒 私密 (僅自己可見)</span>' : ''}
                         </div>
                     </div>
                     ${actionButtonsHtml}
@@ -1732,12 +2239,9 @@ function renderAgenda() {
                     <span class="event-time-badge" style="color:${theme.color};">⏰ ${item.time || '全日'}</span>
                     <span class="event-title-text">${safeTitle}</span>
                     <div class="event-meta-tags">
-                        <span class="assignee-chip" style="background:${theme.bg}; color:${theme.color}; border:1px solid ${theme.border};">
-                            ${theme.icon} ${item.assignee || '全員'}
-                        </span>
+                        <span class="assignee-chip" style="background:${theme.bg}; color:${theme.color}; border:1px solid ${theme.border};">${theme.icon} ${item.assignee || '全員'}</span>
                         <span class="tag-pill">${item.category || '家庭'}</span>
-                        ${item.isPrivate ? '<span class="private-owner-badge">🔒 私人保密 (僅自己可見)</span>' : ''}
-                        ${item.isAI_Priority ? '<span class="tag-pill" style="color:#e11d48;">🔥 高優先</span>' : ''}
+                        ${item.isPrivate ? '<span class="private-owner-badge">🔒 私人保密 (零知識加密)</span>' : ''}
                     </div>
                 </div>
                 ${actionButtonsHtml}
@@ -1754,26 +2258,17 @@ function updateAISummary() {
         .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
     const todayStr = formatDayStr(new Date());
-    const todayActs = (window.activities || []).filter(a => {
-        if (!a || a.date !== todayStr) return false;
-        if (a.isPrivate) return currentUser && a.assignee === currentUser;
-        return true;
-    });
+    const todayActs = (window.activities || []).filter(a => a && a.date === todayStr && (!a.isPrivate || a.assignee === currentUser));
 
     const textEl = document.getElementById('aiStrainText');
     const badgeEl = document.getElementById('aiPendingBadge');
-
     const budgetRatio = (monthExpenses / MONTHLY_BUDGET) * 100;
 
     if (badgeEl) badgeEl.innerText = `本月累計 $${monthExpenses.toFixed(0)}`;
     if (textEl) {
-        if (budgetRatio >= 100) {
-            textEl.innerHTML = `<span style="color:var(--oasis-danger); font-weight:700;">⚠️ 本月支出 $${monthExpenses.toFixed(1)}（已超出預算限額）</span>`;
-        } else if (budgetRatio >= 80) {
-            textEl.innerHTML = `<span style="color:#b45309; font-weight:600;">💡 本月已用 ${Math.round(budgetRatio)}% 預算（目前：$${monthExpenses.toFixed(1)}）</span>`;
-        } else {
-            textEl.innerHTML = `今日 ${todayActs.length} 項日程 · 本月預算進度良好 (${Math.round(budgetRatio)}%)`;
-        }
+        if (budgetRatio >= 100) textEl.innerHTML = `<span style="color:var(--oasis-danger); font-weight:700;">⚠️ 本月支出 $${monthExpenses.toFixed(1)}（超出預算）</span>`;
+        else if (budgetRatio >= 80) textEl.innerHTML = `<span style="color:#b45309; font-weight:600;">💡 本月已用 ${Math.round(budgetRatio)}% 預算</span>`;
+        else textEl.innerHTML = `今日 ${todayActs.length} 項日程 · 本月預算良好 (${Math.round(budgetRatio)}%)`;
     }
 }
 window.updateAISummary = updateAISummary;
@@ -1782,455 +2277,27 @@ function fileToBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onload = () => {
-            const base64 = reader.result.split(',')[1];
-            resolve(base64);
-        };
+        reader.onload = () => resolve(reader.result.split(',')[1]);
         reader.onerror = error => reject(error);
     });
 }
 
-async function recognizeReceiptWithDify(file) {
-    const statusEl = document.getElementById('receiptOcrStatus');
-    if (statusEl) statusEl.style.display = "block";
-
-    if (!window.fbAuth || !window.fbAuth.currentUser) {
-        if (statusEl) statusEl.innerText = "⚠️ 請先登入家庭成員身分";
-        await HIG.alert("需要登入", "請先以家庭成員帳戶登入後再上傳收據！");
-        return null;
-    }
-
-    if (statusEl) statusEl.innerText = "✨ 正在安全傳送至後端雲端模型處理...";
-
-    try {
-        const idToken = await window.fbAuth.currentUser.getIdToken();
-        const base64Data = await fileToBase64(file);
-
-        const PROXY_URL = "https://asia-east1-familycalender-a62ae.cloudfunctions.net/analyzeReceipt";
-
-        const response = await fetch(PROXY_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${idToken}`
-            },
-            body: JSON.stringify({
-                imageBase64: base64Data,
-                mimeType: file.type || "image/jpeg",
-                filename: file.name,
-                selectedDateStr: selectedDateStr
-            })
-        });
-
-        if (!response.ok) {
-            const errData = await response.json().catch(() => ({}));
-            throw new Error(errData.error || `HTTP ${response.status}`);
-        }
-
-        const data = await response.json();
-        return data.outputs;
-
-    } catch (err) {
-        console.warn("收據辨識代理錯誤:", err);
-        if (statusEl) statusEl.innerText = "⚠️ 後端辨識失敗，已切換為手動輸入";
-        return null;
-    }
-}
-
 function handleTopExpenseClick() {
     if (isGuest) {
-        HIG.alert("權限不足", "訪客模式為唯讀，請先驗證家庭成員身分！");
+        HIG.alert("權限不足", "請先登入家庭成員帳號！");
         openAddModal('LOGIN');
         return;
     }
     openExpenseModal();
 }
-
-function openExpenseModal(editItem = null) {
-    const titleEl = document.getElementById('expenseModalTitle');
-    const submitBtn = document.getElementById('expenseSubmitBtn');
-    const keyInput = document.getElementById('editExpenseItemKey');
-    const uploadBox = document.getElementById('receiptUploadLabelBox');
-
-    if (editItem) {
-        titleEl.innerText = "✏️ 修改家庭開支";
-        submitBtn.innerText = "確認更新開支";
-        keyInput.value = editItem.id;
-        uploadBox.style.display = "none";
-
-        let cleanMerchant = String(editItem.title).replace(/\s*\(\$.+?\)/, '').trim();
-        document.getElementById('expenseMerchantInput').value = cleanMerchant;
-        document.getElementById('expenseAmountInput').value = editItem.amount || "";
-        document.getElementById('expenseDateInput').value = editItem.date || selectedDateStr;
-        document.getElementById('expenseTimeInput').value = editItem.time || "12:30";
-        document.getElementById('expenseVisibilitySelect').value = editItem.isPrivate ? "private" : "public";
-        document.getElementById('expenseCategorySelect').value = editItem.category || "家庭餐飲";
-        document.getElementById('expensePayerSelect').value = editItem.assignee || currentUser || "鐵";
-    } else {
-        titleEl.innerText = "🧾 記錄家庭開支 (收據辨識)";
-        submitBtn.innerText = "確認輸送至日曆";
-        keyInput.value = "";
-        uploadBox.style.display = "block";
-
-        document.getElementById('expenseMerchantInput').value = "";
-        document.getElementById('expenseAmountInput').value = "";
-        document.getElementById('expenseDateInput').value = selectedDateStr;
-        document.getElementById('expenseTimeInput').value = "12:30";
-        document.getElementById('expenseVisibilitySelect').value = "public";
-        document.getElementById('expenseCategorySelect').value = "家庭餐飲";
-        document.getElementById('expensePayerSelect').value = currentUser || "鐵";
-        
-        const preview = document.getElementById('receiptPreviewImg');
-        if (preview.src && preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
-        preview.src = "";
-        preview.style.display = "none";
-        document.getElementById('receiptOcrStatus').style.display = "none";
-        document.getElementById('receiptFileInput').value = "";
-    }
-
-    document.getElementById('expenseModal').style.display = 'flex';
-}
-
-function closeExpenseModal() {
-    document.getElementById('expenseModal').style.display = "none";
-}
-
-async function handleReceiptFileChange(input) {
-    const file = input.files && input.files[0];
-    if (!file) return;
-
-    const preview = document.getElementById('receiptPreviewImg');
-    if (preview.src && preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
-    preview.src = URL.createObjectURL(file);
-    preview.style.display = "block";
-
-    const difyRaw = await recognizeReceiptWithDify(file);
-    const statusEl = document.getElementById('receiptOcrStatus');
-
-    if (!difyRaw) {
-        if (statusEl) statusEl.innerText = "⚠️ 未能取得回傳資料，請手動輸入";
-        return;
-    }
-
-    let data = difyRaw;
-    if (typeof data === 'string') {
-        try { data = JSON.parse(data.replace(/```json|```/g, '').trim()); } catch(e){}
-    }
-    if (data.text && typeof data.text === 'string') {
-        try { data = JSON.parse(data.text.replace(/```json|```/g, '').trim()); } catch(e){}
-    }
-    if (data.result && typeof data.result === 'object') data = data.result;
-
-    const merchant = data.merchant || data.title || data.shop_name || "";
-    const amount = parseFloat(data.amount || data.total || data.grand_total || 0);
-    const date = data.date || selectedDateStr;
-    const time = data.time || "12:30";
-
-    const detectedCategory = autoDetectCategoryByMerchant(merchant);
-
-    if (merchant) document.getElementById('expenseMerchantInput').value = merchant;
-    if (!isNaN(amount) && amount > 0) document.getElementById('expenseAmountInput').value = amount;
-    if (date) document.getElementById('expenseDateInput').value = date;
-    if (time) document.getElementById('expenseTimeInput').value = time;
-    document.getElementById('expenseCategorySelect').value = detectedCategory;
-
-    if (merchant || amount > 0) {
-        if (statusEl) statusEl.innerText = `✓ 提取成功：${merchant} (HK$ ${amount}) · 已自動分類為「${detectedCategory}」`;
-    } else {
-        if (statusEl) statusEl.innerText = "⚠️ 辨識完成但未提取到商戶或金額";
-    }
-}
-
-async function saveReceiptExpense() {
-    if (isGuest) return;
-
-    const editKey = document.getElementById('editExpenseItemKey').value;
-    const merchant = document.getElementById('expenseMerchantInput').value.trim();
-    const amountRaw = document.getElementById('expenseAmountInput').value.trim();
-    const amountVal = parseFloat(amountRaw);
-    const date = document.getElementById('expenseDateInput').value;
-    const time = document.getElementById('expenseTimeInput').value || "12:30";
-    const category = document.getElementById('expenseCategorySelect').value;
-    const payer = document.getElementById('expensePayerSelect').value;
-    const isPrivate = document.getElementById('expenseVisibilitySelect').value === "private";
-
-    if (!merchant || isNaN(amountVal) || amountVal <= 0) {
-        await HIG.alert("提示", "請填寫商戶名稱及有效消費金額！");
-        return;
-    }
-
-    await checkBudgetThreshold(amountVal, date);
-
-    const titleText = `${merchant} ($${amountVal})`;
-
-    if (editKey) {
-        const idx = window.activities.findIndex(a => a && a.id === editKey);
-        if (idx !== -1) {
-            window.activities[idx] = {
-                ...window.activities[idx],
-                date,
-                time,
-                title: titleText,
-                assignee: payer,
-                category,
-                isExpense: true,
-                amount: amountVal,
-                isPrivate
-            };
-        }
-    } else {
-        const tempId = "exp_" + Date.now();
-        window.activities.unshift({
-            id: tempId,
-            date,
-            time,
-            title: titleText,
-            assignee: payer,
-            category,
-            isExpense: true,
-            amount: amountVal,
-            isPrivate
-        });
-    }
-
-    localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
-
-    selectedDateStr = date;
-    renderCalendar();
-    renderAgenda();
-    updateAISummary();
-    closeExpenseModal();
-
-    await HIG.alert(editKey ? "已更新" : "已儲存", `開支【${merchant}】HK$ ${amountVal.toFixed(2)} 已成功儲存！\n類別：${category}\n可見度：${isPrivate ? '🔒 不公開 (僅自己可見)' : '🌐 全家公開'}`);
-
-    try {
-        const cipher = await E2EE.encrypt(titleText);
-        const payload = {
-            title: cipher,
-            date,
-            time,
-            category,
-            assignee: payer,
-            isExpense: true,
-            amount: amountVal,
-            isPrivate,
-            updatedAt: Date.now()
-        };
-        if (window.fbDb && window.fbRef) {
-            if (editKey && !editKey.startsWith("exp_")) {
-                await window.fbUpdate(window.fbRef(window.fbDb, `family_calendar_activities/${editKey}`), payload);
-            } else {
-                const newRef = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
-                await window.fbSet(newRef, payload);
-            }
-        }
-    } catch(e) {}
-}
-
-function openEditGeneralItem(id) {
-    if (isGuest) {
-        HIG.alert("權限不足", "訪客模式無法修改！");
-        return;
-    }
-    const item = (window.activities || []).find(a => a && a.id === id);
-    if (!item) return;
-
-    if (item.isExpense) {
-        openExpenseModal(item);
-    } else {
-        openEditSpecificItem(id);
-    }
-}
-
-async function generateLockScreenWallpaper() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 1170;
-    canvas.height = 2532;
-    const ctx = canvas.getContext('2d');
-
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, 2532);
-    bgGrad.addColorStop(0, "#0d0d10");
-    bgGrad.addColorStop(0.5, "#16161a");
-    bgGrad.addColorStop(1, "#1c1c22");
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    let startY = 640;
-    const dayActs = (window.activities || []).filter(a => {
-        if (!a || a.date !== selectedDateStr) return false;
-        if (a.isPrivate) return currentUser && a.assignee === currentUser;
-        return true;
-    });
-
-    const parts = selectedDateStr.split('-');
-    const holiday = HK_HOLIDAYS[selectedDateStr] || "";
-    const lunar = getLunarDayText(selectedDateStr);
-
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 80px -apple-system, sans-serif";
-    ctx.fillText(`${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日`, 100, startY);
-
-    ctx.fillStyle = holiday ? "#ff453a" : "#8e8e93";
-    ctx.font = "600 44px -apple-system, sans-serif";
-    ctx.fillText(`${holiday || lunar} · 家庭焦點`, 100, startY + 76);
-
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(100, startY + 124);
-    ctx.lineTo(1070, startY + 124);
-    ctx.stroke();
-
-    let cardY = startY + 180;
-    if (dayActs.length === 0) {
-        ctx.fillStyle = "#8e8e93";
-        ctx.font = "42px -apple-system, sans-serif";
-        ctx.fillText("今日暫無排定行程，步調輕鬆。❤️", 100, cardY + 70);
-    } else {
-        dayActs.forEach((act, idx) => {
-            if (idx > 4) return;
-            const theme = getMemberTheme(act.assignee);
-
-            ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
-            ctx.roundRect ? ctx.roundRect(100, cardY, 970, 160, 24) : ctx.rect(100, cardY, 970, 160);
-            ctx.fill();
-
-            ctx.fillStyle = act.isExpense ? "#f59e0b" : theme.border;
-            ctx.roundRect ? ctx.roundRect(100, cardY, 18, 160, [24, 0, 0, 24]) : ctx.rect(100, cardY, 18, 160);
-            ctx.fill();
-
-            ctx.fillStyle = act.isExpense ? "#f59e0b" : theme.color;
-            ctx.font = "bold 38px -apple-system, sans-serif";
-            ctx.fillText(act.isExpense ? `💰 HK$ ${act.amount}` : `⏰ ${act.time || '全日'}`, 150, cardY + 62);
-
-            ctx.fillStyle = "#ffffff";
-            ctx.font = "600 44px -apple-system, sans-serif";
-            const safeTitle = getSafeTitle(act.title);
-            const titleTxt = safeTitle.length > 15 ? safeTitle.slice(0, 15) + '...' : safeTitle;
-            ctx.fillText(titleTxt, 150, cardY + 122);
-
-            ctx.fillStyle = theme.bg;
-            ctx.roundRect ? ctx.roundRect(870, cardY + 45, 170, 70, 16) : ctx.rect(870, cardY + 45, 170, 70);
-            ctx.fill();
-
-            ctx.fillStyle = theme.color;
-            ctx.font = "bold 32px -apple-system, sans-serif";
-            ctx.fillText(`${theme.icon} ${act.assignee}`, 895, cardY + 92);
-
-            cardY += 194;
-        });
-    }
-
-    canvas.toBlob(blob => {
-        const file = new File([blob], `FamilyOS_Wallpaper_${selectedDateStr}.png`, { type: 'image/png' });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({
-                title: 'Family OS 鎖屏壁紙',
-                text: '儲存圖片並設為鎖定畫面壁紙，一眼掌握全家行程！',
-                files: [file]
-            });
-        } else {
-            const link = document.createElement('a');
-            link.download = `FamilyOS_Wallpaper_${selectedDateStr}.png`;
-            link.href = canvas.toDataURL();
-            link.click();
-            HIG.alert("壁紙已生成", "圖片已下載！請至相簿選取圖片並設定為手機鎖定畫面壁紙。");
-        }
-    });
-}
-
-// ─── 廣東話自然語言排程與開支匹配 ───
-async function executeAINaturalInput() {
-    if (isGuest) {
-        await HIG.alert("權限不足", "訪客模式為唯讀，請先登入！");
-        openAddModal('LOGIN');
-        return;
-    }
-
-    const input = document.getElementById('aiQuickInput');
-    const raw = input.value.trim();
-    if (!raw) return;
-
-    const expenseMatch = raw.match(/(.+?)(用咗|買咗|支出|使咗|花咗)\s*(\d+(\.\d+)?)\s*(蚊|元|塊)?/);
-    if (expenseMatch) {
-        const merchant = expenseMatch[1].trim();
-        const amount = parseFloat(expenseMatch[3]);
-        const autoCat = autoDetectCategoryByMerchant(merchant);
-
-        await checkBudgetThreshold(amount, selectedDateStr);
-
-        const titleText = `${merchant} ($${amount})`;
-        const tempId = "exp_" + Date.now();
-
-        window.activities.unshift({
-            id: tempId,
-            date: selectedDateStr,
-            time: "12:30",
-            title: titleText,
-            assignee: currentUser || "鐵",
-            category: autoCat,
-            isExpense: true,
-            isPrivate: false,
-            amount: amount
-        });
-        localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
-        renderCalendar();
-        renderAgenda();
-        updateAISummary();
-        input.value = "";
-        await HIG.alert("開支已儲存", `已記錄：${merchant} - HK$ ${amount.toFixed(2)}\n類別自動匹配為【${autoCat}】`);
-        return;
-    }
-
-    let targetDate = selectedDateStr;
-    let targetTime = "20:00";
-    const today = new Date();
-    if (raw.includes("聽日") || raw.includes("聽晚")) {
-        const d = new Date(today); d.setDate(d.getDate() + 1); targetDate = formatDayStr(d);
-        if (raw.includes("聽晚")) targetTime = "19:30";
-    }
-
-    let matchedAssignee = currentUser || "鐵";
-    const members = ["Daddy", "Mummy", "Jolie", "蓓", "熹", "鐵"];
-    for (const m of members) {
-        if (raw.includes(m)) { matchedAssignee = m; break; }
-    }
-
-    const cleanTitle = raw.replace(/(聽日|聽晚|今日|Daddy|Mummy|Jolie|蓓|熹|鐵)/g, "").trim();
-
-    // P2：衝突偵測
-    const conflictMsg = checkScheduleConflicts(targetDate, targetTime, matchedAssignee, cleanTitle);
-    if (conflictMsg) {
-        const proceed = await HIG.confirm("偵測到行程衝突", `${conflictMsg}\n\n是否仍確認排入此行程？`);
-        if (!proceed) return;
-    }
-
-    const tempId = "local_" + Date.now();
-    window.activities.unshift({
-        id: tempId,
-        title: cleanTitle || "行程",
-        date: targetDate,
-        time: targetTime,
-        category: autoDetectCategoryByMerchant(cleanTitle) === "日常開支" ? "家庭" : autoDetectCategoryByMerchant(cleanTitle),
-        assignee: matchedAssignee,
-        isPrivate: false
-    });
-    localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
-    selectedDateStr = targetDate;
-    renderCalendar();
-    renderAgenda();
-    input.value = "";
-    await HIG.alert("行程已排定", `已成功安排：\n【${targetDate} ${targetTime}】${cleanTitle} (👤 ${matchedAssignee})`);
-}
-
+function closeExpenseModal() { document.getElementById('expenseModal').style.display = "none"; }
 function handleTopAddClick() {
     if (isGuest) openAddModal('LOGIN');
     else openAddModal('ADD');
 }
-
 function handleTopManageClick() {
     if (isGuest) {
-        HIG.alert("權限不足", "訪客模式為唯讀！");
+        HIG.alert("權限不足", "請先登入！");
         openAddModal('LOGIN');
         return;
     }
@@ -2239,8 +2306,8 @@ function handleTopManageClick() {
 
 function openAddModal(mode) {
     document.getElementById('editItemKey').value = "";
+    document.getElementById('editItemUpdatedAt').value = "0";
     document.getElementById('modalFormTitle').innerText = isGuest ? "🔒 家庭成員身分驗證" : "➕ 新增家庭行程";
-    document.getElementById('modalSubmitBtn').innerText = "確認儲存至此日";
 
     if (isGuest) {
         document.getElementById('loginGateSection').style.display = 'block';
@@ -2258,104 +2325,19 @@ function openAddModal(mode) {
     document.getElementById('formEventCategory').value = "日常開支";
     document.getElementById('eventModal').style.display = 'flex';
 }
-
-function openEditSpecificItem(id) {
-    const item = (window.activities || []).find(a => a && a.id === id);
-    if (!item) return;
-
-    document.getElementById('editItemKey').value = id;
-    document.getElementById('modalFormTitle').innerText = "✏️ 修改家庭行程";
-    document.getElementById('modalSubmitBtn').innerText = "確認更新儲存";
-
-    document.getElementById('loginGateSection').style.display = 'none';
-    document.getElementById('eventFormFields').style.display = 'block';
-
-    document.getElementById('formEventTitle').value = getSafeTitle(item.title);
-    document.getElementById('nativeEventDate').value = item.date || selectedDateStr;
-    document.getElementById('nativeEventTime').value = item.time || "20:00";
-    document.getElementById('formEventVisibility').value = item.isPrivate ? "private" : "public";
-    document.getElementById('formEventCategory').value = item.category || "日常開支";
-    document.getElementById('formEventAssignee').value = item.assignee || "全員";
-
-    document.getElementById('eventModal').style.display = 'flex';
-}
-
 function closeModal() { document.getElementById('eventModal').style.display = 'none'; }
-
-async function saveEvent() {
-    if (isGuest) return;
-    const title = document.getElementById('formEventTitle').value.trim();
-    const date = document.getElementById('nativeEventDate').value;
-    const time = document.getElementById('nativeEventTime').value || "20:00";
-    const category = document.getElementById('formEventCategory').value;
-    const assignee = document.getElementById('formEventAssignee').value;
-    const isPrivate = document.getElementById('formEventVisibility').value === "private";
-    const editKey = document.getElementById('editItemKey').value;
-
-    if (!title || !date) {
-        await HIG.alert("提示", "請填寫活動名稱與日期！");
-        return;
-    }
-
-    // P2：儲存前執行行程衝突偵測
-    const conflictMsg = checkScheduleConflicts(date, time, assignee, title);
-    if (conflictMsg) {
-        const proceed = await HIG.confirm("偵測到行程衝突", `${conflictMsg}\n\n是否仍確認排入此行程？`);
-        if (!proceed) return;
-    }
-
-    if (editKey) {
-        const idx = window.activities.findIndex(a => a && a.id === editKey);
-        if (idx !== -1) {
-            window.activities[idx] = { ...window.activities[idx], title, date, time, category, assignee, isPrivate };
-        }
-    } else {
-        const tempId = "local_" + Date.now();
-        window.activities.unshift({ id: tempId, title, date, time, category, assignee, isPrivate });
-    }
-
-    localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
-    selectedDateStr = date;
-    renderCalendar();
-    renderAgenda();
-    updateAISummary();
-    closeModal();
-
-    await HIG.alert(
-        editKey ? "已更新" : "已儲存", 
-        editKey ? `行程【${title}】已成功更新！` : `已儲存：行程【${title}】已成功儲存至 ${date}！\n可見度：${isPrivate ? '🔒 不公開 (僅自己可見)' : '🌐 全家公開'}`
-    );
-
-    try {
-        const cipher = await E2EE.encrypt(title);
-        const payload = { title: cipher, date, time, category, assignee, isPrivate, updatedAt: Date.now() };
-        if (window.fbDb && window.fbRef) {
-            if (editKey && !editKey.startsWith("local_")) {
-                await window.fbUpdate(window.fbRef(window.fbDb, `family_calendar_activities/${editKey}`), payload);
-            } else {
-                const newRef = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
-                await window.fbSet(newRef, payload);
-            }
-        }
-    } catch(e) {}
-}
 
 function openManageModal() {
     const container = document.getElementById('manageDayListContainer');
-    const matched = (window.activities || []).filter(a => {
-        if (!a || a.date !== selectedDateStr) return false;
-        if (a.isPrivate) return currentUser && a.assignee === currentUser;
-        return true;
-    });
-
+    const matched = (window.activities || []).filter(a => a && a.date === selectedDateStr && (!a.isPrivate || a.assignee === currentUser));
     if (matched.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:16px; color:var(--apple-text-secondary); font-size:13px;">所選日期無行程可供管理。</div>`;
+        container.innerHTML = `<div style="text-align:center; padding:16px; color:var(--apple-text-secondary); font-size:13px;">此日無行程可供管理。</div>`;
     } else {
         container.innerHTML = matched.map(ev => `
             <div style="background:rgba(0,0,0,0.03); border-radius:10px; padding:10px; display:flex; justify-content:space-between; align-items:center;">
                 <div>
                     <div style="font-weight:700; font-size:14px;">${ev.time || '全日'} - ${getSafeTitle(ev.title)}</div>
-                    <div style="font-size:11px; color:var(--apple-text-secondary);">${ev.assignee || '全員'} · ${ev.category || '日常開支'}${ev.isPrivate ? ' (🔒私人保密)' : ''}</div>
+                    <div style="font-size:11px; color:var(--apple-text-secondary);">${ev.assignee || '全員'} · ${ev.category || '日常開支'}</div>
                 </div>
                 <div style="display:flex; gap:6px;">
                     <button class="btn-edit-link" onclick="openEditGeneralItem('${ev.id}')">修改</button>
@@ -2368,27 +2350,9 @@ function openManageModal() {
 }
 function closeManageModal() { document.getElementById('manageModal').style.display = 'none'; }
 
-async function deleteEventItem(id) {
-    if (isGuest) return;
-    const ok = await HIG.confirm("確認刪除", "確定要刪除這項記錄嗎？");
-    if (!ok) return;
+function handleAuthBadgeClick() { if (isGuest) openAddModal('LOGIN'); }
 
-    window.activities = (window.activities || []).filter(a => a && a.id !== id);
-    localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
-    renderCalendar();
-    renderAgenda();
-    updateAISummary();
-    closeManageModal();
-
-    if (!id.startsWith("local_") && !id.startsWith("exp_") && window.fbDb && window.fbRef && window.fbRemove) {
-        window.fbRemove(window.fbRef(window.fbDb, `family_calendar_activities/${id}`));
-    }
-}
-
-function handleAuthBadgeClick() {
-    if (isGuest) openAddModal('LOGIN');
-}
-
+// 登入處理：驗證身分並解鎖 ECDH 金鑰庫
 async function submitLogin() {
     const member = document.getElementById('loginSelectMember').value;
     const pwd = document.getElementById('loginPasswordInput').value.trim();
@@ -2400,97 +2364,44 @@ async function submitLogin() {
 
     try {
         await window.fbSignIn(window.fbAuth, email, pwd);
-        const nameMap = { 
-            iron: "鐵", 
-            daddy: "Daddy", 
-            mummy: "Mummy", 
-            jolie: "Jolie", 
-            leisel: "熹", 
-            karis: "蓓" 
-        };
-        applyLoginState(nameMap[member] || "鐵");
+        const nameMap = { iron: "鐵", daddy: "Daddy", mummy: "Mummy", jolie: "Jolie", leisel: "熹", karis: "蓓" };
+        const memberName = nameMap[member] || "鐵";
+
+        // 初始化/解鎖專屬 ECDH 私鑰
+        const keyUnlocked = await MemberE2EE.initMemberKeys(memberName, pwd);
+        if (!keyUnlocked) {
+            await HIG.alert("金鑰警告", "密碼不相符，無法解密專屬安全私鑰庫！");
+        }
+
+        applyLoginState(memberName);
         closeModal();
-        await HIG.alert("成功", `歡迎回來，${nameMap[member]}！`);
+        await HIG.alert("成功", `歡迎回來，${memberName}！安全金鑰庫已成功掛載。`);
     } catch (e) {
         await HIG.alert("登入失敗", "密碼不正確！");
-    }
-}
-
-async function signInWithApple() {
-    try {
-        const provider = new window.fbOAuthProvider('apple.com');
-        provider.addScope('email');
-        provider.addScope('name');
-        
-        const result = await window.fbSignInWithPopup(window.fbAuth, provider);
-        const user = result.user;
-        const displayName = user.displayName || user.email?.split('@')[0] || "成員";
-        applyLoginState(displayName);
-        closeModal();
-        await HIG.alert("Apple 登入成功", `歡迎回來，${displayName}！`);
-    } catch (error) {
-        console.warn("Apple 登入中斷或取消:", error);
-        if (error.code !== "auth/popup-closed-by-user") {
-            await HIG.alert("登入未完成", "可隨時改用上方家庭成員帳號登入。");
-        }
     }
 }
 
 async function logoutAccount() {
     const ok = await HIG.confirm("退出登入", "確定切換為訪客模式？");
     if (ok) {
+        MemberE2EE.activePrivateKey = null;
+        MemberE2EE.activeMember = null;
         renderGuestState();
         if (window.fbSignOut && window.fbAuth) await window.fbSignOut(window.fbAuth);
     }
 }
 
-async function requestAccountDeletion() {
-    if (isGuest || !window.fbAuth.currentUser) return;
-
-    const ok = await HIG.confirm(
-        "永久註銷帳號", 
-        "根據隱私條款，此操作將立即註銷此成員身分，並永久清除伺服器驗證憑據。此操作無法復原，確認繼續？"
-    );
-    if (!ok) return;
-
-    const user = window.fbAuth.currentUser;
-    const userEmail = user.email;
-
-    try {
-        await window.fbDeleteUser(user);
-        renderGuestState();
-        await HIG.alert("帳號已成功刪除", "您的帳號與安全憑證已徹底移除。");
-    } catch (err) {
-        if (err.code === "auth/requires-recent-login") {
-            const reauthPwd = await HIG.prompt("安全驗證", "為保障帳號安全，請輸入當前密碼以授權註銷：", "", true);
-            if (!reauthPwd) return;
-
-            try {
-                const cred = window.fbEmailAuthProvider.credential(userEmail, reauthPwd);
-                await window.fbReauth(user, cred);
-                await window.fbDeleteUser(user);
-                renderGuestState();
-                await HIG.alert("帳號已成功刪除", "身分憑據已徹底移除。");
-            } catch (authErr) {
-                await HIG.alert("驗證失敗", "密碼錯誤，註銷已取消。");
-            }
-        } else {
-            await HIG.alert("註銷失敗", err.message || "發生未知錯誤，請稍後重試。");
-        }
-    }
-}
-
 function shareWhatsApp() {
-    const dayActs = (window.activities || []).filter(a => a && a.date === selectedDateStr && (!a.isPrivate || (currentUser && a.assignee === currentUser)));
+    const dayActs = (window.activities || []).filter(a => a && a.date === selectedDateStr && (!a.isPrivate || a.assignee === currentUser));
     if (dayActs.length === 0) {
-        HIG.alert("提示", "今日無任何可公開行程分享！");
+        HIG.alert("提示", "今日無任何可公開行程！");
         return;
     }
-    let msg = `💡【麟李家庭日程與開支 · ${selectedDateStr}】\n\n`;
+    let msg = `💡【麟李家庭日程 · ${selectedDateStr}】\n\n`;
     dayActs.forEach((a, i) => {
         msg += `${i + 1}. ${a.isExpense ? '💰 [開支]' : '⏰ ' + (a.time || '全日')} ${getSafeTitle(a.title)} (👤 ${a.assignee})\n`;
     });
-    msg += `\n請全家留意安排！❤️`;
+    msg += `\n請家人留意安排！❤️`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
 }
 </script>
