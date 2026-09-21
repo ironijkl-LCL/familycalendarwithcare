@@ -2,11 +2,12 @@
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
+<!-- 符合 Apple 無障礙標準，移除鎖死縮放限制 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#f2f2f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="description" content="麟李家庭智慧管理系統 - 結合 Dify AI 視覺辨識、廣東話語音輸入、商戶預算雷達、絕對私人保密與即時日曆同步">
+<meta name="description" content="麟李家庭智慧管理系統 - 結合 Dify AI 視覺辨識、廣東話語音輸入、商戶預算雷達、財務分帳、日曆雙向同步與家庭記憶層">
 <title>Family OS - 麟李家庭智慧管理系統</title>
 
 <style>
@@ -21,7 +22,6 @@
     --oasis-danger: #ff3b30;
     --oasis-warning: #ff9500;
     --oasis-expense: #f59e0b;
-    --oasis-ai-gradient: linear-gradient(135deg, rgba(232, 220, 255, 0.5), rgba(212, 235, 255, 0.5));
     --oasis-ai-purple: #7d2ae8;
     --cal-zoom: 1;
 }
@@ -102,7 +102,7 @@ header {
 /* 🎯 工具列 */
 .adaptive-toolbar {
     display: flex;
-    gap: 5px;
+    gap: 4px;
     flex-shrink: 0;
 }
 .adaptive-toolbar button {
@@ -110,9 +110,9 @@ header {
     border: none;
     border-radius: 10px;
     color: white;
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 600;
-    padding: 8px 2px;
+    padding: 8px 1px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -125,11 +125,13 @@ header {
 
 .btn-green { background: #34c759; }
 .btn-orange { background: #f59e0b; }
+.btn-indigo { background: #5856d6; }
 .btn-blue { background: #0071e3; }
-.btn-purple { background: #5856d6; }
+.btn-purple { background: #af52de; }
+.btn-teal { background: #0d9488; }
 .btn-wa { background: #25d366; }
 
-/* 🔮 排程列、麥克風語音鍵與狀態列 */
+/* 🔮 廣東話語音輸入排程列 */
 .ai-compact-bar {
     background: #ffffff;
     border: 1px solid var(--apple-border);
@@ -185,6 +187,36 @@ header {
     white-space: nowrap;
 }
 
+/* 🧠 P3 家庭記憶層主動建議橫幅 */
+.memory-insight-banner {
+    display: none;
+    background: rgba(0, 113, 227, 0.06);
+    border: 1px solid rgba(0, 113, 227, 0.2);
+    border-radius: 9px;
+    padding: 6px 10px;
+    font-size: 11.5px;
+    flex-shrink: 0;
+}
+.memory-insight-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+.memory-insight-text { color: var(--apple-text); font-weight: 600; flex: 1; }
+.memory-insight-btn {
+    background: var(--oasis-primary);
+    color: #fff;
+    border: none;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+/* 📡 雷達狀態列 */
 .ai-radar-bar {
     display: flex;
     justify-content: space-between;
@@ -235,11 +267,7 @@ header {
     font-weight: 600;
     cursor: pointer;
 }
-.calendar-title-wrap {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
+.calendar-title-wrap { display: flex; align-items: center; gap: 6px; }
 .current-month-label { font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
 .zoom-toggle-badge {
     font-size: 10px;
@@ -378,11 +406,7 @@ header {
     border-bottom: 1px solid var(--apple-border);
     flex-shrink: 0;
 }
-.agenda-header-titles {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
+.agenda-header-titles { display: flex; flex-direction: column; gap: 2px; }
 .agenda-date-title { font-size: 13.5px; font-weight: 700; }
 
 .day-total-expense-chip {
@@ -466,11 +490,7 @@ header {
     font-weight: 700;
 }
 
-.row-actions-group {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-}
+.row-actions-group { display: flex; gap: 6px; align-items: center; }
 .btn-edit-link {
     background: none;
     border: none;
@@ -492,7 +512,7 @@ header {
 
 .empty-agenda-view { text-align: center; padding: 16px 0; color: var(--apple-text-secondary); font-size: 12.5px; }
 
-/* ─── 彈出視窗 ─── */
+/* ─── 彈出視窗樣式 ─── */
 .popup-overlay {
     display: none;
     position: fixed;
@@ -540,11 +560,7 @@ header {
 }
 .form-input:focus { border-color: var(--oasis-primary); background: #ffffff; }
 
-.native-picker-row {
-    display: flex;
-    gap: 8px;
-    margin: 4px 0 6px;
-}
+.native-picker-row { display: flex; gap: 8px; margin: 4px 0 6px; }
 .native-picker-row input[type="date"],
 .native-picker-row input[type="time"] {
     flex: 1;
@@ -670,6 +686,7 @@ header {
 
   const app = initializeApp(firebaseConfig);
 
+  // 僅限本機開發使用 Debug Token，生產環境自動停用以符合 Apple 審核
   if (location.hostname === "localhost") {
       self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
   }
@@ -718,6 +735,7 @@ header {
 
           if (window.applyLoginState) window.applyLoginState(memberName);
           window.startFirebaseSync();
+          window.initMemoryInsightsSync();
       } else {
           if (window.renderGuestState) window.renderGuestState();
       }
@@ -760,6 +778,50 @@ header {
           console.warn("RTDB 同步狀態:", err.code);
       });
   };
+
+  // P3：監聽家庭記憶層建議
+  window.initMemoryInsightsSync = function() {
+      if (!window.fbDb || !window.fbRef || !window.fbOnValue) return;
+      const insightRef = window.fbRef(window.fbDb, "family_insights");
+      window.fbOnValue(insightRef, (snapshot) => {
+          const val = snapshot.val();
+          const banner = document.getElementById('memoryInsightBanner');
+          const msgEl = document.getElementById('memoryInsightMsg');
+          const btn = document.getElementById('memoryAcceptBtn');
+          if (!banner || !val) return;
+
+          let activeInsight = null;
+          let insightKey = null;
+          for (let key in val) {
+              if (val[key] && val[key].status === "active") {
+                  activeInsight = val[key];
+                  insightKey = key;
+                  break;
+              }
+          }
+
+          if (activeInsight) {
+              banner.style.display = "block";
+              msgEl.innerText = `🧠 ${activeInsight.promptMessage}`;
+              btn.onclick = async () => {
+                  selectedDateStr = activeInsight.suggestedDate;
+                  openAddModal('ADD');
+                  document.getElementById('formEventTitle').value = `${activeInsight.assignee} 覆診`;
+                  document.getElementById('nativeEventDate').value = activeInsight.suggestedDate;
+                  document.getElementById('nativeEventTime').value = "19:30";
+                  document.getElementById('formEventCategory').value = "醫療健康";
+                  document.getElementById('formEventAssignee').value = activeInsight.assignee;
+                  
+                  if (window.fbSet) {
+                      await window.fbSet(window.fbRef(window.fbDb, `family_insights/${insightKey}/status`), "scheduled");
+                  }
+                  banner.style.display = "none";
+              };
+          } else {
+              banner.style.display = "none";
+          }
+      });
+  };
 </script>
 </head>
 
@@ -776,26 +838,39 @@ header {
 
 <div class="main-layout">
 
+    <!-- 🎯 擴展自適應單排工具列 -->
     <div class="adaptive-toolbar">
         <button class="btn-green" onclick="handleTopAddClick()">➕ 活動</button>
         <button class="btn-orange" onclick="handleTopExpenseClick()">🧾 記帳</button>
+        <button class="btn-indigo" onclick="openSettlementModal()">📊 結算</button>
         <button class="btn-blue" onclick="handleTopManageClick()">⚙️ 管理</button>
         <button class="btn-purple" onclick="generateLockScreenWallpaper()">📱 壁紙</button>
+        <button class="btn-teal" onclick="subscribeAppleCalendar()">📅 訂閱</button>
         <button class="btn-wa" onclick="shareWhatsApp()">💬 WA</button>
     </div>
 
-    <!-- 🔮 P0 廣東話語音輸入直接整合於排程列 -->
+    <!-- 🔮 P0 廣東話語音輸入排程列 -->
     <div class="ai-compact-bar">
-        <button id="speechBtn" class="ai-speech-mic-btn" onclick="toggleSpeechRecognition()" title="點擊開始廣東話語音輸入">🎙️</button>
+        <button id="speechBtn" class="ai-speech-mic-btn" onclick="toggleSpeechRecognition()" title="按住進行廣東話語音輸入">🎙️</button>
         <input type="text" id="aiQuickInput" class="ai-nlp-input" placeholder="✨ 講或寫：百佳買咗280蚊、聽晚仁安覆診...">
         <button class="ai-nlp-btn" onclick="executeAINaturalInput()">AI 排程</button>
     </div>
 
+    <!-- 🧠 P3 家庭記憶層主動建議橫幅 -->
+    <div id="memoryInsightBanner" class="memory-insight-banner">
+        <div class="memory-insight-content">
+            <span id="memoryInsightMsg" class="memory-insight-text"></span>
+            <button id="memoryAcceptBtn" class="memory-insight-btn">一鍵排程</button>
+        </div>
+    </div>
+
+    <!-- 📡 雷達狀態列 -->
     <div class="ai-radar-bar">
         <div id="aiStrainText" class="ai-strain-text">✨ 正在整理今日家庭步調...</div>
         <div id="aiPendingBadge" class="ai-pending-badge">0 項活動</div>
     </div>
 
+    <!-- 🗓️ 月曆卡片 -->
     <div class="calendar-card" id="calendarCardNode">
         <div class="calendar-nav-bar">
             <button class="nav-arrow-btn" onclick="changeMonthOffset(-1)">⬅ 上一月</button>
@@ -817,6 +892,7 @@ header {
         <div id="daysGridNode" class="days-grid"></div>
     </div>
 
+    <!-- 📋 焦點日程與總開支看板 -->
     <div class="agenda-card">
         <div class="agenda-header">
             <div class="agenda-header-titles">
@@ -975,6 +1051,22 @@ header {
     </div>
 </div>
 
+<!-- 📊 P2 家庭財務結算彈窗 -->
+<div id="settlementModal" class="popup-overlay" onclick="if(event.target===this)closeSettlementModal()">
+    <div class="popup-card">
+        <button class="popup-close-x" onclick="closeSettlementModal()">&times;</button>
+        <h3 style="margin:0 0 4px; font-size:17px; color:var(--oasis-primary);">📊 本月家庭財務結算</h3>
+        <div id="settlementMonthTitle" style="font-size:12px; color:var(--apple-text-secondary); margin-bottom:12px;"></div>
+        
+        <div id="settlementSummaryCards" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;"></div>
+        
+        <h4 style="margin:8px 0 6px; font-size:14px;">💡 建議轉帳方案（最少轉帳路徑）：</h4>
+        <div id="settlementTransfersList" style="background:rgba(0,0,0,0.03); border-radius:10px; padding:10px; font-size:13px; line-height:1.6; margin-bottom:12px;"></div>
+
+        <button class="submit-btn-block" style="background:#34c759;" onclick="exportExpensesToCSV()">📥 匯出當月收支 CSV (Excel相容)</button>
+    </div>
+</div>
+
 <!-- ⚙️ 管理面板 -->
 <div id="manageModal" class="popup-overlay" onclick="if(event.target===this)closeManageModal()">
     <div class="popup-card">
@@ -997,7 +1089,7 @@ header {
 </div>
 
 <script>
-// ─── P1 核心：香港本地商戶自動分類字典 ───
+// ─── P1：香港本地商戶自動分類字典 ───
 const HK_MERCHANT_MAP = {
     "超市日用": [
         "百佳", "parkn", "fusion", "taste", "惠康", "wellcome", "market place", 
@@ -1038,11 +1130,11 @@ function handleMerchantInputBlur(val) {
     }
 }
 
-// ─── P1 核心：月度預算警報檢查（80% 警戒與超支攔截） ───
-const MONTHLY_BUDGET = 15000; // 家庭月度基準預算（HKD）
+// ─── P1：月度預算警報檢查 ───
+const MONTHLY_BUDGET = 15000;
 
 async function checkBudgetThreshold(newExpenseAmount, targetDateStr) {
-    const monthPrefix = targetDateStr.slice(0, 7); // e.g. "2026-09"
+    const monthPrefix = targetDateStr.slice(0, 7);
     const currentMonthExpenses = (window.activities || [])
         .filter(a => a && a.isExpense && a.date && a.date.startsWith(monthPrefix))
         .reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
@@ -1063,14 +1155,14 @@ async function checkBudgetThreshold(newExpenseAmount, targetDateStr) {
     }
 }
 
-// ─── P0 核心：廣東話語音輸入（Web Speech API） ───
+// ─── P0：廣東話語音輸入（Web Speech API） ───
 let recognitionInstance = null;
 let isVoiceRecording = false;
 
 function toggleSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-        HIG.alert("功能不支援", "此設備環境未支援語音辨識，請使用系統鍵盤自帶之廣東話聽寫功能。");
+        HIG.alert("功能不支援", "此設備環境未支援 Web Speech API，請使用系統鍵盤自帶之廣東話聽寫功能。");
         return;
     }
 
@@ -1084,7 +1176,7 @@ function toggleSpeechRecognition() {
 
     try {
         recognitionInstance = new SpeechRecognition();
-        recognitionInstance.lang = 'zh-HK'; // 鎖定香港粵語
+        recognitionInstance.lang = 'zh-HK';
         recognitionInstance.interimResults = false;
         recognitionInstance.maxAlternatives = 1;
 
@@ -1098,7 +1190,6 @@ function toggleSpeechRecognition() {
             if (event.results && event.results[0]) {
                 const transcript = event.results[0][0].transcript;
                 input.value = transcript;
-                // 辨識完成後自動進入排程解析
                 executeAINaturalInput();
             }
         };
@@ -1125,6 +1216,122 @@ function stopSpeechState() {
     if (btn) btn.classList.remove('recording-pulse');
     const input = document.getElementById('aiQuickInput');
     if (input) input.placeholder = "✨ 講或寫：百佳買咗280蚊、聽晚仁安覆診...";
+}
+
+// ─── P2：AI 行程衝突偵測 ───
+function checkScheduleConflicts(dateStr, timeStr, assignee, eventTitle) {
+    if (!timeStr || timeStr === "全日") return null;
+
+    const sameDayActs = (window.activities || []).filter(a => 
+        a && a.date === dateStr && !a.isExpense && (!a.isPrivate || a.assignee === currentUser)
+    );
+
+    const warnings = [];
+
+    // 1. 同一成員自身時間衝突
+    const personalOverlap = sameDayActs.find(a => a.assignee === assignee && a.time === timeStr);
+    if (personalOverlap) {
+        warnings.push(`⚠️ 【個人重疊】${assignee} 於 ${timeStr} 已排定「${getSafeTitle(personalOverlap.title)}」`);
+    }
+
+    // 2. 跨成員接送時段衝突（子女活動 vs 家長工作/重要日程）
+    const isChild = ["Jolie", "熹", "蓓"].includes(assignee);
+    if (isChild) {
+        const busyParents = sameDayActs.filter(a => 
+            (a.assignee === "Daddy" || a.assignee === "Mummy") && 
+            a.time === timeStr && 
+            (a.category === "工作" || a.category === "重要")
+        );
+        busyParents.forEach(p => {
+            warnings.push(`🚗 【接送注意】${assignee} 於 ${timeStr} 有行程，但 ${p.assignee} 正安排「${getSafeTitle(p.title)}」，可能無法接送！`);
+        });
+    }
+
+    return warnings.length > 0 ? warnings.join("\n\n") : null;
+}
+
+// ─── P2：家庭財務結算與分帳演算法 ───
+function openSettlementModal() {
+    const monthStr = selectedDateStr.slice(0, 7);
+    document.getElementById('settlementMonthTitle').innerText = `${monthStr} 月度開支與墊支平衡`;
+
+    const members = ["鐵", "Daddy", "Mummy", "Jolie", "蓓", "熹"];
+    const monthExpenses = (window.activities || []).filter(a => a && a.isExpense && a.date && a.date.startsWith(monthStr));
+    const totalExp = monthExpenses.reduce((s, a) => s + (Number(a.amount) || 0), 0);
+    const perCapita = totalExp / members.length;
+
+    const paidMap = {};
+    members.forEach(m => paidMap[m] = 0);
+    monthExpenses.forEach(a => {
+        if (paidMap[a.assignee] !== undefined) paidMap[a.assignee] += Number(a.amount) || 0;
+    });
+
+    document.getElementById('settlementSummaryCards').innerHTML = `
+        <div style="background:rgba(245,158,11,0.08); padding:8px; border-radius:8px;">
+            <div style="font-size:11px; color:#b45309;">總支出</div>
+            <div style="font-size:16px; font-weight:800; color:#b45309;">HK$ ${totalExp.toFixed(1)}</div>
+        </div>
+        <div style="background:rgba(0,113,227,0.08); padding:8px; border-radius:8px;">
+            <div style="font-size:11px; color:var(--oasis-primary);">6 人均攤每人</div>
+            <div style="font-size:16px; font-weight:800; color:var(--oasis-primary);">HK$ ${perCapita.toFixed(1)}</div>
+        </div>
+    `;
+
+    const debtors = [];
+    const creditors = [];
+    members.forEach(m => {
+        const diff = paidMap[m] - perCapita;
+        if (diff < -1) debtors.push({ member: m, amount: -diff });
+        else if (diff > 1) creditors.push({ member: m, amount: diff });
+    });
+
+    const transfers = [];
+    let i = 0, j = 0;
+    while (i < debtors.length && j < creditors.length) {
+        const pay = Math.min(debtors[i].amount, creditors[j].amount);
+        transfers.push(`👉 <strong>${debtors[i].member}</strong> 應轉帳給 <strong>${creditors[j].member}</strong>：HK$ ${pay.toFixed(1)}`);
+        debtors[i].amount -= pay;
+        creditors[j].amount -= pay;
+        if (debtors[i].amount < 1) i++;
+        if (creditors[j].amount < 1) j++;
+    }
+
+    document.getElementById('settlementTransfersList').innerHTML = transfers.length > 0 
+        ? transfers.join("<br>") 
+        : "<span style='color:var(--apple-text-secondary);'>本月各成員支出完全平衡，無須轉帳。</span>";
+
+    document.getElementById('settlementModal').style.display = 'flex';
+}
+
+function closeSettlementModal() {
+    document.getElementById('settlementModal').style.display = 'none';
+}
+
+function exportExpensesToCSV() {
+    const monthStr = selectedDateStr.slice(0, 7);
+    const expenses = (window.activities || []).filter(a => a && a.isExpense && a.date && a.date.startsWith(monthStr));
+    if (expenses.length === 0) {
+        HIG.alert("提示", "本月無任何開支記錄可匯出！");
+        return;
+    }
+
+    let csv = "\uFEFF消費日期,時間,商戶與明細,實付金額(HKD),付款成員,支出類別,可見度\n";
+    expenses.forEach(e => {
+        const cleanTitle = getSafeTitle(e.title).replace(/,/g, ' ');
+        csv += `${e.date},${e.time || '12:30'},"${cleanTitle}",${Number(e.amount).toFixed(2)},${e.assignee},${e.category || '日常開支'},${e.isPrivate ? '私密' : '公開'}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `FamilyOS_Expenses_${monthStr}.csv`;
+    link.click();
+}
+
+// ─── P3：一鍵喚起 iPhone 原生日曆訂閱 ───
+function subscribeAppleCalendar() {
+    const icsUrl = "webcal://asia-east1-familycalender-a62ae.cloudfunctions.net/publicIcsFeed";
+    window.location.href = icsUrl;
 }
 
 const MEMBER_THEMES = {
@@ -1719,7 +1926,6 @@ async function handleReceiptFileChange(input) {
     const date = data.date || selectedDateStr;
     const time = data.time || "12:30";
 
-    // P1：透過香港字典自動比對分類
     const detectedCategory = autoDetectCategoryByMerchant(merchant);
 
     if (merchant) document.getElementById('expenseMerchantInput').value = merchant;
@@ -1753,7 +1959,6 @@ async function saveReceiptExpense() {
         return;
     }
 
-    // P1：觸發月度預算警報檢查
     await checkBudgetThreshold(amountVal, date);
 
     const titleText = `${merchant} ($${amountVal})`;
@@ -1934,7 +2139,7 @@ async function generateLockScreenWallpaper() {
     });
 }
 
-// ─── 廣東話自然語言與語音輸入核心 ───
+// ─── 廣東話自然語言排程與開支匹配 ───
 async function executeAINaturalInput() {
     if (isGuest) {
         await HIG.alert("權限不足", "訪客模式為唯讀，請先登入！");
@@ -1946,14 +2151,12 @@ async function executeAINaturalInput() {
     const raw = input.value.trim();
     if (!raw) return;
 
-    // 開支匹配：例如「百佳買咗280蚊」、「大快活使咗65」
     const expenseMatch = raw.match(/(.+?)(用咗|買咗|支出|使咗|花咗)\s*(\d+(\.\d+)?)\s*(蚊|元|塊)?/);
     if (expenseMatch) {
         const merchant = expenseMatch[1].trim();
         const amount = parseFloat(expenseMatch[3]);
         const autoCat = autoDetectCategoryByMerchant(merchant);
 
-        // P1：觸發月度預算警報檢查
         await checkBudgetThreshold(amount, selectedDateStr);
 
         const titleText = `${merchant} ($${amount})`;
@@ -1979,7 +2182,6 @@ async function executeAINaturalInput() {
         return;
     }
 
-    // 日程匹配：辨識日期與成員
     let targetDate = selectedDateStr;
     let targetTime = "20:00";
     const today = new Date();
@@ -1988,7 +2190,6 @@ async function executeAINaturalInput() {
         if (raw.includes("聽晚")) targetTime = "19:30";
     }
 
-    // 辨識人名
     let matchedAssignee = currentUser || "鐵";
     const members = ["Daddy", "Mummy", "Jolie", "蓓", "熹", "鐵"];
     for (const m of members) {
@@ -1996,8 +2197,15 @@ async function executeAINaturalInput() {
     }
 
     const cleanTitle = raw.replace(/(聽日|聽晚|今日|Daddy|Mummy|Jolie|蓓|熹|鐵)/g, "").trim();
-    const tempId = "local_" + Date.now();
 
+    // P2：衝突偵測
+    const conflictMsg = checkScheduleConflicts(targetDate, targetTime, matchedAssignee, cleanTitle);
+    if (conflictMsg) {
+        const proceed = await HIG.confirm("偵測到行程衝突", `${conflictMsg}\n\n是否仍確認排入此行程？`);
+        if (!proceed) return;
+    }
+
+    const tempId = "local_" + Date.now();
     window.activities.unshift({
         id: tempId,
         title: cleanTitle || "行程",
@@ -2087,6 +2295,13 @@ async function saveEvent() {
     if (!title || !date) {
         await HIG.alert("提示", "請填寫活動名稱與日期！");
         return;
+    }
+
+    // P2：儲存前執行行程衝突偵測
+    const conflictMsg = checkScheduleConflicts(date, time, assignee, title);
+    if (conflictMsg) {
+        const proceed = await HIG.confirm("偵測到行程衝突", `${conflictMsg}\n\n是否仍確認排入此行程？`);
+        if (!proceed) return;
     }
 
     if (editKey) {
