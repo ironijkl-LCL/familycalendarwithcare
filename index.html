@@ -47,7 +47,7 @@ body {
 
 input, textarea, select { font-size: 16px !important; }
 
-/* ─── 頂部導航列 (徹底避開 iPhone 瀏海、動態島與 5:47 狀態列時間) ─── */
+/* ─── 頂部導航列 ─── */
 header {
     background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(20px);
@@ -131,7 +131,7 @@ header {
 .btn-purple { background: #5856d6; }
 .btn-wa { background: #25d366; }
 
-/* 🔮 輕量極簡 AI 輸入列 */
+/* 🔮 輕量極簡 AI 輸入列與家庭雷達條 */
 .ai-compact-bar {
     background: #ffffff;
     border: 1px solid var(--apple-border);
@@ -163,7 +163,28 @@ header {
     white-space: nowrap;
 }
 
-/* 🗓️ 上層：月曆卡片（支援雙指開合手勢縮放） */
+.ai-radar-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(125, 42, 232, 0.05);
+    border: 1px solid rgba(125, 42, 232, 0.12);
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 11px;
+    flex-shrink: 0;
+}
+.ai-strain-text { color: var(--apple-text); font-weight: 500; }
+.ai-pending-badge {
+    background: var(--oasis-ai-purple);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 10px;
+}
+
+/* 🗓️ 上層：月曆卡片 */
 .calendar-card {
     background: var(--apple-card);
     border-radius: 14px;
@@ -315,7 +336,7 @@ header {
     border-left: 2px solid #f59e0b;
 }
 
-/* 📋 下層：當日焦點節目與開支看板 */
+/* 📋 下層：焦點日程與總開支看板 */
 .agenda-card {
     background: var(--apple-card);
     border-radius: 14px;
@@ -502,16 +523,7 @@ header {
     gap: 8px;
     margin: 4px 0 6px;
 }
-.native-picker-row input[type="date"] {
-    flex: 1.4;
-    padding: 9px 12px;
-    border: 1px solid var(--apple-border);
-    border-radius: 10px;
-    background: rgba(0, 0, 0, 0.02);
-    font-family: inherit;
-    color: var(--apple-text);
-    outline: none;
-}
+.native-picker-row input[type="date"],
 .native-picker-row input[type="time"] {
     flex: 1;
     padding: 9px 12px;
@@ -522,6 +534,7 @@ header {
     color: var(--apple-text);
     outline: none;
 }
+.native-picker-row input[type="date"] { flex: 1.4; }
 
 .receipt-upload-label {
     display: block;
@@ -557,7 +570,7 @@ header {
 }
 .submit-btn-block:active { opacity: 0.85; }
 
-/* ─── HIG 自訂對話框 ─── */
+/* ─── HIG 對話框 ─── */
 .hig-dialog-overlay {
     display: none;
     position: fixed;
@@ -593,7 +606,7 @@ header {
 .hig-dialog-btn.destructive { color: var(--oasis-danger); font-weight: 600; }
 </style>
 
-<!-- Firebase SDK -->
+<!-- Firebase SDK Module -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check.js";
@@ -650,7 +663,6 @@ header {
   window.fbUpdate = update;
   window.fbRemove = remove;
 
-  // 🔑 從 Firebase Realtime Database 自動載入 Dify API Key
   window.loadSystemSecrets = function() {
       if (!window.fbDb || !window.fbRef || !window.fbOnValue) return;
       const secretRef = window.fbRef(window.fbDb, "system_secrets/dify_api_key");
@@ -668,19 +680,19 @@ header {
 
   onAuthStateChanged(auth, async (user) => {
       if (user) {
-          const email = user.email || "";
+          const email = (user.email || "").toLowerCase();
           let memberName = "鐵";
           if (email.includes("daddy")) memberName = "Daddy";
           else if (email.includes("mummy")) memberName = "Mummy";
           else if (email.includes("jolie")) memberName = "Jolie";
-          else if (email.includes("leisel")) memberName = "蓓";
-          else if (email.includes("karis")) memberName = "熹";
+          else if (email.includes("leisel")) memberName = "熹";
+          else if (email.includes("karis")) memberName = "蓓";
 
-          applyLoginState(memberName);
+          if (window.applyLoginState) window.applyLoginState(memberName);
           window.startFirebaseSync();
           window.loadSystemSecrets();
       } else {
-          renderGuestState();
+          if (window.renderGuestState) window.renderGuestState();
           window.cachedDifyApiKey = "";
       }
   });
@@ -694,7 +706,7 @@ header {
           if (data) {
               for (let key in data) {
                   const item = data[key];
-                  const title = await E2EE.decrypt(item.title);
+                  const title = window.E2EE ? await window.E2EE.decrypt(item.title) : (item.title || "活動");
                   list.push({
                       id: key,
                       date: item.date || "",
@@ -712,11 +724,11 @@ header {
               }
           }
           if (list.length > 0) {
-              activities = list;
-              localStorage.setItem('family_cached_activities', JSON.stringify(activities));
-              renderCalendar();
-              renderAgenda();
-              updateAISummary();
+              window.activities = list;
+              localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
+              if (window.renderCalendar) window.renderCalendar();
+              if (window.renderAgenda) window.renderAgenda();
+              if (window.updateAISummary) window.updateAISummary();
           }
       }, (err) => {
           console.warn("RTDB 同步狀態:", err.code);
@@ -746,13 +758,19 @@ header {
         <button class="btn-wa" onclick="shareWhatsApp()">💬 WA</button>
     </div>
 
-    <!-- 🔮 整合型極簡自然語言排程列 -->
+    <!-- 🔮 自然語言排程列 -->
     <div class="ai-compact-bar">
         <input type="text" id="aiQuickInput" class="ai-nlp-input" placeholder="✨ 輸入日程或開支（例如：日常開支百佳280蚊、聽晚仁安覆診）...">
         <button class="ai-nlp-btn" onclick="executeAINaturalInput()">AI 排程</button>
     </div>
 
-    <!-- 🗓️ 上層：月曆卡片（支援雙指縮放與循環倍率切換） -->
+    <!-- 📡 智能家庭雷達狀態列 -->
+    <div class="ai-radar-bar">
+        <div id="aiStrainText" class="ai-strain-text">✨ 正在整理今日家庭步調...</div>
+        <div id="aiPendingBadge" class="ai-pending-badge">0 項活動</div>
+    </div>
+
+    <!-- 🗓️ 上層：月曆卡片 -->
     <div class="calendar-card" id="calendarCardNode">
         <div class="calendar-nav-bar">
             <button class="nav-arrow-btn" onclick="changeMonthOffset(-1)">⬅ 上一月</button>
@@ -774,7 +792,7 @@ header {
         <div id="daysGridNode" class="days-grid"></div>
     </div>
 
-    <!-- 📋 下層：當日焦點日程與總開支看板 -->
+    <!-- 📋 下層：焦點日程與總開支看板 -->
     <div class="agenda-card">
         <div class="agenda-header">
             <div class="agenda-header-titles">
@@ -790,13 +808,14 @@ header {
 
 </div>
 
-<!-- ➕ 活動輸入與修改彈窗（含 🔒 不公開） -->
+<!-- ➕ 活動輸入與修改彈窗 -->
 <div id="eventModal" class="popup-overlay" onclick="if(event.target===this)closeModal()">
     <div class="popup-card">
         <button class="popup-close-x" onclick="closeModal()">&times;</button>
         <h3 id="modalFormTitle" style="margin:0 0 10px; font-size:17px;">➕ 新增家庭行程</h3>
         <input type="hidden" id="editItemKey" value="">
 
+        <!-- 方案 A：選單文字標註與 Firebase 歸屬完全一致 -->
         <div id="loginGateSection" style="display:none; background:rgba(0,0,0,0.02); padding:12px; border-radius:10px; margin-bottom:12px;">
             <p style="margin:0 0 8px; font-size:13px; color:var(--apple-text-secondary); font-weight:600;">🔒 請先驗證家庭成員身分：</p>
             <span class="form-label" style="margin-top:0;">選擇家庭成員帳戶：</span>
@@ -805,8 +824,8 @@ header {
                 <option value="daddy">👨 Daddy</option>
                 <option value="mummy">👩‍🦱 Mummy</option>
                 <option value="jolie">👧 Jolie</option>
-                <option value="leisel">👩 蓓 (karis)</option>
-                <option value="karis">👶 熹 (leisel)</option>
+                <option value="leisel">👶 熹 (leisel)</option>
+                <option value="karis">👩 蓓 (karis)</option>
             </select>
             <input type="password" id="loginPasswordInput" class="form-input" placeholder="輸入成員專屬密碼...">
             <button class="submit-btn-block" onclick="submitLogin()">登入驗證身分</button>
@@ -822,11 +841,10 @@ header {
                 <input type="time" id="nativeEventTime">
             </div>
 
-            <!-- 🔒 可見度權限 -->
             <label class="form-label">可見度權限：</label>
             <select id="formEventVisibility" class="form-input">
                 <option value="public">🌐 公開 (全家人可見)</option>
-                <option value="private">🔒 不公開 (僅只可以自己頁面可見/私人保密)</option>
+                <option value="private">🔒 不公開 (僅自己頁面可見/私人保密)</option>
             </select>
 
             <label class="form-label">活動分類：</label>
@@ -856,7 +874,7 @@ header {
     </div>
 </div>
 
-<!-- 🧾 家庭支出輸入彈窗（連通 Dify Vision + 🔒 不公開） -->
+<!-- 🧾 開支輸入彈窗 -->
 <div id="expenseModal" class="popup-overlay" onclick="if(event.target===this)closeExpenseModal()">
     <div class="popup-card">
         <button class="popup-close-x" onclick="closeExpenseModal()">&times;</button>
@@ -888,11 +906,10 @@ header {
             <input type="time" id="expenseTimeInput">
         </div>
 
-        <!-- 🔒 開支可見度：不公開僅自己可見 -->
         <label class="form-label">開支可見度：</label>
         <select id="expenseVisibilitySelect" class="form-input">
             <option value="public">🌐 公開 (全家人可見)</option>
-            <option value="private">🔒 不公開 (僅只可以自己頁面可見/私人保密)</option>
+            <option value="private">🔒 不公開 (僅自己頁面可見/私人保密)</option>
         </select>
 
         <label class="form-label">支出類別：</label>
@@ -921,7 +938,7 @@ header {
     </div>
 </div>
 
-<!-- ⚙️ 修改 / 刪除專用面板 -->
+<!-- ⚙️ 管理面板 -->
 <div id="manageModal" class="popup-overlay" onclick="if(event.target===this)closeManageModal()">
     <div class="popup-card">
         <button class="popup-close-x" onclick="closeManageModal()">&times;</button>
@@ -1012,6 +1029,7 @@ const E2EE = {
         } catch(e) { return "🔒 行程"; }
     }
 };
+window.E2EE = E2EE;
 
 const HIG = {
     alert(title, msg) {
@@ -1079,13 +1097,12 @@ function getLunarDayText(dateStr) {
     } catch (e) { return ""; }
 }
 
-let activities = JSON.parse(localStorage.getItem('family_cached_activities') || "[]");
+window.activities = JSON.parse(localStorage.getItem('family_cached_activities') || "[]");
 let currentMonthDate = new Date();
 let selectedDateStr = formatDayStr(new Date());
 let currentUser = localStorage.getItem('family_auth_user') || "";
 let isGuest = !currentUser;
 
-// ─── 🔍 雙指縮放等級 ───
 let currentCalZoom = parseFloat(localStorage.getItem('family_cal_zoom') || "1.0");
 
 function applyCalendarZoom(factor) {
@@ -1151,24 +1168,32 @@ function applyLoginState(name) {
     isGuest = false;
     localStorage.setItem('family_auth_user', name);
     const badge = document.getElementById('authBadgeBtn');
-    badge.innerText = `👑 ${name}`;
-    badge.className = 'auth-badge logged-in';
-    document.getElementById('logoutBtn').style.display = 'inline';
+    if (badge) {
+        badge.innerText = `👑 ${name}`;
+        badge.className = 'auth-badge logged-in';
+    }
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) logoutBtn.style.display = 'inline';
     renderAgenda();
     renderCalendar();
 }
+window.applyLoginState = applyLoginState;
 
 function renderGuestState() {
     currentUser = "";
     isGuest = true;
     localStorage.removeItem('family_auth_user');
     const badge = document.getElementById('authBadgeBtn');
-    badge.innerText = "🔒 訪客模式";
-    badge.className = 'auth-badge';
-    document.getElementById('logoutBtn').style.display = 'none';
+    if (badge) {
+        badge.innerText = "🔒 訪客模式";
+        badge.className = 'auth-badge';
+    }
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) logoutBtn.style.display = 'none';
     renderAgenda();
     renderCalendar();
 }
+window.renderGuestState = renderGuestState;
 
 function changeMonthOffset(offset) {
     currentMonthDate.setDate(1);
@@ -1176,17 +1201,18 @@ function changeMonthOffset(offset) {
     renderCalendar();
 }
 
-// ─── 🗓️ 月曆渲染（嚴格落實：不公開行程僅自己可見，他人/訪客 0 殘留） ───
 function renderCalendar() {
     const y = currentMonthDate.getFullYear();
     const m = currentMonthDate.getMonth();
-    document.getElementById('calendarMonthLabel').innerText = `${y}年 ${m + 1}月`;
+    const lbl = document.getElementById('calendarMonthLabel');
+    if (lbl) lbl.innerText = `${y}年 ${m + 1}月`;
 
     const firstDayIndex = new Date(y, m, 1).getDay();
     const totalDays = new Date(y, m + 1, 0).getDate();
     const todayStr = formatDayStr(new Date());
 
     const grid = document.getElementById('daysGridNode');
+    if (!grid) return;
     grid.innerHTML = "";
 
     for (let i = 0; i < firstDayIndex; i++) {
@@ -1209,12 +1235,9 @@ function renderCalendar() {
 
         let eventChipsHtml = "";
         try {
-            // 🔒 嚴格可見性過濾：若設為不公開，非本人完全看不見
-            const dayActs = activities.filter(a => {
+            const dayActs = (window.activities || []).filter(a => {
                 if (!a || a.date !== dStr) return false;
-                if (a.isPrivate) {
-                    return currentUser && a.assignee === currentUser;
-                }
+                if (a.isPrivate) return currentUser && a.assignee === currentUser;
                 return true;
             });
 
@@ -1245,6 +1268,7 @@ function renderCalendar() {
         grid.appendChild(cell);
     }
 }
+window.renderCalendar = renderCalendar;
 
 function selectDate(dStr) {
     selectedDateStr = dStr;
@@ -1252,35 +1276,34 @@ function selectDate(dStr) {
     renderAgenda();
 }
 
-// ─── 📋 當日焦點行程、支出與總額看板 ───
 function renderAgenda() {
     const listNode = document.getElementById('agendaListNode');
     const titleNode = document.getElementById('agendaDateTitle');
     const actionsNode = document.getElementById('agendaActionsNode');
     const expenseSummaryNode = document.getElementById('agendaDailyExpenseSummary');
+    if (!listNode || !titleNode) return;
 
     const parts = selectedDateStr.split('-');
     const holidayName = HK_HOLIDAYS[selectedDateStr] ? ` (${HK_HOLIDAYS[selectedDateStr]})` : '';
     const lunarName = !HK_HOLIDAYS[selectedDateStr] ? ` (${getLunarDayText(selectedDateStr)})` : '';
     titleNode.innerText = `📋 ${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日 行程${holidayName || lunarName}`;
 
-    // 🔒 嚴格可見性過濾
-    const matched = activities.filter(a => {
+    const matched = (window.activities || []).filter(a => {
         if (!a || a.date !== selectedDateStr) return false;
-        if (a.isPrivate) {
-            return currentUser && a.assignee === currentUser;
-        }
+        if (a.isPrivate) return currentUser && a.assignee === currentUser;
         return true;
     });
 
     const visibleExpenses = matched.filter(a => a.isExpense);
     const totalDayExp = visibleExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
-    if (totalDayExp > 0) {
-        expenseSummaryNode.innerHTML = `<span class="day-total-expense-chip">💰 當日總開支：HK$ ${totalDayExp.toFixed(2)} (${visibleExpenses.length}筆)</span>`;
-        expenseSummaryNode.style.display = 'block';
-    } else {
-        expenseSummaryNode.style.display = 'none';
+    if (expenseSummaryNode) {
+        if (totalDayExp > 0) {
+            expenseSummaryNode.innerHTML = `<span class="day-total-expense-chip">💰 當日總開支：HK$ ${totalDayExp.toFixed(2)} (${visibleExpenses.length}筆)</span>`;
+            expenseSummaryNode.style.display = 'block';
+        } else {
+            expenseSummaryNode.style.display = 'none';
+        }
     }
 
     if (actionsNode) {
@@ -1335,7 +1358,7 @@ function renderAgenda() {
                         </span>
                         <span class="tag-pill">${item.category || '家庭'}</span>
                         ${item.isPrivate ? '<span class="private-owner-badge">🔒 私人保密 (僅自己可見)</span>' : ''}
-                        ${item.isAI_Priority ? '<span class="ai-priority-badge">🔥 高優先</span>' : ''}
+                        ${item.isAI_Priority ? '<span class="tag-pill" style="color:#e11d48;">🔥 高優先</span>' : ''}
                     </div>
                 </div>
                 ${actionButtonsHtml}
@@ -1343,11 +1366,11 @@ function renderAgenda() {
         `;
     }).join('');
 }
+window.renderAgenda = renderAgenda;
 
-// ─── 🔮 智慧家庭雷達 ───
 function updateAISummary() {
     const todayStr = formatDayStr(new Date());
-    const todayActs = activities.filter(a => {
+    const todayActs = (window.activities || []).filter(a => {
         if (!a || a.date !== todayStr) return false;
         if (a.isPrivate) return currentUser && a.assignee === currentUser;
         return true;
@@ -1359,52 +1382,45 @@ function updateAISummary() {
     const badgeEl = document.getElementById('aiPendingBadge');
 
     if (totalExp > 0) {
-        badgeEl.innerText = `今日開支 $${totalExp.toFixed(1)}`;
-        textEl.innerHTML = `今日開支合計 <strong>$${totalExp.toFixed(2)}</strong>，生活安排井然有序`;
+        if (badgeEl) badgeEl.innerText = `今日開支 $${totalExp.toFixed(1)}`;
+        if (textEl) textEl.innerHTML = `今日開支合計 <strong>$${totalExp.toFixed(2)}</strong>，各項事務安排井然有序`;
     } else {
-        badgeEl.innerText = `${todayActs.length} 項活動`;
-        textEl.innerText = `家庭步調輕鬆，今日安排順暢`;
+        if (badgeEl) badgeEl.innerText = `${todayActs.length} 項活動`;
+        if (textEl) textEl.innerText = `家庭步調輕鬆，今日安排順暢`;
     }
 }
+window.updateAISummary = updateAISummary;
 
-// ─── 🧾 真正調用 Dify.ai Vision 視覺模型辨識收據 ───
 async function recognizeReceiptWithDify(file) {
     const apiKey = window.cachedDifyApiKey || "";
     const statusEl = document.getElementById('receiptOcrStatus');
-    statusEl.style.display = "block";
+    if (statusEl) statusEl.style.display = "block";
 
     if (!apiKey) {
-        statusEl.innerText = "⚠️ 尚未讀取到 Dify API Key，請確保已登入成員帳戶";
+        if (statusEl) statusEl.innerText = "⚠️ 尚未讀取到 Dify API Key，請確保已登入成員帳戶";
         await HIG.alert("未檢測到授權", "請先以家庭成員帳戶登入，系統會自動從 Firebase 安全同步 Dify 辨識金鑰！");
         return null;
     }
 
-    statusEl.innerText = "✨ 正在上傳收據圖像至 Dify 視覺模型...";
+    if (statusEl) statusEl.innerText = "✨ 正在上傳收據圖像至 Dify 視覺模型...";
 
     try {
-        // 1. 上傳收據圖片到 Dify 伺服器
         const formData = new FormData();
         formData.append('file', file);
         formData.append('user', currentUser || 'family_user');
 
         const uploadRes = await fetch('https://api.dify.ai/v1/files/upload', {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`
-            },
+            headers: { 'Authorization': `Bearer ${apiKey}` },
             body: formData
         });
 
-        if (!uploadRes.ok) {
-            throw new Error(`Dify 文件上傳失敗 (HTTP ${uploadRes.status})`);
-        }
-
+        if (!uploadRes.ok) throw new Error(`Dify 文件上傳失敗 (HTTP ${uploadRes.status})`);
         const uploadData = await uploadRes.json();
         const fileId = uploadData.id;
 
-        statusEl.innerText = "✨ Dify 正在解析全單商戶名、實付總額與消費項目...";
+        if (statusEl) statusEl.innerText = "✨ Dify 正在解析全單商戶名、實付總額與消費項目...";
 
-        // 2. 執行 Dify 視覺分析工作流
         const workflowRes = await fetch('https://api.dify.ai/v1/workflows/run', {
             method: 'POST',
             headers: {
@@ -1427,21 +1443,15 @@ async function recognizeReceiptWithDify(file) {
             })
         });
 
-        if (!workflowRes.ok) {
-            throw new Error(`Dify 工作流調用失敗 (HTTP ${workflowRes.status})`);
-        }
+        if (!workflowRes.ok) throw new Error(`Dify 工作流調用失敗 (HTTP ${workflowRes.status})`);
 
         const result = await workflowRes.json();
-        if (result.data && result.data.outputs) {
-            return result.data.outputs;
-        } else if (result.outputs) {
-            return result.outputs;
-        } else {
-            throw new Error("Dify 回傳格式異常");
-        }
+        if (result.data && result.data.outputs) return result.data.outputs;
+        if (result.outputs) return result.outputs;
+        return null;
     } catch (err) {
         console.warn("Dify 辨識失敗:", err);
-        statusEl.innerText = "⚠️ Dify 連線未成功，已切換為手動確認";
+        if (statusEl) statusEl.innerText = "⚠️ Dify 連線未成功，已切換為手動確認";
         return null;
     }
 }
@@ -1467,7 +1477,7 @@ function openExpenseModal(editItem = null) {
         keyInput.value = editItem.id;
         uploadBox.style.display = "none";
 
-        let cleanMerchant = editItem.title.replace(/\s*\(\$.+?\)/, '').trim();
+        let cleanMerchant = String(editItem.title).replace(/\s*\(\$.+?\)/, '').trim();
         document.getElementById('expenseMerchantInput').value = cleanMerchant;
         document.getElementById('expenseAmountInput').value = editItem.amount || "";
         document.getElementById('expenseDateInput').value = editItem.date || selectedDateStr;
@@ -1490,9 +1500,7 @@ function openExpenseModal(editItem = null) {
         document.getElementById('expensePayerSelect').value = currentUser || "鐵";
         
         const preview = document.getElementById('receiptPreviewImg');
-        if (preview.src && preview.src.startsWith('blob:')) {
-            URL.revokeObjectURL(preview.src);
-        }
+        if (preview.src && preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
         preview.src = "";
         preview.style.display = "none";
         document.getElementById('receiptOcrStatus').style.display = "none";
@@ -1506,15 +1514,12 @@ function closeExpenseModal() {
     document.getElementById('expenseModal').style.display = "none";
 }
 
-// 🎯 真實收據圖片選取事件（深層相容各類輸出並自動填充）
 async function handleReceiptFileChange(input) {
     const file = input.files && input.files[0];
     if (!file) return;
 
     const preview = document.getElementById('receiptPreviewImg');
-    if (preview.src && preview.src.startsWith('blob:')) {
-        URL.revokeObjectURL(preview.src);
-    }
+    if (preview.src && preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
     preview.src = URL.createObjectURL(file);
     preview.style.display = "block";
 
@@ -1522,11 +1527,10 @@ async function handleReceiptFileChange(input) {
     const statusEl = document.getElementById('receiptOcrStatus');
 
     if (!difyRaw) {
-        statusEl.innerText = "⚠️ 未能取得 Dify 回傳資料，請檢查網路或手動輸入";
+        if (statusEl) statusEl.innerText = "⚠️ 未能取得 Dify 回傳資料，請手動輸入";
         return;
     }
 
-    // 深層穿透解析
     let data = difyRaw;
     if (typeof data === 'string') {
         try { data = JSON.parse(data.replace(/```json|```/g, '').trim()); } catch(e){}
@@ -1534,9 +1538,7 @@ async function handleReceiptFileChange(input) {
     if (data.text && typeof data.text === 'string') {
         try { data = JSON.parse(data.text.replace(/```json|```/g, '').trim()); } catch(e){}
     }
-    if (data.result && typeof data.result === 'object') {
-        data = data.result;
-    }
+    if (data.result && typeof data.result === 'object') data = data.result;
 
     const merchant = data.merchant || data.title || data.shop_name || "";
     const amount = parseFloat(data.amount || data.total || data.grand_total || 0);
@@ -1551,14 +1553,12 @@ async function handleReceiptFileChange(input) {
     if (category) document.getElementById('expenseCategorySelect').value = category;
 
     if (merchant || amount > 0) {
-        statusEl.innerText = `✓ Dify 辨識完成！已自動提取：${merchant} (HK$ ${amount})`;
+        if (statusEl) statusEl.innerText = `✓ Dify 辨識完成！已自動提取：${merchant} (HK$ ${amount})`;
     } else {
-        statusEl.innerText = "⚠️ 已連線但未讀取到商戶或金額";
-        await HIG.alert("Dify 原始回傳排查", JSON.stringify(difyRaw, null, 2));
+        if (statusEl) statusEl.innerText = "⚠️ 已連線但未讀取到商戶或金額";
     }
 }
 
-// 儲存開支（支援 🔒 不公開）
 async function saveReceiptExpense() {
     if (isGuest) return;
 
@@ -1580,10 +1580,10 @@ async function saveReceiptExpense() {
     const titleText = `${merchant} ($${amountVal})`;
 
     if (editKey) {
-        const idx = activities.findIndex(a => a && a.id === editKey);
+        const idx = window.activities.findIndex(a => a && a.id === editKey);
         if (idx !== -1) {
-            activities[idx] = {
-                ...activities[idx],
+            window.activities[idx] = {
+                ...window.activities[idx],
                 date,
                 time,
                 title: titleText,
@@ -1596,7 +1596,7 @@ async function saveReceiptExpense() {
         }
     } else {
         const tempId = "exp_" + Date.now();
-        const expenseObj = {
+        window.activities.unshift({
             id: tempId,
             date,
             time,
@@ -1606,11 +1606,10 @@ async function saveReceiptExpense() {
             isExpense: true,
             amount: amountVal,
             isPrivate
-        };
-        activities.unshift(expenseObj);
+        });
     }
 
-    localStorage.setItem('family_cached_activities', JSON.stringify(activities));
+    localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
 
     selectedDateStr = date;
     renderCalendar();
@@ -1618,8 +1617,7 @@ async function saveReceiptExpense() {
     updateAISummary();
     closeExpenseModal();
 
-    // 彈出明確的已存提示
-    await HIG.alert(editKey ? "已更新" : "已儲存", `開支【${merchant}】HK$ ${amountVal.toFixed(2)} 已成功儲存！\n可見度：${isPrivate ? '🔒 不公開 (僅自己可見)' : '🌐 全家人公開'}`);
+    await HIG.alert(editKey ? "已更新" : "已儲存", `開支【${merchant}】HK$ ${amountVal.toFixed(2)} 已成功儲存！\n可見度：${isPrivate ? '🔒 不公開 (僅自己可見)' : '🌐 全家公開'}`);
 
     try {
         const cipher = await E2EE.encrypt(titleText);
@@ -1638,8 +1636,8 @@ async function saveReceiptExpense() {
             if (editKey && !editKey.startsWith("exp_")) {
                 await window.fbUpdate(window.fbRef(window.fbDb, `family_calendar_activities/${editKey}`), payload);
             } else {
-                const ref = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
-                await window.fbSet(ref, payload);
+                const newRef = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
+                await window.fbSet(newRef, payload);
             }
         }
     } catch(e) {}
@@ -1650,7 +1648,7 @@ function openEditGeneralItem(id) {
         HIG.alert("權限不足", "訪客模式無法修改！");
         return;
     }
-    const item = activities.find(a => a && a.id === id);
+    const item = (window.activities || []).find(a => a && a.id === id);
     if (!item) return;
 
     if (item.isExpense) {
@@ -1660,7 +1658,6 @@ function openEditGeneralItem(id) {
     }
 }
 
-// ─── 📱 生成專屬 iPhone 鎖定畫面海報壁紙 ───
 async function generateLockScreenWallpaper() {
     const canvas = document.createElement('canvas');
     canvas.width = 1170;
@@ -1675,7 +1672,7 @@ async function generateLockScreenWallpaper() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     let startY = 640;
-    const dayActs = activities.filter(a => {
+    const dayActs = (window.activities || []).filter(a => {
         if (!a || a.date !== selectedDateStr) return false;
         if (a.isPrivate) return currentUser && a.assignee === currentUser;
         return true;
@@ -1758,7 +1755,6 @@ async function generateLockScreenWallpaper() {
     });
 }
 
-// ─── ✨ 廣東話自然語言輸入 ───
 async function executeAINaturalInput() {
     if (isGuest) {
         await HIG.alert("權限不足", "訪客模式為唯讀，請先登入！");
@@ -1777,7 +1773,7 @@ async function executeAINaturalInput() {
         const titleText = `${merchant} ($${amount})`;
         const tempId = "exp_" + Date.now();
 
-        activities.unshift({
+        window.activities.unshift({
             id: tempId,
             date: selectedDateStr,
             time: "12:30",
@@ -1788,7 +1784,7 @@ async function executeAINaturalInput() {
             isPrivate: false,
             amount: amount
         });
-        localStorage.setItem('family_cached_activities', JSON.stringify(activities));
+        localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
         renderCalendar();
         renderAgenda();
         updateAISummary();
@@ -1805,7 +1801,7 @@ async function executeAINaturalInput() {
     }
     const cleanTitle = raw.replace(/(聽日|聽晚|今日)/g, "").trim();
     const tempId = "local_" + Date.now();
-    activities.unshift({
+    window.activities.unshift({
         id: tempId,
         title: cleanTitle,
         date: targetDate,
@@ -1814,7 +1810,7 @@ async function executeAINaturalInput() {
         assignee: currentUser || "鐵",
         isPrivate: false
     });
-    localStorage.setItem('family_cached_activities', JSON.stringify(activities));
+    localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
     selectedDateStr = targetDate;
     renderCalendar();
     renderAgenda();
@@ -1859,7 +1855,7 @@ function openAddModal(mode) {
 }
 
 function openEditSpecificItem(id) {
-    const item = activities.find(a => a && a.id === id);
+    const item = (window.activities || []).find(a => a && a.id === id);
     if (!item) return;
 
     document.getElementById('editItemKey').value = id;
@@ -1881,7 +1877,6 @@ function openEditSpecificItem(id) {
 
 function closeModal() { document.getElementById('eventModal').style.display = 'none'; }
 
-// 🎯 新增/修改活動儲存核心：儲存後立即彈出「已儲存」對話框
 async function saveEvent() {
     if (isGuest) return;
     const title = document.getElementById('formEventTitle').value.trim();
@@ -1898,23 +1893,22 @@ async function saveEvent() {
     }
 
     if (editKey) {
-        const idx = activities.findIndex(a => a && a.id === editKey);
+        const idx = window.activities.findIndex(a => a && a.id === editKey);
         if (idx !== -1) {
-            activities[idx] = { ...activities[idx], title, date, time, category, assignee, isPrivate };
+            window.activities[idx] = { ...window.activities[idx], title, date, time, category, assignee, isPrivate };
         }
     } else {
         const tempId = "local_" + Date.now();
-        activities.unshift({ id: tempId, title, date, time, category, assignee, isPrivate });
+        window.activities.unshift({ id: tempId, title, date, time, category, assignee, isPrivate });
     }
 
-    localStorage.setItem('family_cached_activities', JSON.stringify(activities));
+    localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
     selectedDateStr = date;
     renderCalendar();
     renderAgenda();
     updateAISummary();
     closeModal();
 
-    // 💡 關鍵升級：儲存後立即彈出「已儲存」原生提示
     await HIG.alert(
         editKey ? "已更新" : "已儲存", 
         editKey ? `行程【${title}】已成功更新！` : `已儲存：行程【${title}】已成功儲存至 ${date}！\n可見度：${isPrivate ? '🔒 不公開 (僅自己可見)' : '🌐 全家公開'}`
@@ -1927,8 +1921,8 @@ async function saveEvent() {
             if (editKey && !editKey.startsWith("local_")) {
                 await window.fbUpdate(window.fbRef(window.fbDb, `family_calendar_activities/${editKey}`), payload);
             } else {
-                const ref = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
-                await window.fbSet(ref, payload);
+                const newRef = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
+                await window.fbSet(newRef, payload);
             }
         }
     } catch(e) {}
@@ -1936,7 +1930,7 @@ async function saveEvent() {
 
 function openManageModal() {
     const container = document.getElementById('manageDayListContainer');
-    const matched = activities.filter(a => {
+    const matched = (window.activities || []).filter(a => {
         if (!a || a.date !== selectedDateStr) return false;
         if (a.isPrivate) return currentUser && a.assignee === currentUser;
         return true;
@@ -1967,8 +1961,8 @@ async function deleteEventItem(id) {
     const ok = await HIG.confirm("確認刪除", "確定要刪除這項記錄嗎？");
     if (!ok) return;
 
-    activities = activities.filter(a => a && a.id !== id);
-    localStorage.setItem('family_cached_activities', JSON.stringify(activities));
+    window.activities = (window.activities || []).filter(a => a && a.id !== id);
+    localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
     renderCalendar();
     renderAgenda();
     updateAISummary();
@@ -1983,6 +1977,7 @@ function handleAuthBadgeClick() {
     if (isGuest) openAddModal('LOGIN');
 }
 
+/* 方案 A：leisel 對應 熹、karis 對應 蓓 */
 async function submitLogin() {
     const member = document.getElementById('loginSelectMember').value;
     const pwd = document.getElementById('loginPasswordInput').value.trim();
@@ -1994,7 +1989,14 @@ async function submitLogin() {
 
     try {
         await window.fbSignIn(window.fbAuth, email, pwd);
-        const nameMap = { iron: "鐵", daddy: "Daddy", mummy: "Mummy", jolie: "Jolie", leisel: "蓓", karis: "熹" };
+        const nameMap = { 
+            iron: "鐵", 
+            daddy: "Daddy", 
+            mummy: "Mummy", 
+            jolie: "Jolie", 
+            leisel: "熹", 
+            karis: "蓓" 
+        };
         applyLoginState(nameMap[member] || "鐵");
         closeModal();
         await HIG.alert("成功", `歡迎回來，${nameMap[member]}！`);
@@ -2012,7 +2014,7 @@ async function logoutAccount() {
 }
 
 function shareWhatsApp() {
-    const dayActs = activities.filter(a => a && a.date === selectedDateStr && (!a.isPrivate || (currentUser && a.assignee === currentUser)));
+    const dayActs = (window.activities || []).filter(a => a && a.date === selectedDateStr && (!a.isPrivate || (currentUser && a.assignee === currentUser)));
     if (dayActs.length === 0) {
         HIG.alert("提示", "今日無任何可公開行程分享！");
         return;
