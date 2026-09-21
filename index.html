@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#f2f2f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="description" content="麟李家庭智慧管理系統 - 結合 Firebase 雲端金鑰、Dify AI 收據辨識、私人保密、手勢縮放與即時日曆同步">
+<meta name="description" content="麟李家庭智慧管理系統 - 結合 Dify AI 真實收據辨識、私人保密、手勢縮放、原生選取器與即時日曆同步">
 <title>Family OS - 麟李家庭智慧管理系統</title>
 
 <link rel="manifest" href="manifest.json">
@@ -47,7 +47,7 @@ body {
 
 input, textarea, select { font-size: 16px !important; }
 
-/* ─── 頂部導航列 ─── */
+/* ─── 頂部導航列 (嚴格避開 iPhone 瀏海、動態島與狀態列) ─── */
 header {
     background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(20px);
@@ -91,7 +91,7 @@ header {
     padding: 4px;
 }
 
-/* ─── 主畫面佈局 ─── */
+/* ─── 主畫面垂直自適應佈局 ─── */
 .main-layout {
     flex: 1;
     display: flex;
@@ -131,7 +131,7 @@ header {
 .btn-purple { background: #5856d6; }
 .btn-wa { background: #25d366; }
 
-/* 🔮 輕量 AI 輸入列 */
+/* 🔮 輕量極簡 AI 輸入列 */
 .ai-compact-bar {
     background: #ffffff;
     border: 1px solid var(--apple-border);
@@ -163,7 +163,7 @@ header {
     white-space: nowrap;
 }
 
-/* 🗓️ 上層：月曆卡片（支援雙指縮放） */
+/* 🗓️ 上層：月曆卡片（支援雙指開合手勢縮放） */
 .calendar-card {
     background: var(--apple-card);
     border-radius: 14px;
@@ -579,7 +579,7 @@ header {
 }
 .hig-dialog-header { padding: 16px 14px 10px; }
 .hig-dialog-title { font-size: 16px; font-weight: 600; margin: 0; }
-.hig-dialog-msg { font-size: 13px; color: var(--apple-text-secondary); margin-top: 4px; white-space: pre-line; }
+.hig-dialog-msg { font-size: 13px; color: var(--apple-text-secondary); margin-top: 4px; }
 .hig-dialog-input {
     width: 86%; margin: 6px auto 12px; padding: 6px 8px;
     border: 1px solid rgba(0,0,0,0.15); border-radius: 6px; box-sizing: border-box; display: block;
@@ -650,6 +650,7 @@ header {
   window.fbUpdate = update;
   window.fbRemove = remove;
 
+  // 🔑 從 Firebase Realtime Database 自動載入 Dify API Key
   window.loadSystemSecrets = function() {
       if (!window.fbDb || !window.fbRef || !window.fbOnValue) return;
       const secretRef = window.fbRef(window.fbDb, "system_secrets/dify_api_key");
@@ -1175,7 +1176,7 @@ function changeMonthOffset(offset) {
     renderCalendar();
 }
 
-// ─── 🗓️ 月曆渲染（嚴格落實：不公開行程僅自己可見） ───
+// ─── 🗓️ 月曆渲染（嚴格落實：不公開行程僅自己可見，他人/訪客 0 殘留） ───
 function renderCalendar() {
     const y = currentMonthDate.getFullYear();
     const m = currentMonthDate.getMonth();
@@ -1208,6 +1209,7 @@ function renderCalendar() {
 
         let eventChipsHtml = "";
         try {
+            // 🔒 嚴格可見性過濾：若設為不公開，非本人完全看不見
             const dayActs = activities.filter(a => {
                 if (!a || a.date !== dStr) return false;
                 if (a.isPrivate) {
@@ -1262,6 +1264,7 @@ function renderAgenda() {
     const lunarName = !HK_HOLIDAYS[selectedDateStr] ? ` (${getLunarDayText(selectedDateStr)})` : '';
     titleNode.innerText = `📋 ${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日 行程${holidayName || lunarName}`;
 
+    // 🔒 嚴格可見性過濾
     const matched = activities.filter(a => {
         if (!a || a.date !== selectedDateStr) return false;
         if (a.isPrivate) {
@@ -1312,7 +1315,7 @@ function renderAgenda() {
                             <span class="assignee-chip" style="background:${theme.bg}; color:${theme.color}; border:1px solid ${theme.border};">
                                 ${theme.icon} 由 ${item.assignee} 支付
                             </span>
-                            <span class="tag-pill">${item.category || '家庭餐飲'}</span>
+                            <span class="tag-pill">${item.category || '日常開支'}</span>
                             ${item.isPrivate ? '<span class="private-owner-badge">🔒 私密 (僅自己可見)</span>' : ''}
                         </div>
                     </div>
@@ -1364,7 +1367,7 @@ function updateAISummary() {
     }
 }
 
-// ─── 🧾 調用 Dify.ai Vision 視覺模型辨識收據 ───
+// ─── 🧾 真正調用 Dify.ai Vision 視覺模型辨識收據 ───
 async function recognizeReceiptWithDify(file) {
     const apiKey = window.cachedDifyApiKey || "";
     const statusEl = document.getElementById('receiptOcrStatus');
@@ -1379,6 +1382,7 @@ async function recognizeReceiptWithDify(file) {
     statusEl.innerText = "✨ 正在上傳收據圖像至 Dify 視覺模型...";
 
     try {
+        // 1. 上傳收據圖片到 Dify 伺服器
         const formData = new FormData();
         formData.append('file', file);
         formData.append('user', currentUser || 'family_user');
@@ -1400,6 +1404,7 @@ async function recognizeReceiptWithDify(file) {
 
         statusEl.innerText = "✨ Dify 正在解析全單商戶名、實付總額與消費項目...";
 
+        // 2. 執行 Dify 視覺分析工作流
         const workflowRes = await fetch('https://api.dify.ai/v1/workflows/run', {
             method: 'POST',
             headers: {
@@ -1479,7 +1484,7 @@ function openExpenseModal(editItem = null) {
         document.getElementById('expenseDateInput').value = selectedDateStr;
         document.getElementById('expenseTimeInput').value = "12:30";
         document.getElementById('expenseVisibilitySelect').value = "public";
-        document.getElementById('expenseCategorySelect').value = "家庭餐飲";
+        document.getElementById('expenseCategorySelect').value = "日常開支";
         document.getElementById('expensePayerSelect').value = currentUser || "鐵";
         
         const preview = document.getElementById('receiptPreviewImg');
@@ -1496,9 +1501,10 @@ function openExpenseModal(editItem = null) {
 }
 
 function closeExpenseModal() {
-    document.getElementById('expenseModal').style.display = 'none';
+    document.getElementById('expenseModal').style.display = "none";
 }
 
+// 🎯 真實收據圖片選取事件
 async function handleReceiptFileChange(input) {
     const file = input.files && input.files[0];
     if (!file) return;
@@ -1510,6 +1516,7 @@ async function handleReceiptFileChange(input) {
     preview.src = URL.createObjectURL(file);
     preview.style.display = "block";
 
+    // 調用真實 Dify.ai Vision 視覺模型
     const difyData = await recognizeReceiptWithDify(file);
     const statusEl = document.getElementById('receiptOcrStatus');
 
@@ -1523,6 +1530,7 @@ async function handleReceiptFileChange(input) {
     }
 }
 
+// 儲存開支（支援 🔒 不公開）
 async function saveReceiptExpense() {
     if (isGuest) return;
 
@@ -1582,11 +1590,8 @@ async function saveReceiptExpense() {
     updateAISummary();
     closeExpenseModal();
 
-    // 🎯 彈出已儲存提示
-    await HIG.alert(
-        editKey ? "開支已更新" : "支出已儲存",
-        `已成功記錄至家庭日曆！\n\n🧾 商戶：${merchant}\n💰 實付：HK$ ${amountVal.toFixed(2)}\n👤 付款人：${payer}\n🔒 權限：${isPrivate ? '不公開 (僅自己可見)' : '全家公開'}`
-    );
+    // 彈出明確的已存提示
+    await HIG.alert(editKey ? "已更新" : "已儲存", `開支【${merchant}】HK$ ${amountVal.toFixed(2)} 已成功儲存！\n可見度：${isPrivate ? '🔒 不公開 (僅自己可見)' : '🌐 全家人公開'}`);
 
     try {
         const cipher = await E2EE.encrypt(titleText);
@@ -1760,7 +1765,7 @@ async function executeAINaturalInput() {
         renderAgenda();
         updateAISummary();
         input.value = "";
-        await HIG.alert("開支已排入", `已識別日常開支：\n${merchant} - HK$ ${amount.toFixed(2)}`);
+        await HIG.alert("已儲存", `已成功儲存開支：\n${merchant} - HK$ ${amount.toFixed(2)}`);
         return;
     }
 
@@ -1786,7 +1791,7 @@ async function executeAINaturalInput() {
     renderCalendar();
     renderAgenda();
     input.value = "";
-    await HIG.alert("AI 排程完成", `已排入：【${targetDate}】${cleanTitle}`);
+    await HIG.alert("已儲存", `已成功排入行程：\n【${targetDate}】${cleanTitle}`);
 }
 
 function handleTopAddClick() {
@@ -1848,14 +1853,9 @@ function openEditSpecificItem(id) {
 
 function closeModal() { document.getElementById('eventModal').style.display = 'none'; }
 
-// 🎯 新增/修改行程儲存函式（增加儲存確認彈窗）
+// 🎯 新增/修改活動儲存核心：儲存後立即彈出「已儲存」對話框
 async function saveEvent() {
-    if (isGuest) {
-        await HIG.alert("權限不足", "訪客模式無法儲存行程，請先登入！");
-        openAddModal('LOGIN');
-        return;
-    }
-
+    if (isGuest) return;
     const title = document.getElementById('formEventTitle').value.trim();
     const date = document.getElementById('nativeEventDate').value;
     const time = document.getElementById('nativeEventTime').value || "20:00";
@@ -1865,7 +1865,7 @@ async function saveEvent() {
     const editKey = document.getElementById('editItemKey').value;
 
     if (!title || !date) {
-        await HIG.alert("提示", "請填寫活動名稱並確認日期！");
+        await HIG.alert("提示", "請填寫活動名稱與日期！");
         return;
     }
 
@@ -1886,10 +1886,10 @@ async function saveEvent() {
     updateAISummary();
     closeModal();
 
-    // 🎯 彈出已成功儲存提示框
+    // 💡 關鍵升級：儲存後立即彈出「已儲存」原生提示
     await HIG.alert(
-        editKey ? "行程已更新" : "行程已儲存",
-        `已成功記錄至家庭日曆！\n\n📌 活動：${title}\n📅 日期：${date} ${time}\n👤 負責人：${assignee}\n🔒 權限：${isPrivate ? '不公開 (僅自己可見)' : '全家公開'}`
+        editKey ? "已更新" : "已儲存", 
+        editKey ? `行程【${title}】已成功更新！` : `行程【${title}】已成功儲存至 ${date}！\n可見度：${isPrivate ? '🔒 不公開 (僅自己可見)' : '🌐 全家公開'}`
     );
 
     try {
