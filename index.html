@@ -2,15 +2,15 @@
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<!-- 修正 4：符合 Apple 無障礙標準，移除 user-scalable=no 與 maximum-scale=1.0 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#f2f2f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="description" content="麟李家庭智慧管理系統 - 結合 Dify AI 視覺辨識、絕對私人保密、手勢縮放、原生選取器與即時日曆同步">
+<meta name="description" content="麟李家庭智慧管理系統 - 結合 Dify AI 視覺辨識、絕對私人保密、原生選取器與即時日曆同步">
 <title>Family OS - 麟李家庭智慧管理系統</title>
 
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<!-- 修正 5：移除不存在的 manifest.json 與 icon 標籤，圖示改由 Xcode Assets.xcassets 統一提供 -->
 
 <style>
 :root {
@@ -38,8 +38,8 @@ body {
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
-    height: 100vh;
-    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -80,9 +80,8 @@ header {
     background: rgba(52, 199, 89, 0.12);
     color: var(--oasis-success);
 }
-.logout-btn {
+.account-action-btn {
     font-size: 12px;
-    color: var(--oasis-danger);
     background: none;
     border: none;
     font-weight: 600;
@@ -90,6 +89,8 @@ header {
     display: none;
     padding: 4px;
 }
+.logout-btn { color: var(--apple-text-secondary); }
+.delete-acc-btn { color: var(--oasis-danger); }
 
 /* ─── 主畫面佈局 ─── */
 .main-layout {
@@ -101,7 +102,7 @@ header {
     gap: 6px;
 }
 
-/* 🎯 自適應單排極簡工具列 */
+/* 🎯 工具列 */
 .adaptive-toolbar {
     display: flex;
     gap: 5px;
@@ -131,7 +132,7 @@ header {
 .btn-purple { background: #5856d6; }
 .btn-wa { background: #25d366; }
 
-/* 🔮 輕量極簡 AI 輸入列與家庭雷達條 */
+/* 🔮 排程列與狀態列 */
 .ai-compact-bar {
     background: #ffffff;
     border: 1px solid var(--apple-border);
@@ -336,7 +337,7 @@ header {
     border-left: 2px solid #f59e0b;
 }
 
-/* 📋 下層：焦點日程與總開支看板 */
+/* 📋 下層：焦點日程 */
 .agenda-card {
     background: var(--apple-card);
     border-radius: 14px;
@@ -570,6 +571,26 @@ header {
 }
 .submit-btn-block:active { opacity: 0.85; }
 
+/* 修正 2：Sign in with Apple 官方樣式按鈕 */
+.apple-signin-btn {
+    width: 100%;
+    padding: 11px;
+    background: #000000;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.apple-signin-btn:active { background: #1c1c1e; }
+.apple-logo-icon { width: 16px; height: 16px; fill: currentColor; }
+
 /* ─── HIG 對話框 ─── */
 .hig-dialog-overlay {
     display: none;
@@ -613,7 +634,7 @@ header {
   import { 
     initializeAuth, browserLocalPersistence, inMemoryPersistence, getAuth, 
     signInWithEmailAndPassword, signOut, deleteUser, reauthenticateWithCredential, 
-    EmailAuthProvider, onAuthStateChanged 
+    EmailAuthProvider, OAuthProvider, signInWithPopup, onAuthStateChanged 
   } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
   import { getDatabase, ref, onValue, set, push, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -629,7 +650,8 @@ header {
 
   const app = initializeApp(firebaseConfig);
 
-  if (location.hostname === "localhost" || location.protocol === "capacitor:") {
+  // 修正 1：徹底移除 capacitor: 協議的 debug token，僅限 localhost 本地瀏覽器開發使用
+  if (location.hostname === "localhost") {
       self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
   }
 
@@ -655,6 +677,8 @@ header {
   window.fbDeleteUser = deleteUser;
   window.fbReauth = reauthenticateWithCredential;
   window.fbEmailAuthProvider = EmailAuthProvider;
+  window.fbOAuthProvider = OAuthProvider;
+  window.fbSignInWithPopup = signInWithPopup;
   window.fbDb = db;
   window.fbRef = ref;
   window.fbOnValue = onValue;
@@ -663,25 +687,11 @@ header {
   window.fbUpdate = update;
   window.fbRemove = remove;
 
-  window.loadSystemSecrets = function() {
-      if (!window.fbDb || !window.fbRef || !window.fbOnValue) return;
-      const secretRef = window.fbRef(window.fbDb, "system_secrets/dify_api_key");
-      window.fbOnValue(secretRef, (snapshot) => {
-          const val = snapshot.val();
-          if (val) {
-              const cleanKey = String(val).replace(/^Bearer\s+/i, '').replace(/["']/g, '').trim();
-              window.cachedDifyApiKey = cleanKey;
-              console.log("✓ Dify API Key 已從 Firebase 秘密庫安全載入");
-          }
-      }, (err) => {
-          console.warn("讀取 system_secrets 狀態:", err.code);
-      });
-  };
-
+  // 監聽 Firebase 登入身分
   onAuthStateChanged(auth, async (user) => {
       if (user) {
           const email = (user.email || "").toLowerCase();
-          let memberName = "鐵";
+          let memberName = user.displayName || "鐵";
           if (email.includes("daddy")) memberName = "Daddy";
           else if (email.includes("mummy")) memberName = "Mummy";
           else if (email.includes("jolie")) memberName = "Jolie";
@@ -690,10 +700,8 @@ header {
 
           if (window.applyLoginState) window.applyLoginState(memberName);
           window.startFirebaseSync();
-          window.loadSystemSecrets();
       } else {
           if (window.renderGuestState) window.renderGuestState();
-          window.cachedDifyApiKey = "";
       }
   });
 
@@ -743,13 +751,14 @@ header {
     <div class="header-title">🏠 Family OS</div>
     <div class="header-status-group">
         <button id="authBadgeBtn" class="auth-badge" onclick="handleAuthBadgeClick()">🔒 訪客模式</button>
-        <button id="logoutBtn" class="logout-btn" onclick="logoutAccount()">登出</button>
+        <button id="logoutBtn" class="account-action-btn logout-btn" onclick="logoutAccount()">登出</button>
+        <!-- 修正 3：App Store Guideline 5.1.1(v) 要求必須提供的刪除帳號入口 -->
+        <button id="deleteAccountBtn" class="account-action-btn delete-acc-btn" onclick="requestAccountDeletion()">註銷</button>
     </div>
 </header>
 
 <div class="main-layout">
 
-    <!-- 🎯 自適應單排極簡工具列 -->
     <div class="adaptive-toolbar">
         <button class="btn-green" onclick="handleTopAddClick()">➕ 活動</button>
         <button class="btn-orange" onclick="handleTopExpenseClick()">🧾 記帳</button>
@@ -758,19 +767,16 @@ header {
         <button class="btn-wa" onclick="shareWhatsApp()">💬 WA</button>
     </div>
 
-    <!-- 🔮 自然語言排程列 -->
     <div class="ai-compact-bar">
         <input type="text" id="aiQuickInput" class="ai-nlp-input" placeholder="✨ 輸入日程或開支（例如：日常開支百佳280蚊、聽晚仁安覆診）...">
         <button class="ai-nlp-btn" onclick="executeAINaturalInput()">AI 排程</button>
     </div>
 
-    <!-- 📡 智能家庭雷達狀態列 -->
     <div class="ai-radar-bar">
         <div id="aiStrainText" class="ai-strain-text">✨ 正在整理今日家庭步調...</div>
         <div id="aiPendingBadge" class="ai-pending-badge">0 項活動</div>
     </div>
 
-    <!-- 🗓️ 上層：月曆卡片 -->
     <div class="calendar-card" id="calendarCardNode">
         <div class="calendar-nav-bar">
             <button class="nav-arrow-btn" onclick="changeMonthOffset(-1)">⬅ 上一月</button>
@@ -792,7 +798,6 @@ header {
         <div id="daysGridNode" class="days-grid"></div>
     </div>
 
-    <!-- 📋 下層：焦點日程與總開支看板 -->
     <div class="agenda-card">
         <div class="agenda-header">
             <div class="agenda-header-titles">
@@ -808,16 +813,16 @@ header {
 
 </div>
 
-<!-- ➕ 活動輸入與修改彈窗 -->
+<!-- ➕ 活動輸入與登入彈窗 -->
 <div id="eventModal" class="popup-overlay" onclick="if(event.target===this)closeModal()">
     <div class="popup-card">
         <button class="popup-close-x" onclick="closeModal()">&times;</button>
         <h3 id="modalFormTitle" style="margin:0 0 10px; font-size:17px;">➕ 新增家庭行程</h3>
         <input type="hidden" id="editItemKey" value="">
 
-        <!-- 方案 A：選單文字標註與 Firebase 歸屬完全一致 -->
         <div id="loginGateSection" style="display:none; background:rgba(0,0,0,0.02); padding:12px; border-radius:10px; margin-bottom:12px;">
             <p style="margin:0 0 8px; font-size:13px; color:var(--apple-text-secondary); font-weight:600;">🔒 請先驗證家庭成員身分：</p>
+            
             <span class="form-label" style="margin-top:0;">選擇家庭成員帳戶：</span>
             <select id="loginSelectMember" class="form-input">
                 <option value="iron">👦 鐵 (iron)</option>
@@ -829,6 +834,20 @@ header {
             </select>
             <input type="password" id="loginPasswordInput" class="form-input" placeholder="輸入成員專屬密碼...">
             <button class="submit-btn-block" onclick="submitLogin()">登入驗證身分</button>
+
+            <!-- 修正 2：符合 Guideline 4.8 的 Sign in with Apple 按鈕 -->
+            <div style="display:flex; align-items:center; margin:10px 0 2px;">
+                <div style="flex:1; height:1px; background:var(--apple-border);"></div>
+                <span style="font-size:11px; color:var(--apple-text-secondary); padding:0 8px;">或</span>
+                <div style="flex:1; height:1px; background:var(--apple-border);"></div>
+            </div>
+            
+            <button class="apple-signin-btn" onclick="signInWithApple()">
+                <svg class="apple-logo-icon" viewBox="0 0 170 170">
+                    <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.04-7.58-7.71-11.65-14.01-6.19-9.56-11.06-20.73-14.6-33.51-3.55-12.78-5.32-24.31-5.32-34.6 0-14.78 3.79-26.68 11.37-35.7 7.58-9.02 17.06-13.62 28.44-13.79 4.35 0 9.28 1.13 14.79 3.39 5.51 2.26 9.4 3.44 11.66 3.54 2.04 0 6.13-1.25 12.28-3.76 6.15-2.51 11.45-3.62 15.91-3.33 12.3.67 21.9 5.09 28.79 13.26-10.92 6.64-16.27 15.69-16.06 27.15.21 9.02 3.65 16.59 10.32 22.7 6.67 6.11 14.58 9.54 23.73 10.28-2.61 7.74-5.83 15.69-9.66 23.86zM119.22 33.02c0-7.39 2.66-14.46 7.98-21.21 5.32-6.75 11.96-11.02 19.92-12.81.42 2.12.63 4.13.63 6.03 0 7.4-2.73 14.54-8.19 21.42-5.46 6.88-12.18 11.05-20.16 12.51-.07-1.9-.18-3.88-.18-5.94z"/>
+                </svg>
+                透過 Apple 登入
+            </button>
         </div>
 
         <div id="eventFormFields">
@@ -886,12 +905,12 @@ header {
         <label for="receiptFileInput" id="receiptUploadLabelBox" class="receipt-upload-label">
             <div style="font-size:26px;">📸</div>
             <div style="font-size:13px; font-weight:700; color:#b45309; margin-top:4px;">點擊影相 / 上傳收據</div>
-            <div style="font-size:11px; color:var(--apple-text-secondary); margin-top:2px;">Dify AI 精準提取實付總額、商戶名及明細</div>
+            <div style="font-size:11px; color:var(--apple-text-secondary); margin-top:2px;">AI 雲端安全提取實付總額、商戶名及明細</div>
             <img id="receiptPreviewImg" class="receipt-preview-img" alt="收據預覽">
         </label>
 
         <div id="receiptOcrStatus" style="font-size:12px; color:var(--oasis-ai-purple); font-weight:bold; display:none; margin:6px 0; text-align:center;">
-            ✨ Dify AI 正在真實辨識收據圖像...
+            ✨ 安全上傳中...
         </div>
 
         <label class="form-label">商戶 / 店舖名稱：</label>
@@ -1055,7 +1074,7 @@ const HIG = {
             el.style.display = 'flex';
         });
     },
-    prompt(title, msg, defaultVal = '') {
+    prompt(title, msg, defaultVal = '', isPassword = false) {
         return new Promise(resolve => {
             const el = document.getElementById('higDialog');
             document.getElementById('higDialogTitle').innerText = title;
@@ -1063,7 +1082,8 @@ const HIG = {
             const input = document.getElementById('higDialogInput');
             input.style.display = 'block';
             input.value = defaultVal;
-            input.type = 'text';
+            input.type = isPassword ? 'password' : 'text';
+            input.placeholder = isPassword ? '請輸入密碼以驗證...' : '';
             document.getElementById('higDialogActions').innerHTML = `
                 <button class="hig-dialog-btn cancel">取消</button>
                 <button class="hig-dialog-btn">確定</button>
@@ -1174,6 +1194,8 @@ function applyLoginState(name) {
     }
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) logoutBtn.style.display = 'inline';
+    const deleteBtn = document.getElementById('deleteAccountBtn');
+    if (deleteBtn) deleteBtn.style.display = 'inline';
     renderAgenda();
     renderCalendar();
 }
@@ -1190,6 +1212,8 @@ function renderGuestState() {
     }
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) logoutBtn.style.display = 'none';
+    const deleteBtn = document.getElementById('deleteAccountBtn');
+    if (deleteBtn) deleteBtn.style.display = 'none';
     renderAgenda();
     renderCalendar();
 }
@@ -1391,67 +1415,61 @@ function updateAISummary() {
 }
 window.updateAISummary = updateAISummary;
 
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+            const base64 = reader.result.split(',')[1];
+            resolve(base64);
+        };
+        reader.onerror = error => reject(error);
+    });
+}
+
 async function recognizeReceiptWithDify(file) {
-    const apiKey = window.cachedDifyApiKey || "";
     const statusEl = document.getElementById('receiptOcrStatus');
     if (statusEl) statusEl.style.display = "block";
 
-    if (!apiKey) {
-        if (statusEl) statusEl.innerText = "⚠️ 尚未讀取到 Dify API Key，請確保已登入成員帳戶";
-        await HIG.alert("未檢測到授權", "請先以家庭成員帳戶登入，系統會自動從 Firebase 安全同步 Dify 辨識金鑰！");
+    if (!window.fbAuth || !window.fbAuth.currentUser) {
+        if (statusEl) statusEl.innerText = "⚠️ 請先登入家庭成員身分";
+        await HIG.alert("需要登入", "請先以家庭成員帳戶登入後再上傳收據！");
         return null;
     }
 
-    if (statusEl) statusEl.innerText = "✨ 正在上傳收據圖像至 Dify 視覺模型...";
+    if (statusEl) statusEl.innerText = "✨ 正在安全傳送至後端雲端模型處理...";
 
     try {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('user', currentUser || 'family_user');
+        const idToken = await window.fbAuth.currentUser.getIdToken();
+        const base64Data = await fileToBase64(file);
 
-        const uploadRes = await fetch('https://api.dify.ai/v1/files/upload', {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${apiKey}` },
-            body: formData
-        });
+        const PROXY_URL = "https://asia-east1-familycalender-a62ae.cloudfunctions.net/analyzeReceipt";
 
-        if (!uploadRes.ok) throw new Error(`Dify 文件上傳失敗 (HTTP ${uploadRes.status})`);
-        const uploadData = await uploadRes.json();
-        const fileId = uploadData.id;
-
-        if (statusEl) statusEl.innerText = "✨ Dify 正在解析全單商戶名、實付總額與消費項目...";
-
-        const workflowRes = await fetch('https://api.dify.ai/v1/workflows/run', {
-            method: 'POST',
+        const response = await fetch(PROXY_URL, {
+            method: "POST",
             headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${idToken}`
             },
             body: JSON.stringify({
-                inputs: {
-                    receipt_image: {
-                        type: 'image',
-                        transfer_method: 'local_file',
-                        upload_file_id: fileId
-                    },
-                    title: "",
-                    assignee: currentUser || "全員",
-                    date: selectedDateStr
-                },
-                response_mode: 'blocking',
-                user: currentUser || 'family_user'
+                imageBase64: base64Data,
+                mimeType: file.type || "image/jpeg",
+                filename: file.name,
+                selectedDateStr: selectedDateStr
             })
         });
 
-        if (!workflowRes.ok) throw new Error(`Dify 工作流調用失敗 (HTTP ${workflowRes.status})`);
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.error || `HTTP ${response.status}`);
+        }
 
-        const result = await workflowRes.json();
-        if (result.data && result.data.outputs) return result.data.outputs;
-        if (result.outputs) return result.outputs;
-        return null;
+        const data = await response.json();
+        return data.outputs;
+
     } catch (err) {
-        console.warn("Dify 辨識失敗:", err);
-        if (statusEl) statusEl.innerText = "⚠️ Dify 連線未成功，已切換為手動確認";
+        console.warn("收據辨識代理錯誤:", err);
+        if (statusEl) statusEl.innerText = "⚠️ 後端辨識失敗，已切換為手動輸入";
         return null;
     }
 }
@@ -1527,7 +1545,7 @@ async function handleReceiptFileChange(input) {
     const statusEl = document.getElementById('receiptOcrStatus');
 
     if (!difyRaw) {
-        if (statusEl) statusEl.innerText = "⚠️ 未能取得 Dify 回傳資料，請手動輸入";
+        if (statusEl) statusEl.innerText = "⚠️ 未能取得回傳資料，請手動輸入";
         return;
     }
 
@@ -1553,9 +1571,9 @@ async function handleReceiptFileChange(input) {
     if (category) document.getElementById('expenseCategorySelect').value = category;
 
     if (merchant || amount > 0) {
-        if (statusEl) statusEl.innerText = `✓ Dify 辨識完成！已自動提取：${merchant} (HK$ ${amount})`;
+        if (statusEl) statusEl.innerText = `✓ 辨識完成！已自動提取：${merchant} (HK$ ${amount})`;
     } else {
-        if (statusEl) statusEl.innerText = "⚠️ 已連線但未讀取到商戶或金額";
+        if (statusEl) statusEl.innerText = "⚠️ 辨識完成但未提取到商戶或金額";
     }
 }
 
@@ -1977,7 +1995,6 @@ function handleAuthBadgeClick() {
     if (isGuest) openAddModal('LOGIN');
 }
 
-/* 方案 A：leisel 對應 熹、karis 對應 蓓 */
 async function submitLogin() {
     const member = document.getElementById('loginSelectMember').value;
     const pwd = document.getElementById('loginPasswordInput').value.trim();
@@ -2005,11 +2022,70 @@ async function submitLogin() {
     }
 }
 
+// 修正 2：Sign in with Apple 登入邏輯（符合 Guideline 4.8）
+async function signInWithApple() {
+    try {
+        const provider = new window.fbOAuthProvider('apple.com');
+        provider.addScope('email');
+        provider.addScope('name');
+        
+        const result = await window.fbSignInWithPopup(window.fbAuth, provider);
+        const user = result.user;
+        const displayName = user.displayName || user.email?.split('@')[0] || "成員";
+        applyLoginState(displayName);
+        closeModal();
+        await HIG.alert("Apple 登入成功", `歡迎回來，${displayName}！`);
+    } catch (error) {
+        console.warn("Apple 登入中斷或取消:", error);
+        if (error.code !== "auth/popup-closed-by-user") {
+            await HIG.alert("登入未完成", "可隨時改用上方家庭成員帳號登入。");
+        }
+    }
+}
+
 async function logoutAccount() {
     const ok = await HIG.confirm("退出登入", "確定切換為訪客模式？");
     if (ok) {
         renderGuestState();
         if (window.fbSignOut && window.fbAuth) await window.fbSignOut(window.fbAuth);
+    }
+}
+
+// 修正 3：帳號刪除流程（符合 Guideline 5.1.1(v)）
+async function requestAccountDeletion() {
+    if (isGuest || !window.fbAuth.currentUser) return;
+
+    const ok = await HIG.confirm(
+        "永久註銷帳號", 
+        "根據隱私條款，此操作將立即註銷此成員身分，並永久清除伺服器驗證憑據。此操作無法復原，確認繼續？"
+    );
+    if (!ok) return;
+
+    const user = window.fbAuth.currentUser;
+    const userEmail = user.email;
+
+    try {
+        await window.fbDeleteUser(user);
+        renderGuestState();
+        await HIG.alert("帳號已成功刪除", "您的帳號與安全憑證已徹底移除。");
+    } catch (err) {
+        // 需重新驗證時要求輸入密碼
+        if (err.code === "auth/requires-recent-login") {
+            const reauthPwd = await HIG.prompt("安全驗證", "為保障帳號安全，請輸入當前密碼以授權註銷：", "", true);
+            if (!reauthPwd) return;
+
+            try {
+                const cred = window.fbEmailAuthProvider.credential(userEmail, reauthPwd);
+                await window.fbReauth(user, cred);
+                await window.fbDeleteUser(user);
+                renderGuestState();
+                await HIG.alert("帳號已成功刪除", "身分憑據已徹底移除。");
+            } catch (authErr) {
+                await HIG.alert("驗證失敗", "密碼錯誤，註銷已取消。");
+            }
+        } else {
+            await HIG.alert("註銷失敗", err.message || "發生未知錯誤，請稍後重試。");
+        }
     }
 }
 
