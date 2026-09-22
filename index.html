@@ -724,7 +724,7 @@ header {
   window.fbRemove = remove;
   window.fbGet = get;
 
-  // 🚨 Medium 1 修復配套：iOS Safari Redirect 回調後引導解鎖/初始化 E2EE 金鑰
+  // iOS Safari Redirect 回調後引導解鎖/初始化 E2EE 金鑰
   getRedirectResult(auth).then(async (result) => {
       if (result && result.user) {
           const user = result.user;
@@ -736,7 +736,7 @@ header {
       console.warn("Apple Redirect 認證未完成或已取消:", err);
   });
 
-  // 🚨 High 2 修復：離線登入自癒與佇列防重
+  // 🚨 Low 2 核心修復：特判 PERMISSION_DENIED 與網絡離線錯誤
   window.ensureMemberMapping = async function(uid, memberName) {
       if (!window.fbDb || !window.fbRef || !window.fbGet || !window.fbSet || !uid || !memberName) return;
 
@@ -765,8 +765,15 @@ header {
               });
           }
       } catch (e) {
-          console.warn("Member mapping 雲端比對失敗，轉入離線佇列待命:", e);
-          if (window.OfflineQueue) {
+          const isPermissionDenied = e.code === 'PERMISSION_DENIED' || (e.message && e.message.includes('Permission denied'));
+          const isNetworkError = !navigator.onLine || 
+                                 e.code === 'auth/network-request-failed' || 
+                                 (e.message && (e.message.includes('network') || e.message.includes('offline') || e.message.includes('timeout') || e.message.includes('disconnected')));
+
+          if (isPermissionDenied) {
+              console.error("Member mapping 權限拒絕（永久失敗，請檢查 Security Rules）:", e);
+          } else if (isNetworkError && window.OfflineQueue) {
+              console.warn("Member mapping 遇網絡異常，轉入離線佇列待命重試:", e);
               const q = window.OfflineQueue.getQueue();
               const exists = q.some(item => item.path === `members/${uid}`);
               if (!exists) {
@@ -776,6 +783,8 @@ header {
                       data: { name: memberName, updatedAt: Date.now() }
                   });
               }
+          } else {
+              console.warn("Member mapping 發生未預期錯誤:", e);
           }
       }
   };
@@ -1020,7 +1029,7 @@ header {
             <div id="agendaActionsNode" class="agenda-actions"></div>
         </div>
         <div id="agendaListNode" class="agenda-list">
-            <div class="empty-agenda-view">此日暫無排定活動</div>
+            <div class="empty-agenda-view">此日暫使排定活動</div>
         </div>
     </div>
 
@@ -1178,13 +1187,12 @@ header {
     </div>
 </div>
 
-<!-- ⚙️ 管理面板（包含 Low 3 自訂預算入口） -->
+<!-- ⚙️ 管理面板 -->
 <div id="manageModal" class="popup-overlay" onclick="if(event.target===this)closeManageModal()">
     <div class="popup-card">
         <button class="popup-close-x" onclick="closeManageModal()">&times;</button>
         <h3 style="margin:0 0 10px; font-size:17px;">⚙️ 家庭設定與行程管理</h3>
         
-        <!-- 💰 Low 3 修復：動態預算設定區塊 -->
         <div style="background:rgba(0,113,227,0.06); border:1px solid rgba(0,113,227,0.18); border-radius:12px; padding:10px 12px; margin-bottom:14px;">
             <div style="font-size:12.5px; font-weight:700; color:var(--oasis-primary); margin-bottom:4px;">💰 每月家庭開支預算設定 (HKD)</div>
             <div style="display:flex; gap:8px; align-items:center;">
@@ -1498,9 +1506,19 @@ const E2EE = {
 };
 window.E2EE = E2EE;
 
-// ─── 🚨 Medium 1 核心解鎖/初始化函數 ───
+// ─── 🚨 Low 1 核心修復：防重 Mutex 鎖與已解鎖記憶體檢查 ───
+let _unlockPromptActive = false;
+
 async function promptAndUnlockMemberKey(displayName) {
     if (!window.MemberE2EE || !displayName) return;
+
+    if (MemberE2EE.activePrivateKey && MemberE2EE.activeMember === displayName) {
+        return;
+    }
+
+    if (_unlockPromptActive) return;
+    _unlockPromptActive = true;
+
     try {
         const record = await KeyVaultDB.getKey(displayName);
         const isNewKey = !record;
@@ -1522,11 +1540,13 @@ async function promptAndUnlockMemberKey(displayName) {
         }
     } catch (err) {
         console.error("promptAndUnlockMemberKey 錯誤:", err);
+    } finally {
+        setTimeout(() => { _unlockPromptActive = false; }, 2500);
     }
 }
 window.promptAndUnlockMemberKey = promptAndUnlockMemberKey;
 
-// ─── 🚨 High 1 修復：遵循嚴格 Commit-then-Evict 順序的調和函數 ───
+// ─── 本地 Temp ID 轉換 Real ID 原子調和函數（Commit-then-Evict） ───
 function reconcileActivityId(tempId, realKey) {
     if (!tempId || !realKey || tempId === realKey) return;
 
@@ -1563,7 +1583,7 @@ function reconcileActivityId(tempId, realKey) {
     }
 }
 
-// ─── 🚨 Medium 2 修復：離線事務佇列（排除毒藥丸死迴圈，超次轉入日誌） ───
+// ─── 🚨 Low 3 核心修復：Auth 錯誤主動強制刷新 Token，避免誤判超次丟棄 ───
 const OfflineQueue = {
     getQueue() { return JSON.parse(localStorage.getItem('family_offline_queue') || "[]"); },
     push(action) {
@@ -1605,6 +1625,23 @@ const OfflineQueue = {
                 }
             } catch(e) {
                 console.warn(`離線佇列同步失敗 [${item.type}] ${item.path || ''}:`, e);
+
+                // 🚨 Low 3：若遇 Auth Token 過期或認證網絡失敗，主動強制換發 Token
+                const isAuthTokenError = e.code === 'auth/network-request-failed' || 
+                                         e.code === 'auth/user-token-expired' || 
+                                         e.code === 'auth/id-token-expired' || 
+                                         (e.message && e.message.toLowerCase().includes('token'));
+
+                if (isAuthTokenError && window.fbAuth?.currentUser) {
+                    try {
+                        await window.fbAuth.currentUser.getIdToken(true);
+                        remaining.push(item);
+                        continue;
+                    } catch (refreshErr) {
+                        console.warn("Auth token 強制換發失敗:", refreshErr);
+                    }
+                }
+
                 const isPermissionError = e.code === 'PERMISSION_DENIED' || (e.message && e.message.includes('Permission denied'));
                 const retryCount = (item.retryCount || 0) + 1;
 
@@ -1777,7 +1814,7 @@ function handleMerchantInputBlur(val) {
     if (detected !== "日常開支" && catSelect) catSelect.value = detected;
 }
 
-// ─── 🚨 Low 3 修復：自訂家庭預算管理 ───
+// ─── 動態家庭預算管理 ───
 let MONTHLY_BUDGET = parseFloat(localStorage.getItem('family_monthly_budget') || "15000");
 
 async function saveMonthlyBudgetSetting() {
@@ -3056,7 +3093,6 @@ async function submitLogin() {
     }
 }
 
-// 🚨 Medium 1 核心修復：登入後自動引導解鎖 E2EE 金鑰
 async function signInWithApple() {
     LoadingHUD.show("Apple 登入中", "正在調用安全驗證...");
     try {
@@ -3115,7 +3151,6 @@ async function signInWithApple() {
     }
 }
 
-// 🚨 Medium 4 修復：登出時銷毀待刪緩存與計時器
 async function logoutAccount() {
     const ok = await HIG.confirm("退出登入", "確定切換為訪客模式？");
     if (ok) {
