@@ -667,7 +667,8 @@ header {
   import { 
     initializeAuth, browserLocalPersistence, inMemoryPersistence, getAuth, 
     signInWithEmailAndPassword, signOut, deleteUser, reauthenticateWithCredential, 
-    EmailAuthProvider, OAuthProvider, signInWithPopup, signInWithCredential, onAuthStateChanged 
+    EmailAuthProvider, OAuthProvider, signInWithPopup, signInWithCredential, 
+    signInWithRedirect, getRedirectResult, onAuthStateChanged 
   } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
   import { getDatabase, ref, onValue, set, push, update, remove, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -712,6 +713,8 @@ header {
   window.fbOAuthProvider = OAuthProvider;
   window.fbSignInWithPopup = signInWithPopup;
   window.fbSignInWithCredential = signInWithCredential;
+  window.fbSignInWithRedirect = signInWithRedirect;
+  window.fbGetRedirectResult = getRedirectResult;
   window.fbDb = db;
   window.fbRef = ref;
   window.fbOnValue = onValue;
@@ -721,8 +724,38 @@ header {
   window.fbRemove = remove;
   window.fbGet = get;
 
+  // 🚨 Medium 3 修復配套：頁面載入時捕獲 iOS Safari Redirect 登入結果
+  getRedirectResult(auth).then(async (result) => {
+      if (result && result.user) {
+          const user = result.user;
+          const displayName = user.displayName || user.email?.split('@')[0] || "鐵";
+          if (window.applyLoginState) await window.applyLoginState(displayName);
+      }
+  }).catch((err) => {
+      console.warn("Apple Redirect 認證未完成或已取消:", err);
+  });
+
+  // 🚨 High 2 核心修復：處理離線登入與防重進入 OfflineQueue
   window.ensureMemberMapping = async function(uid, memberName) {
-      if (!window.fbDb || !window.fbRef || !window.fbGet || !window.fbSet) return;
+      if (!window.fbDb || !window.fbRef || !window.fbGet || !window.fbSet || !uid || !memberName) return;
+
+      // 1. 若目前處於離線狀態，不等待網絡超時，直接防重推入離線佇列
+      if (!navigator.onLine) {
+          if (window.OfflineQueue) {
+              const q = window.OfflineQueue.getQueue();
+              const exists = q.some(item => item.path === `members/${uid}`);
+              if (!exists) {
+                  window.OfflineQueue.push({
+                      type: 'SET',
+                      path: `members/${uid}`,
+                      data: { name: memberName, updatedAt: Date.now() }
+                  });
+              }
+          }
+          return;
+      }
+
+      // 2. 在線狀態：嘗試向雲端校驗與寫入
       try {
           const memberRef = window.fbRef(window.fbDb, `members/${uid}`);
           const snap = await window.fbGet(memberRef);
@@ -733,7 +766,18 @@ header {
               });
           }
       } catch (e) {
-          console.warn("Member mapping 建立失敗:", e);
+          console.warn("Member mapping 雲端比對失敗，轉入離線佇列待命:", e);
+          if (window.OfflineQueue) {
+              const q = window.OfflineQueue.getQueue();
+              const exists = q.some(item => item.path === `members/${uid}`);
+              if (!exists) {
+                  window.OfflineQueue.push({
+                      type: 'SET',
+                      path: `members/${uid}`,
+                      data: { name: memberName, updatedAt: Date.now() }
+                  });
+              }
+          }
       }
   };
 
@@ -1444,36 +1488,43 @@ const E2EE = {
 };
 window.E2EE = E2EE;
 
-// ─── 本地 Temp ID 轉換 Real ID 原子調和函數 ───
+// ─── 🚨 High 1 核心修復：遵循嚴格 Commit-then-Evict 順序的調和函數 ───
 function reconcileActivityId(tempId, realKey) {
     if (!tempId || !realKey || tempId === realKey) return;
 
-    LocalPendingStore.removeByTempId(tempId);
+    try {
+        // 1. 先更新記憶體與本機快取視圖
+        window.activities = (window.activities || []).map(a => 
+            a.id === tempId ? { ...a, id: realKey } : a
+        );
+        localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
 
-    window.activities = (window.activities || []).map(a => 
-        a.id === tempId ? { ...a, id: realKey } : a
-    );
-    localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
-
-    if (window.OfflineQueue) {
-        const q = window.OfflineQueue.getQueue();
-        let changed = false;
-        q.forEach(item => {
-            if (item.tempId === tempId) {
-                item.type = 'UPDATE';
-                item.path = `family_calendar_activities/${realKey}`;
-                delete item.tempId;
-                changed = true;
+        // 2. 再重定向 OfflineQueue 內的未發送交易
+        if (window.OfflineQueue) {
+            const q = window.OfflineQueue.getQueue();
+            let changed = false;
+            q.forEach(item => {
+                if (item.tempId === tempId) {
+                    item.type = 'UPDATE';
+                    item.path = `family_calendar_activities/${realKey}`;
+                    delete item.tempId;
+                    changed = true;
+                }
+                if (item.path && item.path.includes(tempId)) {
+                    item.path = item.path.replace(tempId, realKey);
+                    changed = true;
+                }
+            });
+            if (changed) {
+                localStorage.setItem('family_offline_queue', JSON.stringify(q));
+                window.OfflineQueue.updatePill();
             }
-            if (item.path && item.path.includes(tempId)) {
-                item.path = item.path.replace(tempId, realKey);
-                changed = true;
-            }
-        });
-        if (changed) {
-            localStorage.setItem('family_offline_queue', JSON.stringify(q));
-            window.OfflineQueue.updatePill();
         }
+
+        // 3. 所有狀態安全寫入後，最後才將其從 LocalPendingStore 移除
+        LocalPendingStore.removeByTempId(tempId);
+    } catch (err) {
+        console.error("reconcileActivityId 執行中斷，保留 LocalPendingStore 以防資料丟失:", err);
     }
 }
 
@@ -1512,6 +1563,8 @@ const OfflineQueue = {
                     reconcileActivityId(item.tempId, newRef.key);
                 } else if (item.type === 'UPDATE') {
                     await window.fbUpdate(window.fbRef(window.fbDb, item.path), item.data);
+                } else if (item.type === 'SET') {
+                    await window.fbSet(window.fbRef(window.fbDb, item.path), item.data);
                 } else if (item.type === 'REMOVE') {
                     await window.fbRemove(window.fbRef(window.fbDb, item.path));
                 }
@@ -1608,7 +1661,6 @@ function showUndoToast(title, itemSnapshot, onCommitDelete) {
     }, 6000);
 }
 
-// ─── 🚨 Bug B 核心修復：嚴格防禦重複插入（Exists Check） ───
 function triggerUndoAction() {
     if (undoTimer) {
         clearTimeout(undoTimer);
@@ -1629,7 +1681,6 @@ function triggerUndoAction() {
             LocalPendingStore.add(pendingDeleteItemSnapshot);
         }
 
-        // 🚨 檢查是否已存在於活動列表中，杜絕重複疊加
         const exists = (window.activities || []).some(a => a && a.id === id);
         if (!exists) {
             window.activities.unshift(pendingDeleteItemSnapshot);
@@ -2702,7 +2753,7 @@ function renderCalendar() {
                 if (act.isExpense) return `<div class="calendar-expense-chip" title="${safeTitle}">💰 $${act.amount}${safeTitle}</div>`;
                 const timePart = (typeof act.time === 'string') ? act.time.split(' ')[0] : '';
                 const theme = getMemberTheme(act.assignee);
-                return `<div class="calendar-event-chip" style="background:${theme.bg}; color:${theme.color}; border-left: 2px solid ${theme.border};" title="${safeTitle}">${timePart}${safeTitle}</div>`;
+                return `<div class="calendar-event-chip" style="background:${theme.bg}; color:${theme.color}; border-left: 2px solid ${theme.border};" title="${safeTitle}">${timePart} ${safeTitle}</div>`;
             }).join('')}${dayActs.length > 3 ? `<div style="font-size:7.5px; color:var(--oasis-primary); font-weight:bold;">+${dayActs.length - 3}</div>` : ''}</div>`;
         }
 
@@ -2938,12 +2989,14 @@ async function submitLogin() {
     }
 }
 
+// 🚨 Medium 3 核心修復：原生外掛 -> iOS Safari Redirect -> 桌面 Popup 三重適配
 async function signInWithApple() {
-    LoadingHUD.show("Apple 登入中", "正在調用 iOS 原生安全驗證...");
+    LoadingHUD.show("Apple 登入中", "正在調用安全驗證...");
     try {
         const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
         const AppleSignInPlugin = window.Capacitor?.Plugins?.SignInWithApple;
 
+        // 1. iOS 原生 App 殼：直接調用原生 ASAuthorizationController
         if (isNative && AppleSignInPlugin) {
             const result = await AppleSignInPlugin.authorize({
                 clientId: 'com.lohascare.familycalendar',
@@ -2968,17 +3021,27 @@ async function signInWithApple() {
                 return;
             }
         }
-
-        const provider = new window.fbOAuthProvider('apple.com');
-        provider.addScope('email');
-        provider.addScope('name');
-        const result = await window.fbSignInWithPopup(window.fbAuth, provider);
-        const user = result.user;
-        const displayName = user.displayName || user.email?.split('@')[0] || "鐵";
-        LoadingHUD.hide();
-        await applyLoginState(displayName);
-        closeModal();
-        await HIG.alert("Apple 登入成功", `歡迎回來，${displayName}！`);
+        // 2. iOS 瀏覽器 / PWA (非原生殼)：使用 Redirect 避開 Popup 攔截
+        else if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !isNative) {
+            const provider = new window.fbOAuthProvider('apple.com');
+            provider.addScope('email');
+            provider.addScope('name');
+            await window.fbSignInWithRedirect(window.fbAuth, provider);
+            return;
+        }
+        // 3. Desktop / Android 瀏覽器：走標準 Popup
+        else {
+            const provider = new window.fbOAuthProvider('apple.com');
+            provider.addScope('email');
+            provider.addScope('name');
+            const result = await window.fbSignInWithPopup(window.fbAuth, provider);
+            const user = result.user;
+            const displayName = user.displayName || user.email?.split('@')[0] || "鐵";
+            LoadingHUD.hide();
+            await applyLoginState(displayName);
+            closeModal();
+            await HIG.alert("Apple 登入成功", `歡迎回來，${displayName}！`);
+        }
     } catch (error) {
         LoadingHUD.hide();
         console.warn("Apple 登入未完成或取消:", error);
@@ -2988,9 +3051,24 @@ async function signInWithApple() {
     }
 }
 
+// 🚨 Medium 4 核心修復：登出時銷毀 Undo 操作並清空 pendingDeletedIds
 async function logoutAccount() {
     const ok = await HIG.confirm("退出登入", "確定切換為訪客模式？");
     if (ok) {
+        // 如果有進行中的待定刪除操作，立即 commit，避免孤兒行程
+        if (pendingDeleteAction) {
+            try { pendingDeleteAction(); } catch(e){}
+            pendingDeleteAction = null;
+        }
+        if (undoTimer) { clearTimeout(undoTimer); undoTimer = null; }
+        if (undoCountdownInterval) { clearInterval(undoCountdownInterval); undoCountdownInterval = null; }
+        const toast = document.getElementById('undoToastNode');
+        if (toast) toast.classList.remove('show');
+        
+        // 🚨 徹底清空 Set 與快照，防止污染下一個登入的家庭成員
+        if (window.pendingDeletedIds) window.pendingDeletedIds.clear();
+        pendingDeleteItemSnapshot = null;
+
         MemberE2EE.activePrivateKey = null;
         MemberE2EE.activeMember = null;
         renderGuestState();
@@ -3052,6 +3130,7 @@ async function requestAccountDeletion() {
         } catch (e) {}
 
         LocalPendingStore.save([]);
+        if (window.pendingDeletedIds) window.pendingDeletedIds.clear();
         window.activities = window.activities.filter(a => a.assignee !== memberToDelete && a.owner !== memberToDelete);
         localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
 
