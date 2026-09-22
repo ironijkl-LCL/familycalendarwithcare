@@ -532,7 +532,7 @@ header {
 .hig-hud-title { font-size: 14px; font-weight: 700; color: var(--apple-text); margin: 0; }
 .hig-hud-subtitle { font-size: 11.5px; color: var(--apple-text-secondary); margin: 0; }
 
-/* ─── 6 秒復原 Snack Toast ─── */
+/* ─── 6 秒撤銷 Snack Toast（直觀設計） ─── */
 .undo-toast-container {
     position: fixed;
     bottom: max(20px, env(safe-area-inset-bottom));
@@ -540,7 +540,7 @@ header {
     transform: translateX(-50%) translateY(100px);
     background: #1c1c1e;
     color: #ffffff;
-    padding: 10px 16px;
+    padding: 10px 18px;
     border-radius: 24px;
     display: flex;
     align-items: center;
@@ -550,6 +550,8 @@ header {
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     font-size: 13px;
     font-weight: 600;
+    max-width: 90%;
+    box-sizing: border-box;
 }
 .undo-toast-container.show { transform: translateX(-50%) translateY(0); }
 .undo-btn-pill {
@@ -561,6 +563,7 @@ header {
     font-weight: 700;
     font-size: 12px;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 /* ─── 彈出視窗樣式 ─── */
@@ -737,7 +740,7 @@ header {
       }
   });
 
-  // 實時同步資料庫（帶離線暫存保護與全負載解密）
+  // 實時同步資料庫（帶 pendingDeletedIds 隔離與零知識解密）
   window.startFirebaseSync = function() {
       if (!window.fbDb || !window.fbRef || !window.fbOnValue) return;
       const actRef = window.fbRef(window.fbDb, "family_calendar_activities");
@@ -746,11 +749,14 @@ header {
           const cloudList = [];
           if (data) {
               for (let key in data) {
+                  // 🚨 核心修復：若該項正在「倒數刪除中」，絕對不被雲端快照抓回來！
+                  if (window.pendingDeletedIds && window.pendingDeletedIds.has(key)) continue;
+
                   const item = data[key];
                   if (!item) continue;
 
                   if (item.isPrivate) {
-                      if (!currentUser || item.owner !== currentUser) continue;
+                      if (!currentUser || (item.owner !== currentUser && item.assignee !== currentUser)) continue;
 
                       try {
                           let decryptedJsonStr = "";
@@ -800,7 +806,7 @@ header {
               }
           }
 
-          // 🚨 漏洞 5 核心保護：保留離線隊列中尚未完成傳輸的 tempId 活動，避免被快照抹除
+          // 保持離線建立隊列項
           const offlineQueue = window.OfflineQueue ? window.OfflineQueue.getQueue() : [];
           const pendingTempIds = new Set(offlineQueue.filter(q => q.tempId).map(q => q.tempId));
           const pendingLocalItems = (window.activities || []).filter(a => pendingTempIds.has(a.id));
@@ -880,10 +886,10 @@ header {
     </div>
 </div>
 
-<!-- 6 秒復原 Snack Toast -->
+<!-- 6 秒撤銷 Snack Toast（直觀說明） -->
 <div id="undoToastNode" class="undo-toast-container">
     <span id="undoToastMsg">已刪除項目</span>
-    <button class="undo-btn-pill" onclick="triggerUndoAction()">↩️ 復原 (<span id="undoCountdownSec">6</span>s)</button>
+    <button class="undo-btn-pill" onclick="triggerUndoAction()">↩️ 點此撤銷 (<span id="undoCountdownSec">6</span>s)</button>
 </div>
 
 <header>
@@ -1399,14 +1405,14 @@ const E2EE = {
 };
 window.E2EE = E2EE;
 
-// ─── 🚨 漏洞 5 核心修復：本地 Temp ID 轉換 Real ID 原子調和函數 ───
+// ─── 本地 Temp ID 轉換 Real ID 原子調和函數 ───
 function reconcileActivityId(tempId, realKey) {
     if (!tempId || !realKey || tempId === realKey) return;
     window.activities = (window.activities || []).map(a => a.id === tempId ? { ...a, id: realKey } : a);
     localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
 }
 
-// ─── 離線事務佇列 (Offline Queue 升級支援 CREATE 調和) ───
+// ─── 離線事務佇列 ───
 const OfflineQueue = {
     getQueue() { return JSON.parse(localStorage.getItem('family_offline_queue') || "[]"); },
     push(action) {
@@ -1475,20 +1481,24 @@ const LoadingHUD = {
     }
 };
 
-// ─── 6 秒撤銷 Toast ───
+// ─── 6 秒撤銷 Toast（徹底隔離快照，防止彈回） ───
+window.pendingDeletedIds = new Set();
 let undoTimer = null;
 let pendingDeleteAction = null;
+let pendingDeleteItemSnapshot = null;
 
-function showUndoToast(title, onCommitDelete) {
+function showUndoToast(title, itemSnapshot, onCommitDelete) {
     if (undoTimer) clearTimeout(undoTimer);
     if (pendingDeleteAction) pendingDeleteAction();
 
     pendingDeleteAction = onCommitDelete;
+    pendingDeleteItemSnapshot = itemSnapshot;
+
     const toast = document.getElementById('undoToastNode');
     const msg = document.getElementById('undoToastMsg');
     const secEl = document.getElementById('undoCountdownSec');
     
-    msg.innerText = `已刪除「${title}」`;
+    msg.innerText = `已刪除「${title}」（若誤刪請點右邊撤銷）`;
     toast.classList.add('show');
 
     let leftSec = 6;
@@ -1505,6 +1515,7 @@ function showUndoToast(title, onCommitDelete) {
         if (pendingDeleteAction) {
             pendingDeleteAction();
             pendingDeleteAction = null;
+            pendingDeleteItemSnapshot = null;
         }
     }, 6000);
 }
@@ -1512,13 +1523,19 @@ function showUndoToast(title, onCommitDelete) {
 function triggerUndoAction() {
     if (undoTimer) clearTimeout(undoTimer);
     document.getElementById('undoToastNode').classList.remove('show');
-    window.activities = JSON.parse(localStorage.getItem('family_cached_activities_backup') || "[]");
-    localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
-    renderCalendar();
-    renderAgenda();
-    updateAISummary();
+
+    if (pendingDeleteItemSnapshot) {
+        window.pendingDeletedIds.delete(pendingDeleteItemSnapshot.id);
+        window.activities.unshift(pendingDeleteItemSnapshot);
+        localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
+        renderCalendar();
+        renderAgenda();
+        updateAISummary();
+    }
+
     pendingDeleteAction = null;
-    HIG.alert("已復原", "該項目已取消刪除！");
+    pendingDeleteItemSnapshot = null;
+    HIG.alert("已撤銷刪除", "該活動已成功保留！");
 }
 
 window.requestNotificationPermission = async function() {
@@ -1857,7 +1874,7 @@ async function saveReceiptExpense() {
     }
 }
 
-// ─── 廣東話語音自然排程（雲端推送與 ID 調和） ───
+// ─── 廣東話語音自然排程 ───
 async function executeAINaturalInput() {
     if (isGuest) {
         await HIG.alert("權限不足", "訪客模式為唯讀，請先登入！");
@@ -1984,13 +2001,16 @@ async function executeAINaturalInput() {
     await HIG.alert("行程已排定", `已成功安排：\n【${targetDate} ${targetTime}】${finalTitle} (👤 ${matchedAssignee})`);
 }
 
-// ─── 刪除行程 ───
+// ─── 刪除行程（強化錯誤捕獲與快照防彈回） ───
 async function deleteEventItem(id) {
     if (isGuest) return;
     const item = (window.activities || []).find(a => a && a.id === id);
     if (!item) return;
 
-    localStorage.setItem('family_cached_activities_backup', JSON.stringify(window.activities));
+    // 1. 登記進入 pendingDeletedIds，禁止 onValue 同步彈回
+    window.pendingDeletedIds.add(id);
+
+    // 2. 本地立即移除
     window.activities = window.activities.filter(a => a && a.id !== id);
     localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
     renderCalendar();
@@ -1998,13 +2018,29 @@ async function deleteEventItem(id) {
     updateAISummary();
     closeManageModal();
 
-    showUndoToast(getSafeTitle(item.title), () => {
+    // 3. 顯示可撤銷的 Toast，5 秒未點選則正式執行遠端刪除
+    showUndoToast(getSafeTitle(item.title), item, async () => {
         if (!id.startsWith("local_") && !id.startsWith("exp_")) {
             if (!navigator.onLine) {
                 OfflineQueue.push({ type: "REMOVE", path: `family_calendar_activities/${id}` });
+                window.pendingDeletedIds.delete(id);
             } else if (window.fbDb && window.fbRef && window.fbRemove) {
-                window.fbRemove(window.fbRef(window.fbDb, `family_calendar_activities/${id}`));
+                try {
+                    await window.fbRemove(window.fbRef(window.fbDb, `family_calendar_activities/${id}`));
+                    window.pendingDeletedIds.delete(id);
+                } catch (err) {
+                    console.error("雲端刪除失敗:", err);
+                    window.pendingDeletedIds.delete(id);
+                    // 若伺服器阻擋，將資料還原並提示
+                    window.activities.unshift(item);
+                    localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
+                    renderCalendar();
+                    renderAgenda();
+                    await HIG.alert("刪除失敗", `資料庫拒絕刪除：${err.message || "權限不符"}`);
+                }
             }
+        } else {
+            window.pendingDeletedIds.delete(id);
         }
     });
 }
@@ -2159,7 +2195,6 @@ function generateLockScreenWallpaper() {
     canvas.height = 2340;
     const ctx = canvas.getContext("2d");
 
-    // 1. 深色質感玻璃漸層底圖
     const bgGrad = ctx.createLinearGradient(0, 0, 1080, 2340);
     bgGrad.addColorStop(0, "#09090b");
     bgGrad.addColorStop(0.5, "#18181b");
@@ -2167,14 +2202,12 @@ function generateLockScreenWallpaper() {
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, 1080, 2340);
 
-    // 2. 光暈背景裝飾
     const glowGrad = ctx.createRadialGradient(540, 480, 20, 540, 480, 500);
     glowGrad.addColorStop(0, "rgba(0, 113, 227, 0.2)");
     glowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
     ctx.fillStyle = glowGrad;
     ctx.fillRect(0, 0, 1080, 1000);
 
-    // 3. 頂部家庭標題與當日資訊
     ctx.fillStyle = "#a1a1aa";
     ctx.font = "bold 34px -apple-system, sans-serif";
     ctx.textAlign = "center";
@@ -2188,7 +2221,6 @@ function generateLockScreenWallpaper() {
     ctx.font = "bold 64px -apple-system, sans-serif";
     ctx.fillText(`${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日${holidayName || lunarName}`, 540, 310);
 
-    // 4. 行程卡片容器
     const cardTop = 440;
     ctx.fillStyle = "rgba(255, 255, 255, 0.06)";
     ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
@@ -2236,7 +2268,6 @@ function generateLockScreenWallpaper() {
         }
     }
 
-    // 5. 底部 Apple HIG 風格小註腳
     ctx.fillStyle = "#52525b";
     ctx.font = "28px -apple-system, sans-serif";
     ctx.textAlign = "center";
