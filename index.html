@@ -724,7 +724,6 @@ header {
   window.fbRemove = remove;
   window.fbGet = get;
 
-  // iOS Safari Redirect 回調後引導解鎖/初始化 E2EE 金鑰
   getRedirectResult(auth).then(async (result) => {
       if (result && result.user) {
           const user = result.user;
@@ -736,7 +735,7 @@ header {
       console.warn("Apple Redirect 認證未完成或已取消:", err);
   });
 
-  // 🚨 Low 2 核心修復：特判 PERMISSION_DENIED 與網絡離線錯誤
+  // 🚨 嚴格遵守不可變一次性寫入的 ensureMemberMapping
   window.ensureMemberMapping = async function(uid, memberName) {
       if (!window.fbDb || !window.fbRef || !window.fbGet || !window.fbSet || !uid || !memberName) return;
 
@@ -758,7 +757,8 @@ header {
       try {
           const memberRef = window.fbRef(window.fbDb, `members/${uid}`);
           const snap = await window.fbGet(memberRef);
-          if (!snap.exists() || snap.val()?.name !== memberName) {
+          // 僅在節點不存在時初始化，絕不嘗試更新已存在的不可變 name
+          if (!snap.exists()) {
               await window.fbSet(memberRef, {
                   name: memberName,
                   updatedAt: Date.now()
@@ -1029,7 +1029,7 @@ header {
             <div id="agendaActionsNode" class="agenda-actions"></div>
         </div>
         <div id="agendaListNode" class="agenda-list">
-            <div class="empty-agenda-view">此日暫使排定活動</div>
+            <div class="empty-agenda-view">此日暫無排定活動</div>
         </div>
     </div>
 
@@ -1506,7 +1506,7 @@ const E2EE = {
 };
 window.E2EE = E2EE;
 
-// ─── 🚨 Low 1 核心修復：防重 Mutex 鎖與已解鎖記憶體檢查 ───
+// ─── Low 1 修復：防重 Mutex 鎖與已解鎖記憶體檢查 ───
 let _unlockPromptActive = false;
 
 async function promptAndUnlockMemberKey(displayName) {
@@ -1546,7 +1546,7 @@ async function promptAndUnlockMemberKey(displayName) {
 }
 window.promptAndUnlockMemberKey = promptAndUnlockMemberKey;
 
-// ─── 本地 Temp ID 轉換 Real ID 原子調和函數（Commit-then-Evict） ───
+// ─── 高可靠性原子調和函數（Commit-then-Evict） ───
 function reconcileActivityId(tempId, realKey) {
     if (!tempId || !realKey || tempId === realKey) return;
 
@@ -1583,7 +1583,7 @@ function reconcileActivityId(tempId, realKey) {
     }
 }
 
-// ─── 🚨 Low 3 核心修復：Auth 錯誤主動強制刷新 Token，避免誤判超次丟棄 ───
+// ─── 離線事務佇列（已整合 Low 2 / Low 3 / Micro 2） ───
 const OfflineQueue = {
     getQueue() { return JSON.parse(localStorage.getItem('family_offline_queue') || "[]"); },
     push(action) {
@@ -1626,7 +1626,6 @@ const OfflineQueue = {
             } catch(e) {
                 console.warn(`離線佇列同步失敗 [${item.type}] ${item.path || ''}:`, e);
 
-                // 🚨 Low 3：若遇 Auth Token 過期或認證網絡失敗，主動強制換發 Token
                 const isAuthTokenError = e.code === 'auth/network-request-failed' || 
                                          e.code === 'auth/user-token-expired' || 
                                          e.code === 'auth/id-token-expired' || 
@@ -1638,7 +1637,8 @@ const OfflineQueue = {
                         remaining.push(item);
                         continue;
                     } catch (refreshErr) {
-                        console.warn("Auth token 強制換發失敗:", refreshErr);
+                        // 🚨 Micro 2：明確輸出 Token 刷新失敗日誌
+                        console.warn("Auth token 強制換發失敗，item 進入普通重試佇列:", refreshErr);
                     }
                 }
 
@@ -3219,7 +3219,7 @@ async function requestAccountDeletion() {
             }
         }
 
-        LoadingHUD.update("第 3/4 步：正在銷毀本機安全密鑰庫...");
+        LoadingHUD.update("第 3/4 步：正在銷毀本機安全密鑰庫與離線佇列...");
         try {
             const db = await KeyVaultDB.open();
             const tx = db.transaction(KeyVaultDB.storeName, "readwrite");
@@ -3228,6 +3228,12 @@ async function requestAccountDeletion() {
 
         LocalPendingStore.save([]);
         if (window.pendingDeletedIds) window.pendingDeletedIds.clear();
+
+        if (window.OfflineQueue) {
+            localStorage.setItem('family_offline_queue', JSON.stringify([]));
+            window.OfflineQueue.updatePill();
+        }
+
         window.activities = window.activities.filter(a => a.assignee !== memberToDelete && a.owner !== memberToDelete);
         localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
 
