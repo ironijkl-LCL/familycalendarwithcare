@@ -724,22 +724,22 @@ header {
   window.fbRemove = remove;
   window.fbGet = get;
 
-  // 🚨 Medium 3 修復配套：頁面載入時捕獲 iOS Safari Redirect 登入結果
+  // 🚨 Medium 1 修復配套：iOS Safari Redirect 回調後引導解鎖/初始化 E2EE 金鑰
   getRedirectResult(auth).then(async (result) => {
       if (result && result.user) {
           const user = result.user;
           const displayName = user.displayName || user.email?.split('@')[0] || "鐵";
           if (window.applyLoginState) await window.applyLoginState(displayName);
+          if (window.promptAndUnlockMemberKey) await window.promptAndUnlockMemberKey(displayName);
       }
   }).catch((err) => {
       console.warn("Apple Redirect 認證未完成或已取消:", err);
   });
 
-  // 🚨 High 2 核心修復：處理離線登入與防重進入 OfflineQueue
+  // 🚨 High 2 修復：離線登入自癒與佇列防重
   window.ensureMemberMapping = async function(uid, memberName) {
       if (!window.fbDb || !window.fbRef || !window.fbGet || !window.fbSet || !uid || !memberName) return;
 
-      // 1. 若目前處於離線狀態，不等待網絡超時，直接防重推入離線佇列
       if (!navigator.onLine) {
           if (window.OfflineQueue) {
               const q = window.OfflineQueue.getQueue();
@@ -755,7 +755,6 @@ header {
           return;
       }
 
-      // 2. 在線狀態：嘗試向雲端校驗與寫入
       try {
           const memberRef = window.fbRef(window.fbDb, `members/${uid}`);
           const snap = await window.fbGet(memberRef);
@@ -1179,11 +1178,22 @@ header {
     </div>
 </div>
 
-<!-- ⚙️ 管理面板 -->
+<!-- ⚙️ 管理面板（包含 Low 3 自訂預算入口） -->
 <div id="manageModal" class="popup-overlay" onclick="if(event.target===this)closeManageModal()">
     <div class="popup-card">
         <button class="popup-close-x" onclick="closeManageModal()">&times;</button>
-        <h3 style="margin:0 0 12px; font-size:17px;">⚙️ 管理與修改當日行程</h3>
+        <h3 style="margin:0 0 10px; font-size:17px;">⚙️ 家庭設定與行程管理</h3>
+        
+        <!-- 💰 Low 3 修復：動態預算設定區塊 -->
+        <div style="background:rgba(0,113,227,0.06); border:1px solid rgba(0,113,227,0.18); border-radius:12px; padding:10px 12px; margin-bottom:14px;">
+            <div style="font-size:12.5px; font-weight:700; color:var(--oasis-primary); margin-bottom:4px;">💰 每月家庭開支預算設定 (HKD)</div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <input type="number" id="budgetSettingInput" class="form-input" style="margin:0; flex:1;" placeholder="15000">
+                <button class="submit-btn-block" style="margin:0; width:auto; padding:8px 14px; font-size:13px;" onclick="saveMonthlyBudgetSetting()">儲存預算</button>
+            </div>
+        </div>
+
+        <h4 style="margin:0 0 8px; font-size:14px;">📋 當日行程清單管理：</h4>
         <div id="manageDayListContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
     </div>
 </div>
@@ -1488,18 +1498,44 @@ const E2EE = {
 };
 window.E2EE = E2EE;
 
-// ─── 🚨 High 1 核心修復：遵循嚴格 Commit-then-Evict 順序的調和函數 ───
+// ─── 🚨 Medium 1 核心解鎖/初始化函數 ───
+async function promptAndUnlockMemberKey(displayName) {
+    if (!window.MemberE2EE || !displayName) return;
+    try {
+        const record = await KeyVaultDB.getKey(displayName);
+        const isNewKey = !record;
+        const title = isNewKey ? "首次設定保險庫密碼" : "解鎖私人保險庫";
+        const msg = isNewKey 
+            ? "為配合端對端加密（E2EE），請為你的私密行程設定一組獨立安全密碼。\n\n⚠️ 此密碼僅保存在手機本地，絕不上傳伺服器，請務必記住！"
+            : `歡迎回來 ${displayName}！請輸入保險庫安全密碼，以解鎖你在此設備上的私密行程：`;
+        const pwd = await HIG.prompt(title, msg, "", true);
+        if (pwd) {
+            const success = await MemberE2EE.initMemberKeys(displayName, pwd);
+            if (success) {
+                await HIG.alert("解鎖成功", isNewKey ? "已成功建立你的專屬端對端加密金鑰！" : "私人保險庫已成功解鎖。");
+                if (window.startFirebaseSync) window.startFirebaseSync();
+            } else {
+                await HIG.alert("密碼不相符", "密碼不正確，未能解密私鑰。私密行程將暫時保持保密鎖定狀態。");
+            }
+        } else {
+            await HIG.alert("已略過解鎖", "你仍可正常使用公開日曆，但未解鎖前私密行程將保持隱藏。");
+        }
+    } catch (err) {
+        console.error("promptAndUnlockMemberKey 錯誤:", err);
+    }
+}
+window.promptAndUnlockMemberKey = promptAndUnlockMemberKey;
+
+// ─── 🚨 High 1 修復：遵循嚴格 Commit-then-Evict 順序的調和函數 ───
 function reconcileActivityId(tempId, realKey) {
     if (!tempId || !realKey || tempId === realKey) return;
 
     try {
-        // 1. 先更新記憶體與本機快取視圖
         window.activities = (window.activities || []).map(a => 
             a.id === tempId ? { ...a, id: realKey } : a
         );
         localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
 
-        // 2. 再重定向 OfflineQueue 內的未發送交易
         if (window.OfflineQueue) {
             const q = window.OfflineQueue.getQueue();
             let changed = false;
@@ -1521,14 +1557,13 @@ function reconcileActivityId(tempId, realKey) {
             }
         }
 
-        // 3. 所有狀態安全寫入後，最後才將其從 LocalPendingStore 移除
         LocalPendingStore.removeByTempId(tempId);
     } catch (err) {
         console.error("reconcileActivityId 執行中斷，保留 LocalPendingStore 以防資料丟失:", err);
     }
 }
 
-// ─── 離線事務佇列 ───
+// ─── 🚨 Medium 2 修復：離線事務佇列（排除毒藥丸死迴圈，超次轉入日誌） ───
 const OfflineQueue = {
     getQueue() { return JSON.parse(localStorage.getItem('family_offline_queue') || "[]"); },
     push(action) {
@@ -1569,12 +1604,27 @@ const OfflineQueue = {
                     await window.fbRemove(window.fbRef(window.fbDb, item.path));
                 }
             } catch(e) {
-                remaining.push(item);
+                console.warn(`離線佇列同步失敗 [${item.type}] ${item.path || ''}:`, e);
+                const isPermissionError = e.code === 'PERMISSION_DENIED' || (e.message && e.message.includes('Permission denied'));
+                const retryCount = (item.retryCount || 0) + 1;
+
+                if (isPermissionError || retryCount >= 3) {
+                    try {
+                        const logRef = window.fbPush(window.fbRef(window.fbDb, "system_runtime_logs"));
+                        await window.fbSet(logRef, {
+                            timestamp: Date.now(),
+                            level: "ERROR",
+                            message: `離線同步放棄: [${item.type}] ${item.path || ''} - ${e.message || e.code || '未知錯誤'}`
+                        });
+                    } catch(logErr) {}
+                } else {
+                    remaining.push({ ...item, retryCount });
+                }
             }
         }
         localStorage.setItem('family_offline_queue', JSON.stringify(remaining));
         this.updatePill();
-        if (remaining.length === 0) {
+        if (remaining.length === 0 && q.length > 0) {
             HIG.alert("同步完成", "離線期間建立與修改的項目已安全推送至雲端！");
         }
     }
@@ -1727,7 +1777,21 @@ function handleMerchantInputBlur(val) {
     if (detected !== "日常開支" && catSelect) catSelect.value = detected;
 }
 
-const MONTHLY_BUDGET = 15000;
+// ─── 🚨 Low 3 修復：自訂家庭預算管理 ───
+let MONTHLY_BUDGET = parseFloat(localStorage.getItem('family_monthly_budget') || "15000");
+
+async function saveMonthlyBudgetSetting() {
+    const val = parseFloat(document.getElementById('budgetSettingInput').value.trim());
+    if (isNaN(val) || val <= 0) {
+        await HIG.alert("提示", "請輸入有效的每月預算金額！");
+        return;
+    }
+    MONTHLY_BUDGET = val;
+    localStorage.setItem('family_monthly_budget', String(val));
+    updateAISummary();
+    await HIG.alert("已更新", `每月家庭預算已成功設定為 HK$ ${val.toLocaleString()}`);
+}
+
 async function checkBudgetThreshold(newExpenseAmount, targetDateStr) {
     const monthPrefix = targetDateStr.slice(0, 7);
     const currentMonthExpenses = (window.activities || [])
@@ -1738,7 +1802,7 @@ async function checkBudgetThreshold(newExpenseAmount, targetDateStr) {
     const ratio = totalAfterAdd / MONTHLY_BUDGET;
 
     if (ratio >= 1.0) {
-        await HIG.alert("⚠️ 預算超支警示", `本月開支已達 HK$ ${totalAfterAdd.toFixed(1)}，已超出上限 HK$ ${MONTHLY_BUDGET}！`);
+        await HIG.alert("⚠️ 預算超支警示", `本月開支已達 HK$ ${totalAfterAdd.toFixed(1)}，已超出上限 HK$ ${MONTHLY_BUDGET.toLocaleString()}！`);
     } else if (ratio >= 0.8) {
         await HIG.alert("💡 預算達 80% 警戒線", `本月開支已達 HK$ ${totalAfterAdd.toFixed(1)}（佔上限 ${Math.round(ratio * 100)}%）。`);
     }
@@ -2876,8 +2940,8 @@ function updateAISummary() {
 
     if (badgeEl) badgeEl.innerText = `本月累計 $${monthExpenses.toFixed(0)}`;
     if (textEl) {
-        if (budgetRatio >= 100) textEl.innerHTML = `<span style="color:var(--oasis-danger); font-weight:700;">⚠️ 本月支出 $${monthExpenses.toFixed(1)}（超出預算）</span>`;
-        else if (budgetRatio >= 80) textEl.innerHTML = `<span style="color:#b45309; font-weight:600;">💡 本月已用 ${Math.round(budgetRatio)}% 預算</span>`;
+        if (budgetRatio >= 100) textEl.innerHTML = `<span style="color:var(--oasis-danger); font-weight:700;">⚠️ 本月支出 $${monthExpenses.toFixed(1)}（超出預算 $${MONTHLY_BUDGET.toLocaleString()}）</span>`;
+        else if (budgetRatio >= 80) textEl.innerHTML = `<span style="color:#b45309; font-weight:600;">💡 本月已用 ${Math.round(budgetRatio)}% 預算 (上限 $${MONTHLY_BUDGET.toLocaleString()})</span>`;
         else textEl.innerHTML = `今日 ${todayActs.length} 項日程 · 本月預算良好 (${Math.round(budgetRatio)}%)`;
     }
 }
@@ -2938,6 +3002,9 @@ function openAddModal(mode) {
 function closeModal() { document.getElementById('eventModal').style.display = 'none'; }
 
 function openManageModal() {
+    const budgetInput = document.getElementById('budgetSettingInput');
+    if (budgetInput) budgetInput.value = MONTHLY_BUDGET;
+
     const container = document.getElementById('manageDayListContainer');
     const matched = (window.activities || []).filter(a => a && a.date === selectedDateStr && (!a.isPrivate || a.assignee === currentUser));
     if (matched.length === 0) {
@@ -2989,14 +3056,13 @@ async function submitLogin() {
     }
 }
 
-// 🚨 Medium 3 核心修復：原生外掛 -> iOS Safari Redirect -> 桌面 Popup 三重適配
+// 🚨 Medium 1 核心修復：登入後自動引導解鎖 E2EE 金鑰
 async function signInWithApple() {
     LoadingHUD.show("Apple 登入中", "正在調用安全驗證...");
     try {
         const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
         const AppleSignInPlugin = window.Capacitor?.Plugins?.SignInWithApple;
 
-        // 1. iOS 原生 App 殼：直接調用原生 ASAuthorizationController
         if (isNative && AppleSignInPlugin) {
             const result = await AppleSignInPlugin.authorize({
                 clientId: 'com.lohascare.familycalendar',
@@ -3017,11 +3083,10 @@ async function signInWithApple() {
                 LoadingHUD.hide();
                 await applyLoginState(displayName);
                 closeModal();
-                await HIG.alert("Apple 登入成功", `歡迎回來，${displayName}！`);
+                await promptAndUnlockMemberKey(displayName);
                 return;
             }
         }
-        // 2. iOS 瀏覽器 / PWA (非原生殼)：使用 Redirect 避開 Popup 攔截
         else if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !isNative) {
             const provider = new window.fbOAuthProvider('apple.com');
             provider.addScope('email');
@@ -3029,7 +3094,6 @@ async function signInWithApple() {
             await window.fbSignInWithRedirect(window.fbAuth, provider);
             return;
         }
-        // 3. Desktop / Android 瀏覽器：走標準 Popup
         else {
             const provider = new window.fbOAuthProvider('apple.com');
             provider.addScope('email');
@@ -3040,7 +3104,7 @@ async function signInWithApple() {
             LoadingHUD.hide();
             await applyLoginState(displayName);
             closeModal();
-            await HIG.alert("Apple 登入成功", `歡迎回來，${displayName}！`);
+            await promptAndUnlockMemberKey(displayName);
         }
     } catch (error) {
         LoadingHUD.hide();
@@ -3051,11 +3115,10 @@ async function signInWithApple() {
     }
 }
 
-// 🚨 Medium 4 核心修復：登出時銷毀 Undo 操作並清空 pendingDeletedIds
+// 🚨 Medium 4 修復：登出時銷毀待刪緩存與計時器
 async function logoutAccount() {
     const ok = await HIG.confirm("退出登入", "確定切換為訪客模式？");
     if (ok) {
-        // 如果有進行中的待定刪除操作，立即 commit，避免孤兒行程
         if (pendingDeleteAction) {
             try { pendingDeleteAction(); } catch(e){}
             pendingDeleteAction = null;
@@ -3065,7 +3128,6 @@ async function logoutAccount() {
         const toast = document.getElementById('undoToastNode');
         if (toast) toast.classList.remove('show');
         
-        // 🚨 徹底清空 Set 與快照，防止污染下一個登入的家庭成員
         if (window.pendingDeletedIds) window.pendingDeletedIds.clear();
         pendingDeleteItemSnapshot = null;
 
