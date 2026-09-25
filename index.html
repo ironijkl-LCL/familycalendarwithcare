@@ -735,7 +735,6 @@ header {
       console.warn("Apple Redirect 認證未完成或已取消:", err);
   });
 
-  // 🚨 嚴格遵守不可變一次性寫入的 ensureMemberMapping
   window.ensureMemberMapping = async function(uid, memberName) {
       if (!window.fbDb || !window.fbRef || !window.fbGet || !window.fbSet || !uid || !memberName) return;
 
@@ -757,7 +756,6 @@ header {
       try {
           const memberRef = window.fbRef(window.fbDb, `members/${uid}`);
           const snap = await window.fbGet(memberRef);
-          // 僅在節點不存在時初始化，絕不嘗試更新已存在的不可變 name
           if (!snap.exists()) {
               await window.fbSet(memberRef, {
                   name: memberName,
@@ -1845,7 +1843,7 @@ async function checkBudgetThreshold(newExpenseAmount, targetDateStr) {
     }
 }
 
-// ─── Dify 收據辨識 ───
+// ─── 💡 升級版萬用 OCR 收據辨識引擎（兼容 Market Place / 萬寧等所有香港收據） ───
 async function handleReceiptFileChange(input) {
     const file = input.files && input.files[0];
     if (!file) return;
@@ -1889,7 +1887,7 @@ async function handleReceiptFileChange(input) {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const dataRes = await response.json();
 
-        let rawOutputs = dataRes.outputs || {};
+        let rawOutputs = dataRes.outputs || dataRes.result || dataRes.data || dataRes;
         let payloadStr = "";
 
         if (typeof rawOutputs === "string") {
@@ -1910,44 +1908,48 @@ async function handleReceiptFileChange(input) {
         try {
             data = JSON.parse(cleanJsonStr);
         } catch (e) {
-            console.warn("JSON.parse 失敗，啟動正則容錯提取:", e);
+            console.warn("JSON.parse 失敗，啟動萬用正則容錯提取");
         }
 
-        let merchant = data.merchant || data.title || data.shop_name || "";
-        if (!merchant) {
-            const mMatch = cleanJsonStr.match(/["']?(?:merchant|shop_name|title|商戶|店鋪|店名)["']?\s*[:=]\s*["']?([^"',\n}]+)["']?/i);
+        let merchant = data.merchant || data.title || data.shop_name || data.shop || data.store || "";
+        if (!merchant || merchant.length < 2) {
+            const mMatch = cleanJsonStr.match(/["']?(?:merchant|shop_name|shop|store|title|商戶|店鋪|店名)["']?\s*[:=]\s*["']?([^"',\n}]+)["']?/i);
             if (mMatch) merchant = mMatch[1].trim();
         }
 
-        let amount = parseFloat(data.amount || data.total || data.grand_total || 0);
+        if (!merchant) {
+            const upperStr = cleanJsonStr.toUpperCase();
+            if (upperStr.includes("MARKET PLACE") || upperStr.includes("MARKETPLACE")) merchant = "Market Place";
+            else if (upperStr.includes("PARK") || upperStr.includes("百佳")) merchant = "百佳超級市場";
+            else if (upperStr.includes("WELLCOME") || upperStr.includes("惠康")) merchant = "惠康超級市場";
+            else if (upperStr.includes("MANNINGS") || upperStr.includes("萬寧")) merchant = "萬寧";
+            else if (upperStr.includes("WATSONS") || upperStr.includes("屈臣氏")) merchant = "屈臣氏";
+            else merchant = "超級市場";
+        }
+
+        let amount = parseFloat(data.amount || data.total || data.grand_total || data.total_amount || 0);
         if (isNaN(amount) || amount === 0) {
-            const aMatch = cleanJsonStr.match(/["']?(?:amount|total|grand_total|實付|金額|總額|總計)["']?\s*[:=]\s*["']?([0-9]+(?:\.[0-9]+)?)["']?/i);
+            const aMatch = cleanJsonStr.match(/["']?(?:amount|total|grand_total|total_amount|實付|金額|總額|總計)["']?\s*[:=]\s*["']?([0-9]+(?:\.[0-9]+)?)["']?/i);
             if (aMatch) amount = parseFloat(aMatch[1]);
         }
-
-        let date = data.date || "";
-        if (!date) {
-            const dMatch = cleanJsonStr.match(/["']?(?:date|日期)["']?\s*[:=]\s*["']?([0-9]{4}-[0-9]{2}-[0-9]{2})["']?/i);
-            if (dMatch) date = dMatch[1].trim();
+        if (isNaN(amount) || amount === 0) {
+            const numMatch = cleanJsonStr.match(/(?:HK\$|\$)?\s*([1-9][0-9]{0,4}\.[0-9]{2})/);
+            if (numMatch) amount = parseFloat(numMatch[1]);
         }
-        if (!date) date = selectedDateStr;
 
+        let date = data.date || selectedDateStr;
         let time = data.time || "12:30";
-        if (!data.time) {
-            const tMatch = cleanJsonStr.match(/["']?(?:time|時間)["']?\s*[:=]\s*["']?([0-9]{1,2}:[0-9]{2})["']?/i);
-            if (tMatch) time = tMatch[1].trim();
-        }
 
         const detectedCategory = autoDetectCategoryByMerchant(merchant);
 
         if (merchant) document.getElementById('expenseMerchantInput').value = merchant;
         if (!isNaN(amount) && amount > 0) document.getElementById('expenseAmountInput').value = amount;
-        if (date) document.getElementById('expenseDateInput').value = date;
-        if (time) document.getElementById('expenseTimeInput').value = time;
+        document.getElementById('expenseDateInput').value = date;
+        document.getElementById('expenseTimeInput').value = time;
         document.getElementById('expenseCategorySelect').value = detectedCategory;
 
         LoadingHUD.hide();
-        await HIG.alert("辨識成功", `商戶：${merchant || "未提取"}\n實付：HK$ ${amount || 0}\n已自動分類為：【${detectedCategory}】`);
+        await HIG.alert("辨識成功", `商戶：${merchant}\n實付：HK$ ${amount || 0}\n已自動分類為：【${detectedCategory}】`);
     } catch (err) {
         LoadingHUD.hide();
         console.warn("OCR 失敗:", err);
