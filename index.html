@@ -2,7 +2,7 @@
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#f2f2f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -36,6 +36,8 @@
     --cal-zoom: 1;
 }
 
+* { box-sizing: border-box; }
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
     margin: 0;
@@ -45,8 +47,8 @@ body {
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
-    min-height: 100vh;
-    min-height: 100dvh;
+    height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -59,10 +61,10 @@ header {
     background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    padding-top: max(48px, env(safe-area-inset-top));
-    padding-bottom: 8px;
-    padding-left: 14px;
-    padding-right: 14px;
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-bottom: 10px;
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
     border-bottom: 1px solid var(--apple-border);
     display: flex;
     justify-content: space-between;
@@ -70,8 +72,8 @@ header {
     flex-shrink: 0;
     z-index: 100;
 }
-.header-title { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
-.header-status-group { display: flex; align-items: center; gap: 6px; }
+.header-title { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.header-status-group { display: flex; align-items: center; gap: 8px; }
 
 .network-status-badge {
     display: none;
@@ -86,7 +88,7 @@ header {
 .auth-badge {
     font-size: 12px;
     background: rgba(0, 0, 0, 0.05);
-    padding: 4px 10px;
+    padding: 5px 12px;
     border-radius: 14px;
     font-weight: 600;
     color: var(--apple-text-secondary);
@@ -109,35 +111,43 @@ header {
 .logout-btn { color: var(--apple-text-secondary); }
 .delete-acc-btn { color: var(--oasis-danger); }
 
-/* ─── 主畫面佈局 ─── */
+/* ─── 響應式主架構 ─── */
 .main-layout {
     flex: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding: 6px 10px max(10px, env(safe-area-inset-bottom)) 10px;
-    gap: 6px;
+    padding: 8px max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+    gap: 8px;
+    max-width: 1920px;
+    margin: 0 auto;
+    width: 100%;
 }
 
 /* 🎯 自適應工具列 */
 .adaptive-toolbar {
     display: flex;
-    gap: 4px;
+    gap: 6px;
     flex-shrink: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
 }
+.adaptive-toolbar::-webkit-scrollbar { display: none; }
 .adaptive-toolbar button {
     flex: 1;
+    min-width: 58px;
     border: none;
     border-radius: 10px;
     color: white;
-    font-size: 11.5px;
+    font-size: 12px;
     font-weight: 600;
-    padding: 8px 1px;
+    padding: 9px 4px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 3px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
     white-space: nowrap;
 }
@@ -155,19 +165,19 @@ header {
 .ai-compact-bar {
     background: #ffffff;
     border: 1px solid var(--apple-border);
-    border-radius: 10px;
-    padding: 3px 6px;
+    border-radius: 12px;
+    padding: 4px 8px;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     flex-shrink: 0;
 }
 .ai-speech-mic-btn {
     background: rgba(0, 0, 0, 0.04);
     border: none;
-    font-size: 15px;
+    font-size: 16px;
     cursor: pointer;
-    padding: 5px 7px;
+    padding: 6px 8px;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -190,8 +200,8 @@ header {
     flex: 1;
     border: none;
     background: transparent;
-    padding: 4px 6px;
-    font-size: 12px !important;
+    padding: 6px;
+    font-size: 13px !important;
     outline: none;
     color: var(--apple-text);
 }
@@ -199,9 +209,9 @@ header {
     background: var(--oasis-ai-purple);
     color: #ffffff;
     border: none;
-    border-radius: 6px;
-    padding: 5px 8px;
-    font-size: 11px;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
@@ -212,9 +222,9 @@ header {
     display: none;
     background: rgba(0, 113, 227, 0.06);
     border: 1px solid rgba(0, 113, 227, 0.2);
-    border-radius: 9px;
-    padding: 6px 10px;
-    font-size: 11.5px;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 12px;
     flex-shrink: 0;
 }
 .memory-insight-content { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -223,7 +233,7 @@ header {
     background: var(--oasis-primary);
     color: #fff;
     border: none;
-    padding: 3px 8px;
+    padding: 4px 10px;
     border-radius: 6px;
     font-size: 11px;
     font-weight: 700;
@@ -238,59 +248,70 @@ header {
     align-items: center;
     background: rgba(125, 42, 232, 0.05);
     border: 1px solid rgba(125, 42, 232, 0.12);
-    border-radius: 8px;
-    padding: 4px 8px;
-    font-size: 11px;
+    border-radius: 10px;
+    padding: 6px 10px;
+    font-size: 12px;
     flex-shrink: 0;
 }
 .ai-strain-text { color: var(--apple-text); font-weight: 500; }
 .ai-pending-badge {
     background: var(--oasis-ai-purple);
     color: #fff;
-    padding: 2px 6px;
+    padding: 3px 8px;
     border-radius: 6px;
     font-weight: 700;
-    font-size: 10px;
+    font-size: 11px;
+}
+
+/* ─── 響應式雙容器佈局 ─── */
+.content-grid-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+    overflow: hidden;
 }
 
 /* 🗓️ 月曆卡片 */
 .calendar-card {
     background: var(--apple-card);
-    border-radius: 14px;
-    padding: 6px 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+    border-radius: 16px;
+    padding: 8px 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
     border: 1px solid var(--apple-border);
-    flex: 1.25;
+    flex: 1.3;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     touch-action: pan-y pinch-zoom;
+    min-height: 0;
 }
 .calendar-nav-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 3px;
+    margin-bottom: 6px;
     flex-shrink: 0;
 }
 .nav-arrow-btn {
     background: rgba(0, 0, 0, 0.04);
     border: none;
-    border-radius: 6px;
-    padding: 3px 6px;
-    font-size: 11px;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
 }
-.calendar-title-wrap { display: flex; align-items: center; gap: 6px; }
-.current-month-label { font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
+.calendar-title-wrap { display: flex; align-items: center; gap: 8px; }
+.current-month-label { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
 .zoom-toggle-badge {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     color: var(--oasis-primary);
     background: rgba(0, 113, 227, 0.08);
     border: 1px solid rgba(0, 113, 227, 0.2);
-    padding: 1px 6px;
+    padding: 2px 8px;
     border-radius: 10px;
     cursor: pointer;
 }
@@ -299,10 +320,10 @@ header {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     text-align: center;
-    font-size: 10.5px;
+    font-size: 11px;
     font-weight: 700;
     color: var(--apple-text-secondary);
-    padding-bottom: 2px;
+    padding-bottom: 4px;
     flex-shrink: 0;
 }
 .weekdays-row .sunday { color: var(--oasis-danger); }
@@ -312,15 +333,15 @@ header {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     grid-auto-rows: 1fr;
-    gap: calc(2px * var(--cal-zoom));
+    gap: calc(3px * var(--cal-zoom));
     overflow-y: auto;
 }
 .days-grid::-webkit-scrollbar { display: none; }
 
 .day-cell {
     background: rgba(0, 0, 0, 0.015);
-    border-radius: 6px;
-    padding: calc(2px * var(--cal-zoom)) calc(1px * var(--cal-zoom));
+    border-radius: 8px;
+    padding: calc(3px * var(--cal-zoom)) calc(2px * var(--cal-zoom));
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -349,40 +370,40 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    padding: 0 1px;
+    padding: 0 2px;
     line-height: 1;
 }
 .day-number { font-size: calc(11px * var(--cal-zoom)); font-weight: 700; }
 .day-cell.is-holiday .day-number,
 .day-cell.is-sunday .day-number { color: var(--oasis-danger); }
-.day-lunar { font-size: calc(8px * var(--cal-zoom)); color: var(--apple-text-secondary); transform: scale(0.85); transform-origin: right center; }
+.day-lunar { font-size: calc(8.5px * var(--cal-zoom)); color: var(--apple-text-secondary); transform: scale(0.9); transform-origin: right center; }
 .day-holiday {
-    font-size: calc(8px * var(--cal-zoom));
+    font-size: calc(8.5px * var(--cal-zoom));
     color: var(--oasis-danger);
     font-weight: 700;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    transform: scale(0.82);
+    transform: scale(0.85);
     transform-origin: left center;
 }
 
-.day-events-text-box { display: flex; flex-direction: column; gap: 1px; margin-top: 1px; overflow: hidden; flex: 1; }
+.day-events-text-box { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; overflow: hidden; flex: 1; }
 .calendar-event-chip {
-    font-size: calc(8px * var(--cal-zoom));
-    line-height: 1.1;
-    padding: calc(1px * var(--cal-zoom)) calc(2px * var(--cal-zoom));
-    border-radius: 2px;
+    font-size: calc(8.5px * var(--cal-zoom));
+    line-height: 1.15;
+    padding: calc(1px * var(--cal-zoom)) calc(3px * var(--cal-zoom));
+    border-radius: 3px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     font-weight: 600;
 }
 .calendar-expense-chip {
-    font-size: calc(8px * var(--cal-zoom));
-    line-height: 1.1;
-    padding: calc(1px * var(--cal-zoom)) calc(2px * var(--cal-zoom));
-    border-radius: 2px;
+    font-size: calc(8.5px * var(--cal-zoom));
+    line-height: 1.15;
+    padding: calc(1px * var(--cal-zoom)) calc(3px * var(--cal-zoom));
+    border-radius: 3px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -395,25 +416,26 @@ header {
 /* 📋 焦點日程清單 */
 .agenda-card {
     background: var(--apple-card);
-    border-radius: 14px;
-    padding: 8px 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+    border-radius: 16px;
+    padding: 10px 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
     border: 1px solid var(--apple-border);
-    flex: 1.05;
+    flex: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    min-height: 0;
 }
 .agenda-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    padding-bottom: 5px;
+    padding-bottom: 6px;
     border-bottom: 1px solid var(--apple-border);
     flex-shrink: 0;
 }
 .agenda-header-titles { display: flex; flex-direction: column; gap: 2px; }
-.agenda-date-title { font-size: 13.5px; font-weight: 700; }
+.agenda-date-title { font-size: 14px; font-weight: 700; }
 .day-total-expense-chip {
     display: inline-flex;
     align-items: center;
@@ -425,7 +447,7 @@ header {
     padding: 2px 6px;
     border-radius: 6px;
     width: fit-content;
-    margin-top: 1px;
+    margin-top: 2px;
 }
 
 .agenda-actions { display: flex; gap: 4px; align-items: center; }
@@ -433,9 +455,9 @@ header {
     background: rgba(0, 113, 227, 0.08);
     color: var(--oasis-primary);
     border: none;
-    border-radius: 6px;
-    padding: 4px 8px;
-    font-size: 11px;
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
 }
@@ -443,57 +465,102 @@ header {
 .agenda-list {
     flex: 1;
     overflow-y: auto;
-    padding-top: 5px;
+    padding-top: 6px;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 6px;
 }
 .agenda-list::-webkit-scrollbar { display: none; }
 
 .event-row-card {
     background: rgba(0, 0, 0, 0.02);
-    border-radius: 8px;
-    padding: 6px 8px;
+    border-radius: 10px;
+    padding: 8px 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-left-width: 4px;
     border-left-style: solid;
 }
-.event-info { display: flex; flex-direction: column; gap: 2px; }
-.event-time-badge { font-size: 10.5px; font-weight: 700; }
-.event-title-text { font-size: 13px; font-weight: 600; color: var(--apple-text); }
+.event-info { display: flex; flex-direction: column; gap: 3px; }
+.event-time-badge { font-size: 11px; font-weight: 700; }
+.event-title-text { font-size: 13.5px; font-weight: 600; color: var(--apple-text); }
 .event-meta-tags { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .tag-pill {
-    font-size: 9px;
-    padding: 1px 4px;
+    font-size: 10px;
+    padding: 2px 6px;
     border-radius: 4px;
     background: rgba(0, 0, 0, 0.05);
     color: var(--apple-text-secondary);
     font-weight: 600;
 }
-.assignee-chip { font-size: 9px; padding: 1px 5px; border-radius: 4px; font-weight: 700; }
+.assignee-chip { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
 .expense-amount-badge {
     font-size: 11px;
-    padding: 1px 5px;
+    padding: 2px 6px;
     border-radius: 4px;
     background: rgba(245, 158, 11, 0.18);
     color: #b45309;
     font-weight: 800;
 }
 .private-owner-badge {
-    font-size: 9px;
-    padding: 1px 5px;
+    font-size: 10px;
+    padding: 2px 6px;
     border-radius: 4px;
     background: rgba(107, 114, 128, 0.12);
     color: #4b5563;
     font-weight: 700;
 }
 
-.row-actions-group { display: flex; gap: 6px; align-items: center; }
-.btn-edit-link { background: none; border: none; color: var(--oasis-primary); font-size: 12px; font-weight: 700; cursor: pointer; padding: 2px 4px; }
-.btn-delete-link { background: none; border: none; color: var(--oasis-danger); font-size: 12px; font-weight: 700; cursor: pointer; padding: 2px 4px; }
-.empty-agenda-view { text-align: center; padding: 16px 0; color: var(--apple-text-secondary); font-size: 12.5px; }
+.row-actions-group { display: flex; gap: 8px; align-items: center; }
+.btn-edit-link { background: none; border: none; color: var(--oasis-primary); font-size: 13px; font-weight: 700; cursor: pointer; padding: 4px; }
+.btn-delete-link { background: none; border: none; color: var(--oasis-danger); font-size: 13px; font-weight: 700; cursor: pointer; padding: 4px; }
+.empty-agenda-view { text-align: center; padding: 20px 0; color: var(--apple-text-secondary); font-size: 13px; }
+
+/* ─── 🖥️ iPad 13" / 29" 桌面大螢幕專屬優化 (雙欄儀表板模式) ─── */
+@media (min-width: 820px) {
+    .content-grid-wrapper {
+        flex-direction: row;
+        gap: 14px;
+    }
+    .calendar-card {
+        flex: 1.6;
+        padding: 12px 14px;
+    }
+    .agenda-card {
+        flex: 1.1;
+        padding: 12px 14px;
+    }
+    .day-cell {
+        min-height: calc(56px * var(--cal-zoom));
+    }
+    .adaptive-toolbar button {
+        font-size: 13px;
+        padding: 10px 8px;
+    }
+    .header-title { font-size: 20px; }
+}
+
+@media (min-width: 1400px) {
+    /* 針對 27"-32" 大螢幕超高清解析度 */
+    .main-layout {
+        padding: 14px 20px;
+        gap: 12px;
+    }
+    .calendar-card {
+        flex: 1.8;
+    }
+    .day-cell {
+        min-height: calc(72px * var(--cal-zoom));
+    }
+    .day-number {
+        font-size: calc(13px * var(--cal-zoom));
+    }
+    .calendar-event-chip, .calendar-expense-chip {
+        font-size: calc(11px * var(--cal-zoom));
+        padding: 2px 4px;
+    }
+}
 
 /* ─── Apple HIG 全螢幕 Loading HUD ─── */
 .hig-loading-hud {
@@ -583,7 +650,7 @@ header {
     width: 90%;
     max-width: 440px;
     border-radius: 20px;
-    padding: 18px;
+    padding: 20px;
     box-shadow: 0 16px 40px rgba(0,0,0,0.15);
     box-sizing: border-box;
     position: relative;
@@ -591,10 +658,10 @@ header {
     overflow-y: auto;
 }
 .popup-close-x { position: absolute; top: 14px; right: 16px; font-size: 22px; color: var(--apple-text-secondary); border: none; background: none; cursor: pointer; }
-.form-label { font-size: 13px; font-weight: 600; color: var(--apple-text-secondary); margin-top: 8px; display: block; }
+.form-label { font-size: 13px; font-weight: 600; color: var(--apple-text-secondary); margin-top: 10px; display: block; }
 .form-input {
     width: 100%;
-    padding: 9px 12px;
+    padding: 10px 12px;
     margin: 4px 0 6px;
     border: 1px solid var(--apple-border);
     border-radius: 10px;
@@ -606,7 +673,7 @@ header {
 .form-input:focus { border-color: var(--oasis-primary); background: #ffffff; }
 .native-picker-row { display: flex; gap: 8px; margin: 4px 0 6px; }
 .native-picker-row input[type="date"], .native-picker-row input[type="time"] {
-    flex: 1; padding: 9px 12px; border: 1px solid var(--apple-border); border-radius: 10px;
+    flex: 1; padding: 10px 12px; border: 1px solid var(--apple-border); border-radius: 10px;
     background: rgba(0, 0, 0, 0.02); font-family: inherit; color: var(--apple-text); outline: none;
 }
 .native-picker-row input[type="date"] { flex: 1.4; }
@@ -617,15 +684,15 @@ header {
 }
 .receipt-preview-img { max-width: 100%; max-height: 120px; border-radius: 8px; margin-top: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none; }
 .submit-btn-block {
-    width: 100%; padding: 11px; background: var(--oasis-primary); color: white; border: none; border-radius: 10px;
-    font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 10px;
+    width: 100%; padding: 12px; background: var(--oasis-primary); color: white; border: none; border-radius: 10px;
+    font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 12px;
 }
 .submit-btn-block:active { opacity: 0.85; }
 
 /* ─── Apple Sign-In 原生按鈕 ─── */
 .apple-signin-btn {
     width: 100%;
-    padding: 11px;
+    padding: 12px;
     background: #000000;
     color: #ffffff;
     border: none;
@@ -648,14 +715,14 @@ header {
     background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(8px); z-index: 10000; justify-content: center; align-items: center;
 }
 .hig-dialog-card {
-    background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(20px); width: 270px; border-radius: 14px; overflow: hidden; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(20px); width: 280px; border-radius: 14px; overflow: hidden; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 .hig-dialog-header { padding: 16px 14px 10px; }
 .hig-dialog-title { font-size: 16px; font-weight: 600; margin: 0; }
 .hig-dialog-msg { font-size: 13px; color: var(--apple-text-secondary); margin-top: 4px; }
-.hig-dialog-input { width: 86%; margin: 6px auto 12px; padding: 6px 8px; border: 1px solid rgba(0,0,0,0.15); border-radius: 6px; box-sizing: border-box; display: block; }
+.hig-dialog-input { width: 86%; margin: 6px auto 12px; padding: 8px; border: 1px solid rgba(0,0,0,0.15); border-radius: 6px; box-sizing: border-box; display: block; }
 .hig-dialog-actions { display: flex; border-top: 1px solid rgba(0,0,0,0.08); }
-.hig-dialog-btn { flex: 1; background: none; border: none; padding: 11px 0; font-size: 15px; color: var(--oasis-primary); cursor: pointer; }
+.hig-dialog-btn { flex: 1; background: none; border: none; padding: 12px 0; font-size: 15px; color: var(--oasis-primary); cursor: pointer; }
 .hig-dialog-btn.cancel { border-right: 1px solid rgba(0,0,0,0.08); color: var(--apple-text-secondary); }
 .hig-dialog-btn.destructive { color: var(--oasis-danger); font-weight: 600; }
 </style>
@@ -974,7 +1041,7 @@ header {
         <button class="btn-wa" onclick="shareWhatsApp()">💬 WA</button>
     </div>
 
-    <!-- 🔮 P0 廣東話語音輸入排程列 -->
+    <!-- 🔮 廣東話語音輸入排程列 -->
     <div class="ai-compact-bar">
         <button id="speechBtn" class="ai-speech-mic-btn" onclick="toggleSpeechRecognition()" title="按住進行廣東話語音輸入">🎙️</button>
         <input type="text" id="aiQuickInput" class="ai-nlp-input" placeholder="✨ 講或寫：百佳買咗280蚊、聽晚仁安覆診...">
@@ -995,39 +1062,42 @@ header {
         <div id="aiPendingBadge" class="ai-pending-badge">0 項活動</div>
     </div>
 
-    <!-- 🗓️ 月曆卡片 -->
-    <div class="calendar-card" id="calendarCardNode">
-        <div class="calendar-nav-bar">
-            <button class="nav-arrow-btn" onclick="changeMonthOffset(-1)">⬅ 上一月</button>
-            <div class="calendar-title-wrap">
-                <div id="calendarMonthLabel" class="current-month-label">2026年 9月</div>
-                <span id="zoomLevelIndicator" class="zoom-toggle-badge" onclick="cycleCalendarZoom()" title="點擊切換大小或雙指手勢縮放">🔍 100%</span>
+    <!-- 響應式內容容器（iPhone 直排、iPad / 29" 橫排雙欄） -->
+    <div class="content-grid-wrapper">
+        <!-- 🗓️ 月曆卡片 -->
+        <div class="calendar-card" id="calendarCardNode">
+            <div class="calendar-nav-bar">
+                <button class="nav-arrow-btn" onclick="changeMonthOffset(-1)">⬅ 上一月</button>
+                <div class="calendar-title-wrap">
+                    <div id="calendarMonthLabel" class="current-month-label">2026年 9月</div>
+                    <span id="zoomLevelIndicator" class="zoom-toggle-badge" onclick="cycleCalendarZoom()" title="點擊切換大小或雙指手勢縮放">🔍 100%</span>
+                </div>
+                <button class="nav-arrow-btn" onclick="changeMonthOffset(1)">下一月 ➡</button>
             </div>
-            <button class="nav-arrow-btn" onclick="changeMonthOffset(1)">下一月 ➡</button>
+            <div class="weekdays-row">
+                <div class="sunday">日</div>
+                <div>一</div>
+                <div>二</div>
+                <div>三</div>
+                <div>四</div>
+                <div>五</div>
+                <div>六</div>
+            </div>
+            <div id="daysGridNode" class="days-grid"></div>
         </div>
-        <div class="weekdays-row">
-            <div class="sunday">日</div>
-            <div>一</div>
-            <div>二</div>
-            <div>三</div>
-            <div>四</div>
-            <div>五</div>
-            <div>六</div>
-        </div>
-        <div id="daysGridNode" class="days-grid"></div>
-    </div>
 
-    <!-- 📋 焦點日程 -->
-    <div class="agenda-card">
-        <div class="agenda-header">
-            <div class="agenda-header-titles">
-                <div id="agendaDateTitle" class="agenda-date-title">📋 行程資訊</div>
-                <div id="agendaDailyExpenseSummary" style="display:none;"></div>
+        <!-- 📋 焦點日程 -->
+        <div class="agenda-card">
+            <div class="agenda-header">
+                <div class="agenda-header-titles">
+                    <div id="agendaDateTitle" class="agenda-date-title">📋 行程資訊</div>
+                    <div id="agendaDailyExpenseSummary" style="display:none;"></div>
+                </div>
+                <div id="agendaActionsNode" class="agenda-actions"></div>
             </div>
-            <div id="agendaActionsNode" class="agenda-actions"></div>
-        </div>
-        <div id="agendaListNode" class="agenda-list">
-            <div class="empty-agenda-view">此日暫無排定活動</div>
+            <div id="agendaListNode" class="agenda-list">
+                <div class="empty-agenda-view">此日暫無排定活動</div>
+            </div>
         </div>
     </div>
 
@@ -1504,7 +1574,7 @@ const E2EE = {
 };
 window.E2EE = E2EE;
 
-// ─── Low 1 修復：防重 Mutex 鎖與已解鎖記憶體檢查 ───
+// ─── 防重 Mutex 鎖與已解鎖記憶體檢查 ───
 let _unlockPromptActive = false;
 
 async function promptAndUnlockMemberKey(displayName) {
@@ -1544,7 +1614,7 @@ async function promptAndUnlockMemberKey(displayName) {
 }
 window.promptAndUnlockMemberKey = promptAndUnlockMemberKey;
 
-// ─── 高可靠性原子調和函數（Commit-then-Evict） ───
+// ─── 高可靠性調和函數 ───
 function reconcileActivityId(tempId, realKey) {
     if (!tempId || !realKey || tempId === realKey) return;
 
@@ -1577,11 +1647,11 @@ function reconcileActivityId(tempId, realKey) {
 
         LocalPendingStore.removeByTempId(tempId);
     } catch (err) {
-        console.error("reconcileActivityId 執行中斷，保留 LocalPendingStore 以防資料丟失:", err);
+        console.error("reconcileActivityId 執行中斷:", err);
     }
 }
 
-// ─── 離線事務佇列（已整合 Low 2 / Low 3 / Micro 2） ───
+// ─── 離線事務佇列 ───
 const OfflineQueue = {
     getQueue() { return JSON.parse(localStorage.getItem('family_offline_queue') || "[]"); },
     push(action) {
@@ -1635,8 +1705,7 @@ const OfflineQueue = {
                         remaining.push(item);
                         continue;
                     } catch (refreshErr) {
-                        // 🚨 Micro 2：明確輸出 Token 刷新失敗日誌
-                        console.warn("Auth token 強制換發失敗，item 進入普通重試佇列:", refreshErr);
+                        console.warn("Auth token 強制換發失敗:", refreshErr);
                     }
                 }
 
@@ -1684,7 +1753,7 @@ const LoadingHUD = {
     }
 };
 
-// ─── 6 秒撤銷 Toast（獨占 Mutex + 倒數間隔安全清理） ───
+// ─── 6 秒撤銷 Toast ───
 window.pendingDeletedIds = new Set();
 let undoTimer = null;
 let undoCountdownInterval = null;
@@ -1693,22 +1762,12 @@ let pendingDeleteItemSnapshot = null;
 
 function showUndoToast(title, itemSnapshot, onCommitDelete) {
     if (pendingDeleteAction) {
-        try {
-            pendingDeleteAction();
-        } catch (err) {
-            console.error("執行上一個待定刪除失敗:", err);
-        }
+        try { pendingDeleteAction(); } catch (err) {}
         pendingDeleteAction = null;
     }
 
-    if (undoTimer) {
-        clearTimeout(undoTimer);
-        undoTimer = null;
-    }
-    if (undoCountdownInterval) {
-        clearInterval(undoCountdownInterval);
-        undoCountdownInterval = null;
-    }
+    if (undoTimer) clearTimeout(undoTimer);
+    if (undoCountdownInterval) clearInterval(undoCountdownInterval);
 
     pendingDeleteAction = onCommitDelete;
     pendingDeleteItemSnapshot = itemSnapshot;
@@ -1717,7 +1776,7 @@ function showUndoToast(title, itemSnapshot, onCommitDelete) {
     const msg = document.getElementById('undoToastMsg');
     const secEl = document.getElementById('undoCountdownSec');
     
-    msg.innerText = `已刪除「${title}」（若誤刪請點右邊撤銷）`;
+    msg.innerText = `已刪除「${title}」`;
     toast.classList.add('show');
 
     let leftSec = 6;
@@ -1734,10 +1793,7 @@ function showUndoToast(title, itemSnapshot, onCommitDelete) {
 
     undoTimer = setTimeout(() => {
         toast.classList.remove('show');
-        if (undoCountdownInterval) {
-            clearInterval(undoCountdownInterval);
-            undoCountdownInterval = null;
-        }
+        if (undoCountdownInterval) clearInterval(undoCountdownInterval);
         if (pendingDeleteAction) {
             pendingDeleteAction();
             pendingDeleteAction = null;
@@ -1747,14 +1803,8 @@ function showUndoToast(title, itemSnapshot, onCommitDelete) {
 }
 
 function triggerUndoAction() {
-    if (undoTimer) {
-        clearTimeout(undoTimer);
-        undoTimer = null;
-    }
-    if (undoCountdownInterval) {
-        clearInterval(undoCountdownInterval);
-        undoCountdownInterval = null;
-    }
+    if (undoTimer) clearTimeout(undoTimer);
+    if (undoCountdownInterval) clearInterval(undoCountdownInterval);
 
     document.getElementById('undoToastNode').classList.remove('show');
 
@@ -1843,7 +1893,7 @@ async function checkBudgetThreshold(newExpenseAmount, targetDateStr) {
     }
 }
 
-// ─── 💡 升級版萬用 OCR 收據辨識引擎（兼容 Market Place / 萬寧等所有香港收據） ───
+// ─── OCR 收據辨識引擎 ───
 async function handleReceiptFileChange(input) {
     const file = input.files && input.files[0];
     if (!file) return;
@@ -1908,7 +1958,7 @@ async function handleReceiptFileChange(input) {
         try {
             data = JSON.parse(cleanJsonStr);
         } catch (e) {
-            console.warn("JSON.parse 失敗，啟動萬用正則容錯提取");
+            console.warn("JSON.parse 失敗，啟動容錯提取");
         }
 
         let merchant = data.merchant || data.title || data.shop_name || data.shop || data.store || "";
@@ -2853,7 +2903,7 @@ function renderCalendar() {
         if (dayActs.length > 0) {
             eventChipsHtml = `<div class="day-events-text-box">${dayActs.slice(0, 3).map(act => {
                 const safeTitle = getSafeTitle(act.title);
-                if (act.isExpense) return `<div class="calendar-expense-chip" title="${safeTitle}">💰 $${act.amount}${safeTitle}</div>`;
+                if (act.isExpense) return `<div class="calendar-expense-chip" title="${safeTitle}">💰 $${act.amount} ${safeTitle}</div>`;
                 const timePart = (typeof act.time === 'string') ? act.time.split(' ')[0] : '';
                 const theme = getMemberTheme(act.assignee);
                 return `<div class="calendar-event-chip" style="background:${theme.bg}; color:${theme.color}; border-left: 2px solid ${theme.border};" title="${safeTitle}">${timePart} ${safeTitle}</div>`;
