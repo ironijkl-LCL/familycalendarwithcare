@@ -327,6 +327,7 @@ header {
     flex-shrink: 0;
 }
 .weekdays-row .sunday { color: var(--oasis-danger); }
+.weekdays-row .saturday { color: #0071e3; }
 
 .days-grid {
     flex: 1;
@@ -376,6 +377,7 @@ header {
 .day-number { font-size: calc(11px * var(--cal-zoom)); font-weight: 700; }
 .day-cell.is-holiday .day-number,
 .day-cell.is-sunday .day-number { color: var(--oasis-danger); }
+.day-cell.is-saturday .day-number { color: #0071e3; }
 .day-lunar { font-size: calc(8.5px * var(--cal-zoom)); color: var(--apple-text-secondary); transform: scale(0.9); transform-origin: right center; }
 .day-holiday {
     font-size: calc(8.5px * var(--cal-zoom));
@@ -398,6 +400,13 @@ header {
     overflow: hidden;
     text-overflow: ellipsis;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+.calendar-event-chip.is-pinned {
+    box-shadow: 0 0 0 1px rgba(255, 149, 0, 0.7);
+    font-weight: 800;
 }
 .calendar-expense-chip {
     font-size: calc(8.5px * var(--cal-zoom));
@@ -450,7 +459,17 @@ header {
     margin-top: 2px;
 }
 
-.agenda-actions { display: flex; gap: 4px; align-items: center; }
+.agenda-actions { display: flex; gap: 6px; align-items: center; }
+.agenda-view-toggle-btn {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--apple-border);
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--apple-text);
+}
 .agenda-quick-btn {
     background: rgba(0, 113, 227, 0.08);
     color: var(--oasis-primary);
@@ -481,9 +500,14 @@ header {
     align-items: center;
     border-left-width: 4px;
     border-left-style: solid;
+    position: relative;
+}
+.event-row-card.is-pinned {
+    background: rgba(255, 149, 0, 0.04);
+    box-shadow: 0 0 0 1px rgba(255, 149, 0, 0.25);
 }
 .event-info { display: flex; flex-direction: column; gap: 3px; }
-.event-time-badge { font-size: 11px; font-weight: 700; }
+.event-time-badge { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
 .event-title-text { font-size: 13.5px; font-weight: 600; color: var(--apple-text); }
 .event-meta-tags { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .tag-pill {
@@ -511,11 +535,74 @@ header {
     color: #4b5563;
     font-weight: 700;
 }
+.pin-badge {
+    font-size: 10px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: rgba(255, 149, 0, 0.18);
+    color: #b45309;
+    font-weight: 800;
+}
+.attachment-badge {
+    font-size: 10px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: rgba(0, 113, 227, 0.12);
+    color: var(--oasis-primary);
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
 
 .row-actions-group { display: flex; gap: 8px; align-items: center; }
 .btn-edit-link { background: none; border: none; color: var(--oasis-primary); font-size: 13px; font-weight: 700; cursor: pointer; padding: 4px; }
 .btn-delete-link { background: none; border: none; color: var(--oasis-danger); font-size: 13px; font-weight: 700; cursor: pointer; padding: 4px; }
 .empty-agenda-view { text-align: center; padding: 20px 0; color: var(--apple-text-secondary); font-size: 13px; }
+
+/* ⏱️ 小時時間軸檢視 (TimeTree-style 垂直時段排程) */
+.timeline-view-container {
+    flex: 1;
+    overflow-y: auto;
+    padding-top: 6px;
+    display: flex;
+    flex-direction: column;
+}
+.timeline-view-container::-webkit-scrollbar { display: none; }
+.timeline-hour-row {
+    display: flex;
+    min-height: 44px;
+    border-top: 1px dashed var(--apple-border);
+    position: relative;
+}
+.timeline-hour-label {
+    width: 48px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--apple-text-secondary);
+    padding-top: 2px;
+    flex-shrink: 0;
+}
+.timeline-hour-content {
+    flex: 1;
+    padding: 2px 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.timeline-event-block {
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left-width: 3px;
+    border-left-style: solid;
+    cursor: pointer;
+}
 
 /* ─── 🖥️ iPad 13" / 29" 桌面大螢幕專屬優化 (雙欄儀表板模式) ─── */
 @media (min-width: 820px) {
@@ -542,7 +629,6 @@ header {
 }
 
 @media (min-width: 1400px) {
-    /* 針對 27"-32" 大螢幕超高清解析度 */
     .main-layout {
         padding: 14px 20px;
         gap: 12px;
@@ -836,9 +922,8 @@ header {
                                  (e.message && (e.message.includes('network') || e.message.includes('offline') || e.message.includes('timeout') || e.message.includes('disconnected')));
 
           if (isPermissionDenied) {
-              console.error("Member mapping 權限拒絕（永久失敗，請檢查 Security Rules）:", e);
+              console.error("Member mapping 權限拒絕:", e);
           } else if (isNetworkError && window.OfflineQueue) {
-              console.warn("Member mapping 遇網絡異常，轉入離線佇列待命重試:", e);
               const q = window.OfflineQueue.getQueue();
               const exists = q.some(item => item.path === `members/${uid}`);
               if (!exists) {
@@ -848,8 +933,6 @@ header {
                       data: { name: memberName, updatedAt: Date.now() }
                   });
               }
-          } else {
-              console.warn("Member mapping 發生未預期錯誤:", e);
           }
       }
   };
@@ -913,6 +996,8 @@ header {
                               category: inner.category || "家庭",
                               isExpense: !!inner.isExpense,
                               amount: inner.amount || 0,
+                              isPinned: !!inner.isPinned,
+                              attachment: inner.attachment || null,
                               isPrivate: true,
                               updatedAt: item.updatedAt || 0
                           });
@@ -930,6 +1015,8 @@ header {
                           category: item.category || "家庭",
                           isExpense: item.isExpense || false,
                           amount: item.amount || 0,
+                          isPinned: !!item.isPinned,
+                          attachment: item.attachment || null,
                           isPrivate: false,
                           updatedAt: item.updatedAt || 0
                       });
@@ -938,7 +1025,6 @@ header {
           }
 
           const pendingLocalItems = window.LocalPendingStore ? window.LocalPendingStore.getAll() : [];
-
           window.activities = [...pendingLocalItems, ...cloudList];
           localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
 
@@ -971,15 +1057,6 @@ header {
           if (activeInsight) {
               banner.style.display = "block";
               msgEl.innerText = `🧠 ${activeInsight.promptMessage}`;
-              
-              if (Notification.permission === "granted" && !sessionStorage.getItem(`notif_${insightKey}`)) {
-                  new Notification("🧠 家庭記憶層提醒", {
-                      body: activeInsight.promptMessage,
-                      icon: "icons/icon-192.png"
-                  });
-                  sessionStorage.setItem(`notif_${insightKey}`, "true");
-              }
-
               btn.onclick = async () => {
                   selectedDateStr = activeInsight.suggestedDate;
                   openAddModal('ADD');
@@ -988,7 +1065,6 @@ header {
                   document.getElementById('nativeEventTime').value = "19:30";
                   document.getElementById('formEventCategory').value = "醫療健康";
                   document.getElementById('formEventAssignee').value = activeInsight.assignee;
-                  
                   if (window.fbSet) {
                       await window.fbSet(window.fbRef(window.fbDb, `family_insights/${insightKey}/status`), "scheduled");
                   }
@@ -1035,7 +1111,7 @@ header {
         <button class="btn-green" onclick="handleTopAddClick()">➕ 活動</button>
         <button class="btn-orange" onclick="handleTopExpenseClick()">🧾 記帳</button>
         <button class="btn-indigo" onclick="openSettlementModal()">📊 結算</button>
-        <button class="btn-blue" onclick="handleTopManageClick()">⚙️ 管理</button>
+        <button class="btn-blue" onclick="handleTopManageClick()">⚙️ 設定</button>
         <button class="btn-purple" onclick="generateLockScreenWallpaper()">📱 壁紙</button>
         <button class="btn-teal" onclick="subscribeAppleCalendar()">📅 訂閱</button>
         <button class="btn-wa" onclick="shareWhatsApp()">💬 WA</button>
@@ -1044,7 +1120,7 @@ header {
     <!-- 🔮 廣東話語音輸入排程列 -->
     <div class="ai-compact-bar">
         <button id="speechBtn" class="ai-speech-mic-btn" onclick="toggleSpeechRecognition()" title="按住進行廣東話語音輸入">🎙️</button>
-        <input type="text" id="aiQuickInput" class="ai-nlp-input" placeholder="✨ 講或寫：百佳買咗280蚊、聽晚仁安覆診...">
+        <input type="text" id="aiQuickInput" class="ai-nlp-input" placeholder="✨ 講或寫：百佳買咗280蚊、聽晚仁安覆診、置頂日文堂...">
         <button class="ai-nlp-btn" onclick="executeAINaturalInput()">AI 排程</button>
     </div>
 
@@ -1062,42 +1138,40 @@ header {
         <div id="aiPendingBadge" class="ai-pending-badge">0 項活動</div>
     </div>
 
-    <!-- 響應式內容容器（iPhone 直排、iPad / 29" 橫排雙欄） -->
+    <!-- 響應式雙欄佈局 (iPhone 直排、iPad / 29" 橫排雙欄) -->
     <div class="content-grid-wrapper">
         <!-- 🗓️ 月曆卡片 -->
         <div class="calendar-card" id="calendarCardNode">
             <div class="calendar-nav-bar">
                 <button class="nav-arrow-btn" onclick="changeMonthOffset(-1)">⬅ 上一月</button>
                 <div class="calendar-title-wrap">
-                    <div id="calendarMonthLabel" class="current-month-label">2026年 9月</div>
-                    <span id="zoomLevelIndicator" class="zoom-toggle-badge" onclick="cycleCalendarZoom()" title="點擊切換大小或雙指手勢縮放">🔍 100%</span>
+                    <div id="calendarMonthLabel" class="current-month-label">2026年 10月</div>
+                    <span id="zoomLevelIndicator" class="zoom-toggle-badge" onclick="cycleCalendarZoom()" title="縮放">🔍 100%</span>
                 </div>
                 <button class="nav-arrow-btn" onclick="changeMonthOffset(1)">下一月 ➡</button>
             </div>
-            <div class="weekdays-row">
-                <div class="sunday">日</div>
-                <div>一</div>
-                <div>二</div>
-                <div>三</div>
-                <div>四</div>
-                <div>五</div>
-                <div>六</div>
-            </div>
+            <div id="weekdaysRowNode" class="weekdays-row"></div>
             <div id="daysGridNode" class="days-grid"></div>
         </div>
 
-        <!-- 📋 焦點日程 -->
+        <!-- 📋 焦點日程 / 小時時間軸 -->
         <div class="agenda-card">
             <div class="agenda-header">
                 <div class="agenda-header-titles">
                     <div id="agendaDateTitle" class="agenda-date-title">📋 行程資訊</div>
                     <div id="agendaDailyExpenseSummary" style="display:none;"></div>
                 </div>
-                <div id="agendaActionsNode" class="agenda-actions"></div>
+                <div class="agenda-actions">
+                    <button id="toggleAgendaViewBtn" class="agenda-view-toggle-btn" onclick="toggleAgendaView()">⏱️ 時間軸</button>
+                    <div id="agendaActionsNode"></div>
+                </div>
             </div>
+            <!-- 清單檢視 -->
             <div id="agendaListNode" class="agenda-list">
                 <div class="empty-agenda-view">此日暫無排定活動</div>
             </div>
+            <!-- 小時單位時間軸檢視 (TimeTree 核心功能) -->
+            <div id="agendaTimelineNode" class="timeline-view-container" style="display: none;"></div>
         </div>
     </div>
 
@@ -1123,29 +1197,23 @@ header {
             </select>
             <input type="password" id="loginPasswordInput" class="form-input" placeholder="輸入成員專屬密碼...">
             <button class="submit-btn-block" onclick="submitLogin()">登入驗證身分</button>
-
-            <div style="display:flex; align-items:center; margin:10px 0 2px;">
-                <div style="flex:1; height:1px; background:var(--apple-border);"></div>
-                <span style="font-size:11px; color:var(--apple-text-secondary); padding:0 8px;">或</span>
-                <div style="flex:1; height:1px; background:var(--apple-border);"></div>
-            </div>
-            
-            <button class="apple-signin-btn" onclick="signInWithApple()">
-                <svg class="apple-logo-icon" viewBox="0 0 170 170">
-                    <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.04-7.58-7.71-11.65-14.01-6.19-9.56-11.06-20.73-14.6-33.51-3.55-12.78-5.32-24.31-5.32-34.6 0-14.78 3.79-26.68 11.37-35.7 7.58-9.02 17.06-13.62 28.44-13.79 4.35 0 9.28 1.13 14.79 3.39 5.51 2.26 9.4 3.44 11.66 3.54 2.04 0 6.13-1.25 12.28-3.76 6.15-2.51 11.45-3.62 15.91-3.33 12.3.67 21.9 5.09 28.79 13.26-10.92 6.64-16.27 15.69-16.06 27.15.21 9.02 3.65 16.59 10.32 22.7 6.67 6.11 14.58 9.54 23.73 10.28-2.61 7.74-5.83 15.69-9.66 23.86zM119.22 33.02c0-7.39 2.66-14.46 7.98-21.21 5.32-6.75 11.96-11.02 19.92-12.81.42 2.12.63 4.13.63 6.03 0 7.4-2.73 14.54-8.19 21.42-5.46 6.88-12.18 11.05-20.16 12.51-.07-1.9-.18-3.88-.18-5.94z"/>
-                </svg>
-                透過 Apple 登入
-            </button>
+            <button class="apple-signin-btn" onclick="signInWithApple()">透過 Apple 登入</button>
         </div>
 
         <div id="eventFormFields">
             <label class="form-label">活動名稱 / 地點：</label>
-            <input type="text" id="formEventTitle" class="form-input" placeholder="例如：Dinner/Grandma home">
+            <input type="text" id="formEventTitle" class="form-input" placeholder="例如：Dinner / Grandma home">
 
             <label class="form-label">📅 日期與時間：</label>
             <div class="native-picker-row">
                 <input type="date" id="nativeEventDate">
                 <input type="time" id="nativeEventTime">
+            </div>
+
+            <!-- 📌 置頂重要行程 (TimeTree Pin 功能) -->
+            <div style="display:flex; align-items:center; justify-content:space-between; margin:8px 0; background:rgba(255,149,0,0.06); padding:8px 12px; border-radius:10px; border:1px solid rgba(255,149,0,0.2);">
+                <span style="font-size:13px; font-weight:700; color:#b45309;">📌 置頂行程（優先展示不漏看）</span>
+                <input type="checkbox" id="formEventPin" style="width:18px; height:18px; accent-color:var(--oasis-warning);">
             </div>
 
             <label class="form-label">可見度權限：</label>
@@ -1156,25 +1224,30 @@ header {
 
             <label class="form-label">活動分類：</label>
             <select id="formEventCategory" class="form-input">
-                <option value="日常開支">💰 日常開支</option>
                 <option value="家庭">👨‍👩‍👧 家庭</option>
                 <option value="醫療健康">💊 醫療健康</option>
                 <option value="體育運動">🎯 體育運動</option>
                 <option value="學校">🏫 學校</option>
                 <option value="工作">💼 工作</option>
                 <option value="重要">❤️ 重要</option>
+                <option value="日常開支">💰 日常開支</option>
             </select>
 
             <label class="form-label">執行負責人：</label>
             <select id="formEventAssignee" class="form-input">
-                <option value="鐵" style="color:#0071e3; font-weight:bold;">👦 鐵 (藍色)</option>
-                <option value="Daddy" style="color:#1d4ed8; font-weight:bold;">👨 Daddy (深藍)</option>
-                <option value="Mummy" style="color:#e11d48; font-weight:bold;">👩‍🦱 Mummy (玫瑰紅)</option>
-                <option value="Jolie" style="color:#8b5cf6; font-weight:bold;">👧 Jolie (紫色)</option>
-                <option value="蓓" style="color:#ea580c; font-weight:bold;">👩 蓓 (橙色)</option>
-                <option value="熹" style="color:#0d9488; font-weight:bold;">👶 熹 (薄荷綠)</option>
-                <option value="全員" style="color:#16a34a; font-weight:bold;">👨‍👩‍👧‍👦 全員 (翡翠綠)</option>
+                <option value="鐵">👦 鐵</option>
+                <option value="Daddy">👨 Daddy</option>
+                <option value="Mummy">👩‍🦱 Mummy</option>
+                <option value="Jolie">👧 Jolie</option>
+                <option value="蓓">👩 蓓</option>
+                <option value="熹">👶 熹</option>
+                <option value="全員">👨‍‍👩‍👧‍👦 全員</option>
             </select>
+
+            <!-- 📎 附件檔案/圖片上傳 (TimeTree Attachment 功能) -->
+            <label class="form-label">📎 附加照片或文件憑證 (PDF/圖片)：</label>
+            <input type="file" id="formEventAttachmentInput" class="form-input" style="padding:6px;" accept="image/*,application/pdf" onchange="handleEventAttachmentSelect(this)">
+            <div id="attachmentPreviewName" style="font-size:11px; color:var(--oasis-primary); font-weight:600; margin-top:2px; display:none;"></div>
 
             <button id="modalSubmitBtn" class="submit-btn-block" onclick="saveEvent()">確認儲存至此日</button>
         </div>
@@ -1194,14 +1267,14 @@ header {
         <label for="receiptFileInput" id="receiptUploadLabelBox" class="receipt-upload-label">
             <div style="font-size:26px;">📸</div>
             <div style="font-size:13px; font-weight:700; color:#b45309; margin-top:4px;">點擊影相 / 上傳收據</div>
-            <div style="font-size:11px; color:var(--apple-text-secondary); margin-top:2px;">AI 雲端安全提取實付總額、商戶名並自動匹配類別</div>
+            <div style="font-size:11px; color:var(--apple-text-secondary); margin-top:2px;">AI 智能辨識金額與商戶</div>
             <img id="receiptPreviewImg" class="receipt-preview-img" alt="收據預覽">
         </label>
 
         <label class="form-label">商戶 / 店舖名稱：</label>
-        <input type="text" id="expenseMerchantInput" class="form-input" placeholder="例如：百佳超級市場 / 萬寧 / 那個" oninput="handleMerchantInputBlur(this.value)">
+        <input type="text" id="expenseMerchantInput" class="form-input" placeholder="例如：百佳超級市場 / 萬寧" oninput="handleMerchantInputBlur(this.value)">
 
-        <label class="form-label">實付金額 (HKD - 含服務費總額)：</label>
+        <label class="form-label">實付金額 (HKD)：</label>
         <input type="number" step="0.1" id="expenseAmountInput" class="form-input" placeholder="例如：535">
 
         <label class="form-label">📅 消費日期與時間：</label>
@@ -1210,25 +1283,16 @@ header {
             <input type="time" id="expenseTimeInput">
         </div>
 
-        <label class="form-label">開支可見度：</label>
-        <select id="expenseVisibilitySelect" class="form-input">
-            <option value="public">🌐 公開 (全家人可見)</option>
-            <option value="private">🔒 不公開 (全負載零知識加密 · 隱蔽金額與商戶)</option>
-        </select>
-
         <label class="form-label">支出類別：</label>
         <select id="expenseCategorySelect" class="form-input">
             <option value="家庭餐飲">🍽️ 家庭餐飲</option>
-            <option value="日常開支">💰 日常開支</option>
             <option value="超市日用">🛒 超市日用</option>
             <option value="醫療健康">💊 醫療健康</option>
             <option value="水電煤雜費">⚡ 水電煤雜費</option>
-            <option value="學校教育">📚 學校教育</option>
-            <option value="交通出行">🚗 交通出行</option>
-            <option value="其他開支">📦 其他開支</option>
+            <option value="日常開支">💰 日常開支</option>
         </select>
 
-        <label class="form-label">付款家庭成員：</label>
+        <label class="form-label">付款成員：</label>
         <select id="expensePayerSelect" class="form-input">
             <option value="鐵">👦 鐵</option>
             <option value="Daddy">👨 Daddy</option>
@@ -1249,20 +1313,36 @@ header {
         <h3 style="margin:0 0 4px; font-size:17px; color:var(--oasis-primary);">📊 本月家庭財務結算</h3>
         <div id="settlementMonthTitle" style="font-size:12px; color:var(--apple-text-secondary); margin-bottom:12px;"></div>
         <div id="settlementSummaryCards" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;"></div>
-        <h4 style="margin:8px 0 6px; font-size:14px;">💡 建議轉帳方案（最少轉帳路徑）：</h4>
+        <h4 style="margin:8px 0 6px; font-size:14px;">💡 建議轉帳方案：</h4>
         <div id="settlementTransfersList" style="background:rgba(0,0,0,0.03); border-radius:10px; padding:10px; font-size:13px; line-height:1.6; margin-bottom:12px;"></div>
-        <button class="submit-btn-block" style="background:#34c759;" onclick="exportExpensesToCSV()">📥 匯出當月收支 CSV (Excel相容)</button>
+        <button class="submit-btn-block" style="background:#34c759;" onclick="exportExpensesToCSV()">📥 匯出當月收支 CSV</button>
     </div>
 </div>
 
-<!-- ⚙️ 管理面板 -->
+<!-- ⚙️️ 系統設定與行程管理 -->
 <div id="manageModal" class="popup-overlay" onclick="if(event.target===this)closeManageModal()">
     <div class="popup-card">
         <button class="popup-close-x" onclick="closeManageModal()">&times;</button>
-        <h3 style="margin:0 0 10px; font-size:17px;">⚙️ 家庭設定與行程管理</h3>
+        <h3 style="margin:0 0 10px; font-size:17px;">⚙️ App 設定與行事曆偏好</h3>
         
+        <!-- 一週開始日與農曆顯示 (TimeTree Settings) -->
+        <div style="background:rgba(0,0,0,0.03); border-radius:12px; padding:12px; margin-bottom:12px;">
+            <div style="font-size:13px; font-weight:700; margin-bottom:8px;">📅 日曆偏好設定</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="font-size:13px; color:var(--apple-text);">一週的開始：</span>
+                <select id="settingWeekStartSelect" class="form-input" style="width:auto; margin:0; padding:4px 8px;" onchange="saveAppDisplaySettings()">
+                    <option value="0">星期日</option>
+                    <option value="1">星期一</option>
+                </select>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:13px; color:var(--apple-text);">顯示農曆資訊：</span>
+                <input type="checkbox" id="settingShowLunarCheckbox" style="width:18px; height:18px; accent-color:var(--oasis-primary);" onchange="saveAppDisplaySettings()">
+            </div>
+        </div>
+
         <div style="background:rgba(0,113,227,0.06); border:1px solid rgba(0,113,227,0.18); border-radius:12px; padding:10px 12px; margin-bottom:14px;">
-            <div style="font-size:12.5px; font-weight:700; color:var(--oasis-primary); margin-bottom:4px;">💰 每月家庭開支預算設定 (HKD)</div>
+            <div style="font-size:12.5px; font-weight:700; color:var(--oasis-primary); margin-bottom:4px;">💰 每月家庭開支預算 (HKD)</div>
             <div style="display:flex; gap:8px; align-items:center;">
                 <input type="number" id="budgetSettingInput" class="form-input" style="margin:0; flex:1;" placeholder="15000">
                 <button class="submit-btn-block" style="margin:0; width:auto; padding:8px 14px; font-size:13px;" onclick="saveMonthlyBudgetSetting()">儲存預算</button>
@@ -1301,15 +1381,10 @@ header {
 // ─── 獨立 LocalPendingStore ───
 const LocalPendingStore = {
     getItems() {
-        try {
-            return JSON.parse(localStorage.getItem('family_local_pending') || "[]");
-        } catch (e) {
-            return [];
-        }
+        try { return JSON.parse(localStorage.getItem('family_local_pending') || "[]"); }
+        catch (e) { return []; }
     },
-    save(items) {
-        localStorage.setItem('family_local_pending', JSON.stringify(items));
-    },
+    save(items) { localStorage.setItem('family_local_pending', JSON.stringify(items)); },
     add(item) {
         if (!item || !item.id) return;
         const items = this.getItems().filter(i => i.id !== item.id);
@@ -1321,13 +1396,11 @@ const LocalPendingStore = {
         const items = this.getItems().filter(i => i.id !== tempId);
         this.save(items);
     },
-    getAll() {
-        return this.getItems();
-    }
+    getAll() { return this.getItems(); }
 };
 window.LocalPendingStore = LocalPendingStore;
 
-// ─── 本機安全金鑰庫（IndexedDB 存儲封裝） ───
+// ─── 本機安全金鑰庫 ───
 const KeyVaultDB = {
     dbName: "FamilyOS_KeyVault",
     storeName: "member_keys",
@@ -1359,54 +1432,27 @@ const KeyVaultDB = {
     }
 };
 
-// ─── 成員專屬非對稱加密引擎（ECDH P-256 + PBKDF2 + AES-GCM） ───
+// ─── 成員專屬非對稱加密引擎 ───
 const MemberE2EE = {
     activePrivateKey: null,
     activeMember: null,
-
     async deriveKeyFromPassword(password, salt) {
         const enc = new TextEncoder();
-        const keyMaterial = await crypto.subtle.importKey(
-            "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]
-        );
-        return await crypto.subtle.deriveKey(
-            { name: "PBKDF2", salt, iterations: 100000, hash: "SHA-256" },
-            keyMaterial,
-            { name: "AES-GCM", length: 256 },
-            false,
-            ["encrypt", "decrypt"]
-        );
+        const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]);
+        return await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: 100000, hash: "SHA-256" }, keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
     },
-
     async initMemberKeys(memberName, password) {
         this.activeMember = memberName;
         let record = await KeyVaultDB.getKey(memberName);
-
         if (!record) {
-            const keyPair = await crypto.subtle.generateKey(
-                { name: "ECDH", namedCurve: "P-256" },
-                true,
-                ["deriveKey", "deriveBits"]
-            );
-
+            const keyPair = await crypto.subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, ["deriveKey", "deriveBits"]);
             const rawPrivKey = await crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
             const rawJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
-
-            const exportedPubKey = {
-                kty: rawJwk.kty,
-                crv: rawJwk.crv,
-                x: rawJwk.x,
-                y: rawJwk.y
-            };
-
+            const exportedPubKey = { kty: rawJwk.kty, crv: rawJwk.crv, x: rawJwk.x, y: rawJwk.y };
             const salt = crypto.getRandomValues(new Uint8Array(16));
             const iv = crypto.getRandomValues(new Uint8Array(12));
             const wrapKey = await this.deriveKeyFromPassword(password, salt);
-            const encryptedPrivKey = await crypto.subtle.encrypt(
-                { name: "AES-GCM", iv },
-                wrapKey,
-                rawPrivKey
-            );
+            const encryptedPrivKey = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, wrapKey, rawPrivKey);
 
             await KeyVaultDB.saveKey(memberName, {
                 encryptedPrivKey: Array.from(new Uint8Array(encryptedPrivKey)),
@@ -1416,12 +1462,8 @@ const MemberE2EE = {
             });
 
             if (window.fbDb && window.fbRef && window.fbSet) {
-                await window.fbSet(
-                    window.fbRef(window.fbDb, `family_public_keys/${memberName}`),
-                    exportedPubKey
-                );
+                await window.fbSet(window.fbRef(window.fbDb, `family_public_keys/${memberName}`), exportedPubKey);
             }
-
             this.activePrivateKey = keyPair.privateKey;
             return true;
         } else {
@@ -1429,110 +1471,50 @@ const MemberE2EE = {
                 const salt = new Uint8Array(record.salt);
                 const iv = new Uint8Array(record.iv);
                 const wrapKey = await this.deriveKeyFromPassword(password, salt);
-                const decryptedRawPrivKey = await crypto.subtle.decrypt(
-                    { name: "AES-GCM", iv },
-                    wrapKey,
-                    new Uint8Array(record.encryptedPrivKey)
-                );
-
-                this.activePrivateKey = await crypto.subtle.importKey(
-                    "pkcs8",
-                    decryptedRawPrivKey,
-                    { name: "ECDH", namedCurve: "P-256" },
-                    false,
-                    ["deriveKey", "deriveBits"]
-                );
+                const decryptedRawPrivKey = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, wrapKey, new Uint8Array(record.encryptedPrivKey));
+                this.activePrivateKey = await crypto.subtle.importKey("pkcs8", decryptedRawPrivKey, { name: "ECDH", namedCurve: "P-256" }, false, ["deriveKey", "deriveBits"]);
                 return true;
             } catch (e) {
-                console.error("私鑰解密失敗:", e);
                 return false;
             }
         }
     },
-
     async encryptWithPublicKey(text, targetMember) {
         if (!text) return "";
         let pubKeyJwk = null;
         const localKey = await KeyVaultDB.getKey(targetMember);
-        if (localKey && localKey.publicKey) {
-            pubKeyJwk = localKey.publicKey;
-        } else if (window.fbDb && window.fbRef && window.fbGet) {
+        if (localKey && localKey.publicKey) pubKeyJwk = localKey.publicKey;
+        else if (window.fbDb && window.fbRef && window.fbGet) {
             const snap = await window.fbGet(window.fbRef(window.fbDb, `family_public_keys/${targetMember}`));
             if (snap.exists()) pubKeyJwk = snap.val();
         }
-
         if (!pubKeyJwk) return await E2EE.encrypt(text);
 
-        const targetPubKey = await crypto.subtle.importKey(
-            "jwk", pubKeyJwk, { name: "ECDH", namedCurve: "P-256" }, false, []
-        );
-
-        const ephemPair = await crypto.subtle.generateKey(
-            { name: "ECDH", namedCurve: "P-256" }, true, ["deriveKey"]
-        );
-
-        const sharedSecretKey = await crypto.subtle.deriveKey(
-            { name: "ECDH", public: targetPubKey },
-            ephemPair.privateKey,
-            { name: "AES-GCM", length: 256 },
-            false,
-            ["encrypt"]
-        );
-
+        const targetPubKey = await crypto.subtle.importKey("jwk", pubKeyJwk, { name: "ECDH", namedCurve: "P-256" }, false, []);
+        const ephemPair = await crypto.subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, ["deriveKey"]);
+        const sharedSecretKey = await crypto.subtle.deriveKey({ name: "ECDH", public: targetPubKey }, ephemPair.privateKey, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);
         const iv = crypto.getRandomValues(new Uint8Array(12));
-        const cipher = await crypto.subtle.encrypt(
-            { name: "AES-GCM", iv },
-            sharedSecretKey,
-            new TextEncoder().encode(String(text))
-        );
-
+        const cipher = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, sharedSecretKey, new TextEncoder().encode(String(text)));
         const ephemPubKeyJwk = await crypto.subtle.exportKey("jwk", ephemPair.publicKey);
 
         return {
             is_ecdh: true,
             owner: targetMember,
-            ephem: {
-                kty: ephemPubKeyJwk.kty,
-                crv: ephemPubKeyJwk.crv,
-                x: ephemPubKeyJwk.x,
-                y: ephemPubKeyJwk.y
-            },
+            ephem: { kty: ephemPubKeyJwk.kty, crv: ephemPubKeyJwk.crv, x: ephemPubKeyJwk.x, y: ephemPubKeyJwk.y },
             iv: btoa(String.fromCharCode(...iv)),
             data: btoa(String.fromCharCode(...new Uint8Array(cipher)))
         };
     },
-
     async decryptWithPrivateKey(cipherObj) {
         if (!cipherObj) return "";
-        if (typeof cipherObj !== "object" || !cipherObj.is_ecdh) {
-            return typeof cipherObj === "string" ? cipherObj : (cipherObj.title || "活動");
-        }
-
-        if (cipherObj.owner !== this.activeMember || !this.activePrivateKey) {
-            return "🔒 私人保密行程";
-        }
-
+        if (typeof cipherObj !== "object" || !cipherObj.is_ecdh) return typeof cipherObj === "string" ? cipherObj : (cipherObj.title || "活動");
+        if (cipherObj.owner !== this.activeMember || !this.activePrivateKey) return "🔒 私人保密行程";
         try {
-            const ephemPubKey = await crypto.subtle.importKey(
-                "jwk", cipherObj.ephem, { name: "ECDH", namedCurve: "P-256" }, false, []
-            );
-
-            const sharedSecretKey = await crypto.subtle.deriveKey(
-                { name: "ECDH", public: ephemPubKey },
-                this.activePrivateKey,
-                { name: "AES-GCM", length: 256 },
-                false,
-                ["decrypt"]
-            );
-
+            const ephemPubKey = await crypto.subtle.importKey("jwk", cipherObj.ephem, { name: "ECDH", namedCurve: "P-256" }, false, []);
+            const sharedSecretKey = await crypto.subtle.deriveKey({ name: "ECDH", public: ephemPubKey }, this.activePrivateKey, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
             const iv = Uint8Array.from(atob(cipherObj.iv), c => c.charCodeAt(0));
             const data = Uint8Array.from(atob(cipherObj.data), c => c.charCodeAt(0));
-
-            const plain = await crypto.subtle.decrypt(
-                { name: "AES-GCM", iv },
-                sharedSecretKey,
-                data
-            );
+            const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, sharedSecretKey, data);
             return new TextDecoder().decode(plain);
         } catch (e) {
             return "🔒 私人行程（解密失敗）";
@@ -1541,7 +1523,7 @@ const MemberE2EE = {
 };
 window.MemberE2EE = MemberE2EE;
 
-// ─── 全家共用 E2EE 引擎（公開行程標題保護） ───
+// ─── 全家共用 E2EE 引擎 ───
 const E2EE = {
     cachedKey: null,
     async getKey() {
@@ -1574,83 +1556,6 @@ const E2EE = {
 };
 window.E2EE = E2EE;
 
-// ─── 防重 Mutex 鎖與已解鎖記憶體檢查 ───
-let _unlockPromptActive = false;
-
-async function promptAndUnlockMemberKey(displayName) {
-    if (!window.MemberE2EE || !displayName) return;
-
-    if (MemberE2EE.activePrivateKey && MemberE2EE.activeMember === displayName) {
-        return;
-    }
-
-    if (_unlockPromptActive) return;
-    _unlockPromptActive = true;
-
-    try {
-        const record = await KeyVaultDB.getKey(displayName);
-        const isNewKey = !record;
-        const title = isNewKey ? "首次設定保險庫密碼" : "解鎖私人保險庫";
-        const msg = isNewKey 
-            ? "為配合端對端加密（E2EE），請為你的私密行程設定一組獨立安全密碼。\n\n⚠️ 此密碼僅保存在手機本地，絕不上傳伺服器，請務必記住！"
-            : `歡迎回來 ${displayName}！請輸入保險庫安全密碼，以解鎖你在此設備上的私密行程：`;
-        const pwd = await HIG.prompt(title, msg, "", true);
-        if (pwd) {
-            const success = await MemberE2EE.initMemberKeys(displayName, pwd);
-            if (success) {
-                await HIG.alert("解鎖成功", isNewKey ? "已成功建立你的專屬端對端加密金鑰！" : "私人保險庫已成功解鎖。");
-                if (window.startFirebaseSync) window.startFirebaseSync();
-            } else {
-                await HIG.alert("密碼不相符", "密碼不正確，未能解密私鑰。私密行程將暫時保持保密鎖定狀態。");
-            }
-        } else {
-            await HIG.alert("已略過解鎖", "你仍可正常使用公開日曆，但未解鎖前私密行程將保持隱藏。");
-        }
-    } catch (err) {
-        console.error("promptAndUnlockMemberKey 錯誤:", err);
-    } finally {
-        setTimeout(() => { _unlockPromptActive = false; }, 2500);
-    }
-}
-window.promptAndUnlockMemberKey = promptAndUnlockMemberKey;
-
-// ─── 高可靠性調和函數 ───
-function reconcileActivityId(tempId, realKey) {
-    if (!tempId || !realKey || tempId === realKey) return;
-
-    try {
-        window.activities = (window.activities || []).map(a => 
-            a.id === tempId ? { ...a, id: realKey } : a
-        );
-        localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
-
-        if (window.OfflineQueue) {
-            const q = window.OfflineQueue.getQueue();
-            let changed = false;
-            q.forEach(item => {
-                if (item.tempId === tempId) {
-                    item.type = 'UPDATE';
-                    item.path = `family_calendar_activities/${realKey}`;
-                    delete item.tempId;
-                    changed = true;
-                }
-                if (item.path && item.path.includes(tempId)) {
-                    item.path = item.path.replace(tempId, realKey);
-                    changed = true;
-                }
-            });
-            if (changed) {
-                localStorage.setItem('family_offline_queue', JSON.stringify(q));
-                window.OfflineQueue.updatePill();
-            }
-        }
-
-        LocalPendingStore.removeByTempId(tempId);
-    } catch (err) {
-        console.error("reconcileActivityId 執行中斷:", err);
-    }
-}
-
 // ─── 離線事務佇列 ───
 const OfflineQueue = {
     getQueue() { return JSON.parse(localStorage.getItem('family_offline_queue') || "[]"); },
@@ -1673,10 +1578,7 @@ const OfflineQueue = {
     async flush() {
         if (!navigator.onLine || !window.fbDb) return;
         const q = this.getQueue();
-        if (q.length === 0) {
-            this.updatePill();
-            return;
-        }
+        if (q.length === 0) { this.updatePill(); return; }
         const remaining = [];
         for (const item of q) {
             try {
@@ -1692,65 +1594,33 @@ const OfflineQueue = {
                     await window.fbRemove(window.fbRef(window.fbDb, item.path));
                 }
             } catch(e) {
-                console.warn(`離線佇列同步失敗 [${item.type}] ${item.path || ''}:`, e);
-
-                const isAuthTokenError = e.code === 'auth/network-request-failed' || 
-                                         e.code === 'auth/user-token-expired' || 
-                                         e.code === 'auth/id-token-expired' || 
-                                         (e.message && e.message.toLowerCase().includes('token'));
-
-                if (isAuthTokenError && window.fbAuth?.currentUser) {
-                    try {
-                        await window.fbAuth.currentUser.getIdToken(true);
-                        remaining.push(item);
-                        continue;
-                    } catch (refreshErr) {
-                        console.warn("Auth token 強制換發失敗:", refreshErr);
-                    }
-                }
-
-                const isPermissionError = e.code === 'PERMISSION_DENIED' || (e.message && e.message.includes('Permission denied'));
-                const retryCount = (item.retryCount || 0) + 1;
-
-                if (isPermissionError || retryCount >= 3) {
-                    try {
-                        const logRef = window.fbPush(window.fbRef(window.fbDb, "system_runtime_logs"));
-                        await window.fbSet(logRef, {
-                            timestamp: Date.now(),
-                            level: "ERROR",
-                            message: `離線同步放棄: [${item.type}] ${item.path || ''} - ${e.message || e.code || '未知錯誤'}`
-                        });
-                    } catch(logErr) {}
-                } else {
-                    remaining.push({ ...item, retryCount });
-                }
+                remaining.push(item);
             }
         }
         localStorage.setItem('family_offline_queue', JSON.stringify(remaining));
         this.updatePill();
-        if (remaining.length === 0 && q.length > 0) {
-            HIG.alert("同步完成", "離線期間建立與修改的項目已安全推送至雲端！");
-        }
     }
 };
 window.OfflineQueue = OfflineQueue;
 window.addEventListener('online', () => OfflineQueue.flush());
 window.addEventListener('offline', () => OfflineQueue.updatePill());
 
-// ─── Loading HUD 控制器 ───
+function reconcileActivityId(tempId, realKey) {
+    if (!tempId || !realKey || tempId === realKey) return;
+    window.activities = (window.activities || []).map(a => a.id === tempId ? { ...a, id: realKey } : a);
+    localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
+    LocalPendingStore.removeByTempId(tempId);
+}
+
+// ─── Loading HUD ───
 const LoadingHUD = {
     show(title, subtitle) {
-        const hud = document.getElementById('higLoadingHud');
         document.getElementById('higHudTitle').innerText = title || "處理中...";
         document.getElementById('higHudSubtitle').innerText = subtitle || "";
-        hud.style.display = "flex";
+        document.getElementById('higLoadingHud').style.display = "flex";
     },
-    update(subtitle) {
-        document.getElementById('higHudSubtitle').innerText = subtitle || "";
-    },
-    hide() {
-        document.getElementById('higLoadingHud').style.display = "none";
-    }
+    update(subtitle) { document.getElementById('higHudSubtitle').innerText = subtitle || ""; },
+    hide() { document.getElementById('higLoadingHud').style.display = "none"; }
 };
 
 // ─── 6 秒撤銷 Toast ───
@@ -1761,11 +1631,7 @@ let pendingDeleteAction = null;
 let pendingDeleteItemSnapshot = null;
 
 function showUndoToast(title, itemSnapshot, onCommitDelete) {
-    if (pendingDeleteAction) {
-        try { pendingDeleteAction(); } catch (err) {}
-        pendingDeleteAction = null;
-    }
-
+    if (pendingDeleteAction) { try { pendingDeleteAction(); } catch (err) {} }
     if (undoTimer) clearTimeout(undoTimer);
     if (undoCountdownInterval) clearInterval(undoCountdownInterval);
 
@@ -1773,78 +1639,88 @@ function showUndoToast(title, itemSnapshot, onCommitDelete) {
     pendingDeleteItemSnapshot = itemSnapshot;
 
     const toast = document.getElementById('undoToastNode');
-    const msg = document.getElementById('undoToastMsg');
-    const secEl = document.getElementById('undoCountdownSec');
-    
-    msg.innerText = `已刪除「${title}」`;
+    document.getElementById('undoToastMsg').innerText = `已刪除「${title}」`;
     toast.classList.add('show');
 
     let leftSec = 6;
-    secEl.innerText = leftSec;
-
+    document.getElementById('undoCountdownSec').innerText = leftSec;
     undoCountdownInterval = setInterval(() => {
         leftSec--;
-        secEl.innerText = leftSec;
-        if (leftSec <= 0) {
-            clearInterval(undoCountdownInterval);
-            undoCountdownInterval = null;
-        }
+        document.getElementById('undoCountdownSec').innerText = leftSec;
+        if (leftSec <= 0) clearInterval(undoCountdownInterval);
     }, 1000);
 
     undoTimer = setTimeout(() => {
         toast.classList.remove('show');
-        if (undoCountdownInterval) clearInterval(undoCountdownInterval);
-        if (pendingDeleteAction) {
-            pendingDeleteAction();
-            pendingDeleteAction = null;
-            pendingDeleteItemSnapshot = null;
-        }
+        if (pendingDeleteAction) { pendingDeleteAction(); pendingDeleteAction = null; pendingDeleteItemSnapshot = null; }
     }, 6000);
 }
 
 function triggerUndoAction() {
     if (undoTimer) clearTimeout(undoTimer);
     if (undoCountdownInterval) clearInterval(undoCountdownInterval);
-
     document.getElementById('undoToastNode').classList.remove('show');
 
     if (pendingDeleteItemSnapshot) {
         const id = pendingDeleteItemSnapshot.id;
         window.pendingDeletedIds.delete(id);
-        
-        if (id.startsWith("local_") || id.startsWith("exp_")) {
-            LocalPendingStore.add(pendingDeleteItemSnapshot);
-        }
-
-        const exists = (window.activities || []).some(a => a && a.id === id);
-        if (!exists) {
-            window.activities.unshift(pendingDeleteItemSnapshot);
-        }
-
+        if (id.startsWith("local_") || id.startsWith("exp_")) LocalPendingStore.add(pendingDeleteItemSnapshot);
+        if (!(window.activities || []).some(a => a && a.id === id)) window.activities.unshift(pendingDeleteItemSnapshot);
         localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
         renderCalendar();
         renderAgenda();
         updateAISummary();
     }
-
     pendingDeleteAction = null;
     pendingDeleteItemSnapshot = null;
     HIG.alert("已撤銷刪除", "該活動已成功保留！");
 }
 
-window.requestNotificationPermission = async function() {
-    if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
-        await Notification.requestPermission();
-    }
-};
+// ─── 全域偏好設定 ───
+let WEEK_START_DAY = parseInt(localStorage.getItem('family_week_start') || "0", 10); // 0=週日, 1=週一
+let SHOW_LUNAR = localStorage.getItem('family_show_lunar') !== "false";
+let AGENDA_VIEW_MODE = localStorage.getItem('family_agenda_view') || "list"; // "list" 或 "timeline"
+let currentAttachmentData = null;
 
-// ─── 香港商戶字典 ───
+function saveAppDisplaySettings() {
+    WEEK_START_DAY = parseInt(document.getElementById('settingWeekStartSelect').value, 10);
+    SHOW_LUNAR = document.getElementById('settingShowLunarCheckbox').checked;
+    localStorage.setItem('family_week_start', String(WEEK_START_DAY));
+    localStorage.setItem('family_show_lunar', String(SHOW_LUNAR));
+    renderCalendar();
+    renderAgenda();
+}
+
+function toggleAgendaView() {
+    AGENDA_VIEW_MODE = AGENDA_VIEW_MODE === "list" ? "timeline" : "list";
+    localStorage.setItem('family_agenda_view', AGENDA_VIEW_MODE);
+    const btn = document.getElementById('toggleAgendaViewBtn');
+    if (btn) btn.innerText = AGENDA_VIEW_MODE === "list" ? "⏱️ 時間軸" : "📋 清單";
+    renderAgenda();
+}
+
+// ─── 附件處理 ───
+function handleEventAttachmentSelect(input) {
+    const file = input.files && input.files[0];
+    const previewEl = document.getElementById('attachmentPreviewName');
+    if (!file) { currentAttachmentData = null; previewEl.style.display = "none"; return; }
+    
+    const reader = new FileReader();
+    reader.onload = () => {
+        currentAttachmentData = { name: file.name, type: file.type, data: reader.result };
+        previewEl.innerText = `📎 已選取：${file.name}`;
+        previewEl.style.display = "block";
+    };
+    reader.readAsDataURL(file);
+}
+
+// ─── 香港商戶與預算 ───
 const HK_MERCHANT_MAP = {
-    "超市日用": ["百佳", "parkn", "fusion", "taste", "惠康", "wellcome", "market place", "360", "優品360", "759", "阿布泰", "大生", "佳寶", "u購", "donki", "一田", "citysuper", "無印", "muji"],
-    "家庭餐飲": ["大快活", "大家樂", "美心", "麥當勞", "mcdonald", "kfc", "肯德基", "那個", "元氣", "壽司郎", "sushiro", "譚仔", "三哥", "太興", "星巴克", "starbucks", "敏華", "翠華", "壽司", "酒樓", "茶餐廳", "麵家", "冰室"],
-    "醫療健康": ["萬寧", "mannings", "屈臣氏", "watsons", "仁安", "養和", "浸會", "卓健", "尚至", "診所", "醫院", "牙醫", "物理治療", "藥房", "同仁堂", "余仁生", "覆診"],
-    "交通出行": ["港鐵", "mtr", "九巴", "kmb", "城巴", "citybus", "hketoll", "易通行", "加德士", "caltex", "shell", "esso", "中石化", "sinopec", "泊車", "停車場", "的士", "uber", "高鐵"],
-    "水電煤雜費": ["中電", "clp", "港燈", "煤氣", "towngas", "水務署", "香港寬頻", "hkbn", "網上行", "hkt", "csl", "smartone", "3香港", "中國移動", "管理費"]
+    "超市日用": ["百佳", "parkn", "fusion", "taste", "惠康", "wellcome", "market place", "360", "優品360", "759", "donki", "一田"],
+    "家庭餐飲": ["大快活", "大家樂", "美心", "麥當勞", "肯德基", "壽司郎", "譚仔", "三哥", "星巴克"],
+    "醫療健康": ["萬寧", "屈臣氏", "仁安", "養和", "浸會", "卓健", "診所", "醫院", "覆診"],
+    "交通出行": ["港鐵", "九巴", "城巴", "hketoll", "的士", "uber"],
+    "水電煤雜費": ["中電", "港燈", "煤氣", "水務署", "香港寬頻", "hkt"]
 };
 
 function autoDetectCategoryByMerchant(merchantName) {
@@ -1862,172 +1738,64 @@ function handleMerchantInputBlur(val) {
     if (detected !== "日常開支" && catSelect) catSelect.value = detected;
 }
 
-// ─── 動態家庭預算管理 ───
 let MONTHLY_BUDGET = parseFloat(localStorage.getItem('family_monthly_budget') || "15000");
 
 async function saveMonthlyBudgetSetting() {
     const val = parseFloat(document.getElementById('budgetSettingInput').value.trim());
-    if (isNaN(val) || val <= 0) {
-        await HIG.alert("提示", "請輸入有效的每月預算金額！");
-        return;
-    }
+    if (isNaN(val) || val <= 0) return HIG.alert("提示", "請輸入有效的每月預算金額！");
     MONTHLY_BUDGET = val;
     localStorage.setItem('family_monthly_budget', String(val));
     updateAISummary();
-    await HIG.alert("已更新", `每月家庭預算已成功設定為 HK$ ${val.toLocaleString()}`);
+    await HIG.alert("已更新", `每月家庭預算已設定為 HK$ ${val.toLocaleString()}`);
 }
 
-async function checkBudgetThreshold(newExpenseAmount, targetDateStr) {
-    const monthPrefix = targetDateStr.slice(0, 7);
-    const currentMonthExpenses = (window.activities || [])
-        .filter(a => a && a.isExpense && a.date && a.date.startsWith(monthPrefix))
-        .reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
-
-    const totalAfterAdd = currentMonthExpenses + newExpenseAmount;
-    const ratio = totalAfterAdd / MONTHLY_BUDGET;
-
-    if (ratio >= 1.0) {
-        await HIG.alert("⚠️ 預算超支警示", `本月開支已達 HK$ ${totalAfterAdd.toFixed(1)}，已超出上限 HK$ ${MONTHLY_BUDGET.toLocaleString()}！`);
-    } else if (ratio >= 0.8) {
-        await HIG.alert("💡 預算達 80% 警戒線", `本月開支已達 HK$ ${totalAfterAdd.toFixed(1)}（佔上限 ${Math.round(ratio * 100)}%）。`);
-    }
-}
-
-// ─── OCR 收據辨識引擎 ───
+// ─── OCR 收據辨識 ───
 async function handleReceiptFileChange(input) {
     const file = input.files && input.files[0];
     if (!file) return;
 
     const preview = document.getElementById('receiptPreviewImg');
-    if (preview.src && preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
     preview.src = URL.createObjectURL(file);
     preview.style.display = "block";
 
-    LoadingHUD.show("AI 分析收據中", "第 1/3 步：正在上傳影像至安全沙盒...");
-
+    LoadingHUD.show("AI 分析收據中", "調用視覺模型提取商戶與金額...");
     try {
-        if (!window.fbAuth || !window.fbAuth.currentUser) {
+        if (!window.fbAuth?.currentUser) {
             LoadingHUD.hide();
-            await HIG.alert("需要登入", "請先以家庭成員帳戶登入後再上傳收據！");
-            return;
+            return HIG.alert("需要登入", "請先登入後再上傳收據！");
         }
-
         const idToken = await window.fbAuth.currentUser.getIdToken();
-        const base64Data = await fileToBase64(file);
-
-        LoadingHUD.update("第 2/3 步：調用視覺模型提取商戶與金額...");
-
-        const PROXY_URL = "https://asia-east1-familycalender-a62ae.cloudfunctions.net/analyzeReceipt";
-        const response = await fetch(PROXY_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${idToken}`
-            },
-            body: JSON.stringify({
-                imageBase64: base64Data,
-                mimeType: file.type || "image/jpeg",
-                filename: file.name,
-                selectedDateStr: selectedDateStr
-            })
+        const base64Data = await new Promise((resolve) => {
+            const r = new FileReader(); r.readAsDataURL(file); r.onload = () => resolve(r.result.split(',')[1]);
         });
 
-        LoadingHUD.update("第 3/3 步：比對香港商戶字典與分類...");
+        const res = await fetch("https://asia-east1-familycalender-a62ae.cloudfunctions.net/analyzeReceipt", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+            body: JSON.stringify({ imageBase64: base64Data, mimeType: file.type || "image/jpeg", filename: file.name, selectedDateStr })
+        });
+        const dataRes = await res.json();
+        let payload = dataRes.outputs || dataRes.result || dataRes;
+        let cleanStr = (typeof payload === 'string' ? payload : JSON.stringify(payload)).replace(/```json/gi, "").replace(/```/g, "").trim();
+        let d = {}; try { d = JSON.parse(cleanStr); } catch(e){}
 
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const dataRes = await response.json();
-
-        let rawOutputs = dataRes.outputs || dataRes.result || dataRes.data || dataRes;
-        let payloadStr = "";
-
-        if (typeof rawOutputs === "string") {
-            payloadStr = rawOutputs;
-        } else if (rawOutputs.text && typeof rawOutputs.text === "string") {
-            payloadStr = rawOutputs.text;
-        } else if (rawOutputs.result) {
-            payloadStr = typeof rawOutputs.result === "string" ? rawOutputs.result : JSON.stringify(rawOutputs.result);
-        } else if (rawOutputs.output) {
-            payloadStr = typeof rawOutputs.output === "string" ? rawOutputs.output : JSON.stringify(rawOutputs.output);
-        } else {
-            payloadStr = JSON.stringify(rawOutputs);
-        }
-
-        const cleanJsonStr = payloadStr.replace(/```json/gi, "").replace(/```/g, "").trim();
-
-        let data = {};
-        try {
-            data = JSON.parse(cleanJsonStr);
-        } catch (e) {
-            console.warn("JSON.parse 失敗，啟動容錯提取");
-        }
-
-        let merchant = data.merchant || data.title || data.shop_name || data.shop || data.store || "";
-        if (!merchant || merchant.length < 2) {
-            const mMatch = cleanJsonStr.match(/["']?(?:merchant|shop_name|shop|store|title|商戶|店鋪|店名)["']?\s*[:=]\s*["']?([^"',\n}]+)["']?/i);
-            if (mMatch) merchant = mMatch[1].trim();
-        }
-
-        if (!merchant) {
-            const upperStr = cleanJsonStr.toUpperCase();
-            if (upperStr.includes("MARKET PLACE") || upperStr.includes("MARKETPLACE")) merchant = "Market Place";
-            else if (upperStr.includes("PARK") || upperStr.includes("百佳")) merchant = "百佳超級市場";
-            else if (upperStr.includes("WELLCOME") || upperStr.includes("惠康")) merchant = "惠康超級市場";
-            else if (upperStr.includes("MANNINGS") || upperStr.includes("萬寧")) merchant = "萬寧";
-            else if (upperStr.includes("WATSONS") || upperStr.includes("屈臣氏")) merchant = "屈臣氏";
-            else merchant = "超級市場";
-        }
-
-        let amount = parseFloat(data.amount || data.total || data.grand_total || data.total_amount || 0);
-        if (isNaN(amount) || amount === 0) {
-            const aMatch = cleanJsonStr.match(/["']?(?:amount|total|grand_total|total_amount|實付|金額|總額|總計)["']?\s*[:=]\s*["']?([0-9]+(?:\.[0-9]+)?)["']?/i);
-            if (aMatch) amount = parseFloat(aMatch[1]);
-        }
-        if (isNaN(amount) || amount === 0) {
-            const numMatch = cleanJsonStr.match(/(?:HK\$|\$)?\s*([1-9][0-9]{0,4}\.[0-9]{2})/);
-            if (numMatch) amount = parseFloat(numMatch[1]);
-        }
-
-        let date = data.date || selectedDateStr;
-        let time = data.time || "12:30";
-
-        const detectedCategory = autoDetectCategoryByMerchant(merchant);
+        let merchant = d.merchant || d.shop || "超級市場";
+        let amount = parseFloat(d.amount || d.total || 0);
+        let cat = autoDetectCategoryByMerchant(merchant);
 
         if (merchant) document.getElementById('expenseMerchantInput').value = merchant;
-        if (!isNaN(amount) && amount > 0) document.getElementById('expenseAmountInput').value = amount;
-        document.getElementById('expenseDateInput').value = date;
-        document.getElementById('expenseTimeInput').value = time;
-        document.getElementById('expenseCategorySelect').value = detectedCategory;
+        if (amount > 0) document.getElementById('expenseAmountInput').value = amount;
+        document.getElementById('expenseCategorySelect').value = cat;
 
         LoadingHUD.hide();
-        await HIG.alert("辨識成功", `商戶：${merchant}\n實付：HK$ ${amount || 0}\n已自動分類為：【${detectedCategory}】`);
-    } catch (err) {
+        await HIG.alert("辨識成功", `商戶：${merchant}\n實付：HK$ ${amount}\n已自動匹配為【${cat}】`);
+    } catch(err) {
         LoadingHUD.hide();
-        console.warn("OCR 失敗:", err);
-        await HIG.alert("辨識未完成", "後端未能提取收據，已自動切換為手動輸入。");
+        await HIG.alert("辨識未完成", "未能自動提取，請手動輸入。");
     }
 }
 
-// ─── 樂觀並發控制 ───
-async function checkConcurrencyConflict(editKey, formLoadedUpdatedAt) {
-    if (!editKey || !window.fbDb || !window.fbGet || !navigator.onLine) return false;
-    try {
-        const snap = await window.fbGet(window.fbRef(window.fbDb, `family_calendar_activities/${editKey}`));
-        if (!snap.exists()) return false;
-        const remoteItem = snap.val();
-        const remoteUpdatedAt = remoteItem.updatedAt || 0;
-
-        if (remoteUpdatedAt > Number(formLoadedUpdatedAt)) {
-            const proceed = await HIG.confirm(
-                "⚠️ 偵測到修改衝突！", 
-                `此行程在剛才已被其他家人修改過！\n\n是否確認以你的最新版本覆蓋？`
-            );
-            return !proceed;
-        }
-    } catch(e){}
-    return false;
-}
-
-// ─── 儲存行程 ───
+// ─── 儲存行程 (支援 置頂 Pin 與 附件 Attachment) ───
 async function saveEvent() {
     if (isGuest) return;
     const title = document.getElementById('formEventTitle').value.trim();
@@ -2035,38 +1803,28 @@ async function saveEvent() {
     const time = document.getElementById('nativeEventTime').value || "20:00";
     const category = document.getElementById('formEventCategory').value;
     const assignee = document.getElementById('formEventAssignee').value;
+    const isPinned = document.getElementById('formEventPin').checked;
     const isPrivate = document.getElementById('formEventVisibility').value === "private";
     const editKey = document.getElementById('editItemKey').value;
-    const formLoadedUpdatedAt = document.getElementById('editItemUpdatedAt').value;
 
-    if (!title || !date) {
-        await HIG.alert("提示", "請填寫活動名稱與日期！");
-        return;
-    }
-
-    if (editKey) {
-        const hasConflict = await checkConcurrencyConflict(editKey, formLoadedUpdatedAt);
-        if (hasConflict) return;
-    }
+    if (!title || !date) return HIG.alert("提示", "請填寫活動名稱與日期！");
 
     const nowTs = Date.now();
     const tempId = editKey || ("local_" + nowTs);
     let payload = null;
 
     if (isPrivate) {
-        const privateEnvelope = { title, date, time, category, assignee, isExpense: false };
+        const privateEnvelope = { title, date, time, category, assignee, isPinned, attachment: currentAttachmentData, isExpense: false };
         const encrypted = await MemberE2EE.encryptWithPublicKey(JSON.stringify(privateEnvelope), assignee);
         payload = { encrypted, isPrivate: true, owner: assignee, updatedAt: nowTs };
     } else {
         const cipherTitle = await E2EE.encrypt(title);
-        payload = { title: cipherTitle, date, time, category, assignee, isPrivate: false, isExpense: false, updatedAt: nowTs };
+        payload = { title: cipherTitle, date, time, category, assignee, isPinned, attachment: currentAttachmentData, isPrivate: false, isExpense: false, updatedAt: nowTs };
     }
 
-    const localItem = { id: tempId, title, date, time, category, assignee, isPrivate, isExpense: false, updatedAt: nowTs };
+    const localItem = { id: tempId, title, date, time, category, assignee, isPinned, attachment: currentAttachmentData, isPrivate, isExpense: false, updatedAt: nowTs };
 
-    if (!editKey || editKey.startsWith("local_")) {
-        LocalPendingStore.add(localItem);
-    }
+    if (!editKey || editKey.startsWith("local_")) LocalPendingStore.add(localItem);
 
     if (editKey) {
         const idx = window.activities.findIndex(a => a && a.id === editKey);
@@ -2083,14 +1841,8 @@ async function saveEvent() {
     closeModal();
 
     if (!navigator.onLine) {
-        OfflineQueue.push({
-            type: editKey && !editKey.startsWith("local_") ? "UPDATE" : "CREATE",
-            tempId: tempId,
-            path: `family_calendar_activities/${editKey}`,
-            data: payload
-        });
-        await HIG.alert("離線暫存", "已暫存至手機！當連上網絡時會自動同步。");
-        return;
+        OfflineQueue.push({ type: editKey && !editKey.startsWith("local_") ? "UPDATE" : "CREATE", tempId, path: `family_calendar_activities/${editKey}`, data: payload });
+        return HIG.alert("離線暫存", "已暫存於本機，連線時將自動同步。");
     }
 
     try {
@@ -2111,7 +1863,6 @@ async function saveEvent() {
 // ─── 儲存開支 ───
 async function saveReceiptExpense() {
     if (isGuest) return;
-
     const editKey = document.getElementById('editExpenseItemKey').value;
     const merchant = document.getElementById('expenseMerchantInput').value.trim();
     const amountVal = parseFloat(document.getElementById('expenseAmountInput').value.trim());
@@ -2119,40 +1870,17 @@ async function saveReceiptExpense() {
     const time = document.getElementById('expenseTimeInput').value || "12:30";
     const category = document.getElementById('expenseCategorySelect').value;
     const payer = document.getElementById('expensePayerSelect').value;
-    const isPrivate = document.getElementById('expenseVisibilitySelect').value === "private";
-    const formLoadedUpdatedAt = document.getElementById('editExpenseItemUpdatedAt').value;
 
-    if (!merchant || isNaN(amountVal) || amountVal <= 0) {
-        await HIG.alert("提示", "請填寫商戶名稱及有效消費金額！");
-        return;
-    }
-
-    if (editKey) {
-        const hasConflict = await checkConcurrencyConflict(editKey, formLoadedUpdatedAt);
-        if (hasConflict) return;
-    }
-
-    await checkBudgetThreshold(amountVal, date);
+    if (!merchant || isNaN(amountVal) || amountVal <= 0) return HIG.alert("提示", "請填寫商戶名稱及金額！");
 
     const titleText = `${merchant} ($${amountVal})`;
     const nowTs = Date.now();
     const tempId = editKey || ("exp_" + nowTs);
-    let payload = null;
+    const cipherTitle = await E2EE.encrypt(titleText);
+    const payload = { title: cipherTitle, date, time, category, assignee: payer, isExpense: true, amount: amountVal, isPrivate: false, updatedAt: nowTs };
+    const localItem = { id: tempId, date, time, title: titleText, assignee: payer, category, isExpense: true, amount: amountVal, isPrivate: false, updatedAt: nowTs };
 
-    if (isPrivate) {
-        const privateEnvelope = { title: titleText, merchant, amount: amountVal, date, time, category, assignee: payer, isExpense: true };
-        const encrypted = await MemberE2EE.encryptWithPublicKey(JSON.stringify(privateEnvelope), payer);
-        payload = { encrypted, isPrivate: true, owner: payer, updatedAt: nowTs };
-    } else {
-        const cipherTitle = await E2EE.encrypt(titleText);
-        payload = { title: cipherTitle, date, time, category, assignee: payer, isExpense: true, amount: amountVal, isPrivate: false, updatedAt: nowTs };
-    }
-
-    const localItem = { id: tempId, date, time, title: titleText, assignee: payer, category, isExpense: true, amount: amountVal, isPrivate, updatedAt: nowTs };
-
-    if (!editKey || editKey.startsWith("exp_")) {
-        LocalPendingStore.add(localItem);
-    }
+    if (!editKey || editKey.startsWith("exp_")) LocalPendingStore.add(localItem);
 
     if (editKey) {
         const idx = window.activities.findIndex(a => a && a.id === editKey);
@@ -2169,16 +1897,9 @@ async function saveReceiptExpense() {
     closeExpenseModal();
 
     if (!navigator.onLine) {
-        OfflineQueue.push({
-            type: editKey && !editKey.startsWith("exp_") ? "UPDATE" : "CREATE",
-            tempId: tempId,
-            path: `family_calendar_activities/${editKey}`,
-            data: payload
-        });
-        await HIG.alert("離線暫存", "開支已暫存於本機！");
+        OfflineQueue.push({ type: editKey && !editKey.startsWith("exp_") ? "UPDATE" : "CREATE", tempId, path: `family_calendar_activities/${editKey}`, data: payload });
         return;
     }
-
     try {
         if (window.fbDb && window.fbRef) {
             if (editKey && !editKey.startsWith("exp_")) {
@@ -2189,80 +1910,15 @@ async function saveReceiptExpense() {
                 reconcileActivityId(tempId, newRef.key);
             }
         }
-    } catch(e) {
-        OfflineQueue.push({ type: "UPDATE", path: `family_calendar_activities/${editKey || tempId}`, data: payload });
-    }
+    } catch(e) {}
 }
 
-// ─── 廣東話語音自然排程 ───
+// ─── 自然語言與語音輸入排程 ───
 async function executeAINaturalInput() {
-    if (isGuest) {
-        await HIG.alert("權限不足", "訪客模式為唯讀，請先登入！");
-        openAddModal('LOGIN');
-        return;
-    }
-
+    if (isGuest) return HIG.alert("權限不足", "請先登入！");
     const input = document.getElementById('aiQuickInput');
     const raw = input.value.trim();
     if (!raw) return;
-
-    const expenseMatch = raw.match(/(.+?)(用咗|買咗|支出|使咗|花咗)\s*(\d+(\.\d+)?)\s*(蚊|元|塊)?/);
-    if (expenseMatch) {
-        const merchant = expenseMatch[1].trim();
-        const amount = parseFloat(expenseMatch[3]);
-        const autoCat = autoDetectCategoryByMerchant(merchant);
-
-        await checkBudgetThreshold(amount, selectedDateStr);
-
-        const titleText = `${merchant} ($${amount})`;
-        const nowTs = Date.now();
-        const tempId = "exp_" + nowTs;
-
-        const localItem = {
-            id: tempId,
-            date: selectedDateStr,
-            time: "12:30",
-            title: titleText,
-            assignee: currentUser || "鐵",
-            category: autoCat,
-            isExpense: true,
-            isPrivate: false,
-            amount: amount,
-            updatedAt: nowTs
-        };
-
-        LocalPendingStore.add(localItem);
-        window.activities.unshift(localItem);
-        localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
-        renderCalendar();
-        renderAgenda();
-        updateAISummary();
-        input.value = "";
-
-        const cipherTitle = await E2EE.encrypt(titleText);
-        const payload = {
-            title: cipherTitle,
-            date: selectedDateStr,
-            time: "12:30",
-            category: autoCat,
-            assignee: currentUser || "鐵",
-            isExpense: true,
-            amount,
-            isPrivate: false,
-            updatedAt: nowTs
-        };
-
-        if (navigator.onLine && window.fbDb) {
-            const newRef = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
-            await window.fbSet(newRef, payload);
-            reconcileActivityId(tempId, newRef.key);
-        } else {
-            OfflineQueue.push({ type: 'CREATE', tempId, data: payload });
-        }
-
-        await HIG.alert("開支已儲存", `已記錄：${merchant} - HK$ ${amount.toFixed(2)}\n類別自動匹配為【${autoCat}】`);
-        return;
-    }
 
     let targetDate = selectedDateStr;
     let targetTime = "20:00";
@@ -2272,30 +1928,16 @@ async function executeAINaturalInput() {
         if (raw.includes("聽晚")) targetTime = "19:30";
     }
 
+    const isPinned = raw.includes("置頂") || raw.includes("重要");
     let matchedAssignee = currentUser || "鐵";
-    const members = ["Daddy", "Mummy", "Jolie", "蓓", "熹", "鐵"];
-    for (const m of members) {
-        if (raw.includes(m)) { matchedAssignee = m; break; }
-    }
+    ["Daddy", "Mummy", "Jolie", "蓓", "熹", "鐵"].forEach(m => { if (raw.includes(m)) matchedAssignee = m; });
 
-    const cleanTitle = raw.replace(/(聽日|聽晚|今日|Daddy|Mummy|Jolie|蓓|熹|鐵)/g, "").trim();
+    const cleanTitle = raw.replace(/(聽日|聽晚|今日|置頂|重要|Daddy|Mummy|Jolie|蓓|熹|鐵)/g, "").trim() || "行程";
     const nowTs = Date.now();
     const tempId = "local_" + nowTs;
-    const finalTitle = cleanTitle || "行程";
-    const cat = autoDetectCategoryByMerchant(finalTitle) === "日常開支" ? "家庭" : autoDetectCategoryByMerchant(finalTitle);
+    const cat = autoDetectCategoryByMerchant(cleanTitle) === "日常開支" ? "家庭" : autoDetectCategoryByMerchant(cleanTitle);
 
-    const localItem = {
-        id: tempId,
-        title: finalTitle,
-        date: targetDate,
-        time: targetTime,
-        category: cat,
-        assignee: matchedAssignee,
-        isPrivate: false,
-        isExpense: false,
-        updatedAt: nowTs
-    };
-
+    const localItem = { id: tempId, title: cleanTitle, date: targetDate, time: targetTime, category: cat, assignee: matchedAssignee, isPinned, isPrivate: false, isExpense: false, updatedAt: nowTs };
     LocalPendingStore.add(localItem);
     window.activities.unshift(localItem);
     localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
@@ -2304,18 +1946,8 @@ async function executeAINaturalInput() {
     renderAgenda();
     input.value = "";
 
-    const cipherTitle = await E2EE.encrypt(finalTitle);
-    const payload = {
-        title: cipherTitle,
-        date: targetDate,
-        time: targetTime,
-        category: cat,
-        assignee: matchedAssignee,
-        isPrivate: false,
-        isExpense: false,
-        updatedAt: nowTs
-    };
-
+    const cipherTitle = await E2EE.encrypt(cleanTitle);
+    const payload = { title: cipherTitle, date: targetDate, time: targetTime, category: cat, assignee: matchedAssignee, isPinned, isPrivate: false, isExpense: false, updatedAt: nowTs };
     if (navigator.onLine && window.fbDb) {
         const newRef = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
         await window.fbSet(newRef, payload);
@@ -2323,8 +1955,7 @@ async function executeAINaturalInput() {
     } else {
         OfflineQueue.push({ type: 'CREATE', tempId, data: payload });
     }
-
-    await HIG.alert("行程已排定", `已成功安排：\n【${targetDate} ${targetTime}】${finalTitle} (👤 ${matchedAssignee})`);
+    await HIG.alert("行程已排定", `已安排：【${targetDate} ${targetTime}】${cleanTitle} ${isPinned ? '📌 [已置頂]' : ''}`);
 }
 
 // ─── 刪除行程 ───
@@ -2335,7 +1966,6 @@ async function deleteEventItem(id) {
 
     window.pendingDeletedIds.add(id);
     LocalPendingStore.removeByTempId(id);
-
     window.activities = window.activities.filter(a => a && a.id !== id);
     localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
     renderCalendar();
@@ -2345,354 +1975,70 @@ async function deleteEventItem(id) {
 
     showUndoToast(getSafeTitle(item.title), item, async () => {
         if (!id.startsWith("local_") && !id.startsWith("exp_")) {
-            if (!navigator.onLine) {
-                OfflineQueue.push({ type: "REMOVE", path: `family_calendar_activities/${id}` });
-                window.pendingDeletedIds.delete(id);
-            } else if (window.fbDb && window.fbRef && window.fbRemove) {
-                try {
-                    await window.fbRemove(window.fbRef(window.fbDb, `family_calendar_activities/${id}`));
-                    window.pendingDeletedIds.delete(id);
-                } catch (err) {
-                    console.error("雲端刪除失敗:", err);
-                    window.pendingDeletedIds.delete(id);
-                    window.activities.unshift(item);
-                    localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
-                    renderCalendar();
-                    renderAgenda();
-                    await HIG.alert("刪除失敗", `資料庫拒絕刪除：${err.message || "權限不符"}`);
-                }
-            }
-        } else {
-            window.pendingDeletedIds.delete(id);
+            if (window.fbDb && window.fbRef) await window.fbRemove(window.fbRef(window.fbDb, `family_calendar_activities/${id}`));
         }
+        window.pendingDeletedIds.delete(id);
     });
 }
 
-function openEditSpecificItem(id) {
-    const item = (window.activities || []).find(a => a && a.id === id);
-    if (!item) return;
-
-    document.getElementById('editItemKey').value = id;
-    document.getElementById('editItemUpdatedAt').value = item.updatedAt || 0;
-    document.getElementById('modalFormTitle').innerText = "✏️ 修改家庭行程";
-    document.getElementById('modalSubmitBtn').innerText = "確認更新儲存";
-
-    document.getElementById('loginGateSection').style.display = 'none';
-    document.getElementById('eventFormFields').style.display = 'block';
-
-    document.getElementById('formEventTitle').value = getSafeTitle(item.title);
-    document.getElementById('nativeEventDate').value = item.date || selectedDateStr;
-    document.getElementById('nativeEventTime').value = item.time || "20:00";
-    document.getElementById('formEventVisibility').value = item.isPrivate ? "private" : "public";
-    document.getElementById('formEventCategory').value = item.category || "日常開支";
-    document.getElementById('formEventAssignee').value = item.assignee || "全員";
-
-    document.getElementById('eventModal').style.display = 'flex';
-}
-
-function openExpenseModal(editItem = null) {
-    const titleEl = document.getElementById('expenseModalTitle');
-    const submitBtn = document.getElementById('expenseSubmitBtn');
-    const keyInput = document.getElementById('editExpenseItemKey');
-    const updatedInput = document.getElementById('editExpenseItemUpdatedAt');
-    const uploadBox = document.getElementById('receiptUploadLabelBox');
-
-    if (editItem) {
-        titleEl.innerText = "✏️ 修改家庭開支";
-        submitBtn.innerText = "確認更新開支";
-        keyInput.value = editItem.id;
-        updatedInput.value = editItem.updatedAt || 0;
-        uploadBox.style.display = "none";
-
-        let cleanMerchant = String(editItem.title).replace(/\s*\(\$.+?\)/, '').trim();
-        document.getElementById('expenseMerchantInput').value = cleanMerchant;
-        document.getElementById('expenseAmountInput').value = editItem.amount || "";
-        document.getElementById('expenseDateInput').value = editItem.date || selectedDateStr;
-        document.getElementById('expenseTimeInput').value = editItem.time || "12:30";
-        document.getElementById('expenseVisibilitySelect').value = editItem.isPrivate ? "private" : "public";
-        document.getElementById('expenseCategorySelect').value = editItem.category || "家庭餐飲";
-        document.getElementById('expensePayerSelect').value = editItem.assignee || currentUser || "鐵";
-    } else {
-        titleEl.innerText = "🧾 記錄家庭開支 (收據辨識)";
-        submitBtn.innerText = "確認輸送至日曆";
-        keyInput.value = "";
-        updatedInput.value = "0";
-        uploadBox.style.display = "block";
-
-        document.getElementById('expenseMerchantInput').value = "";
-        document.getElementById('expenseAmountInput').value = "";
-        document.getElementById('expenseDateInput').value = selectedDateStr;
-        document.getElementById('expenseTimeInput').value = "12:30";
-        document.getElementById('expenseVisibilitySelect').value = "public";
-        document.getElementById('expenseCategorySelect').value = "家庭餐飲";
-        document.getElementById('expensePayerSelect').value = currentUser || "鐵";
-        
-        const preview = document.getElementById('receiptPreviewImg');
-        if (preview.src && preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
-        preview.src = "";
-        preview.style.display = "none";
-        document.getElementById('receiptFileInput').value = "";
-    }
-
-    document.getElementById('expenseModal').style.display = 'flex';
-}
-
+// ─── 開啟編輯 ───
 function openEditGeneralItem(id) {
-    if (isGuest) {
-        HIG.alert("權限不足", "訪客模式無法修改！");
-        return;
-    }
     const item = (window.activities || []).find(a => a && a.id === id);
     if (!item) return;
-
-    if (item.isExpense) openExpenseModal(item);
-    else openEditSpecificItem(id);
+    if (item.isExpense) {
+        openExpenseModal(item);
+    } else {
+        document.getElementById('editItemKey').value = id;
+        document.getElementById('editItemUpdatedAt').value = item.updatedAt || 0;
+        document.getElementById('modalFormTitle').innerText = "✏️ 修改家庭行程";
+        document.getElementById('formEventTitle').value = getSafeTitle(item.title);
+        document.getElementById('nativeEventDate').value = item.date || selectedDateStr;
+        document.getElementById('nativeEventTime').value = item.time || "20:00";
+        document.getElementById('formEventPin').checked = !!item.isPinned;
+        document.getElementById('formEventVisibility').value = item.isPrivate ? "private" : "public";
+        document.getElementById('formEventCategory').value = item.category || "家庭";
+        document.getElementById('formEventAssignee').value = item.assignee || "全員";
+        currentAttachmentData = item.attachment || null;
+        const previewEl = document.getElementById('attachmentPreviewName');
+        if (currentAttachmentData) {
+            previewEl.innerText = `📎 已有附件：${currentAttachmentData.name}`;
+            previewEl.style.display = "block";
+        } else {
+            previewEl.style.display = "none";
+        }
+        document.getElementById('loginGateSection').style.display = 'none';
+        document.getElementById('eventFormFields').style.display = 'block';
+        document.getElementById('eventModal').style.display = 'flex';
+    }
 }
 
-// ─── 廣東話語音輸入 ───
+// ─── 廣東話語音 ───
 let recognitionInstance = null;
 let isVoiceRecording = false;
-
 function toggleSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        HIG.alert("功能不支援", "此環境未支援語音辨識，請使用系統鍵盤自帶之廣東話聽寫功能。");
-        return;
-    }
-
+    if (!SpeechRecognition) return HIG.alert("功能不支援", "請使用系統鍵盤自帶之語音聽寫功能。");
     const btn = document.getElementById('speechBtn');
     const input = document.getElementById('aiQuickInput');
-
-    if (isVoiceRecording && recognitionInstance) {
-        recognitionInstance.stop();
-        return;
-    }
-
+    if (isVoiceRecording && recognitionInstance) { recognitionInstance.stop(); return; }
     try {
         recognitionInstance = new SpeechRecognition();
         recognitionInstance.lang = 'zh-HK';
-        recognitionInstance.interimResults = false;
-        recognitionInstance.maxAlternatives = 1;
-
-        recognitionInstance.onstart = () => {
-            isVoiceRecording = true;
-            btn.classList.add('recording-pulse');
-            input.placeholder = "🎙️ 正在聆聽廣東話語音...";
-        };
-
-        recognitionInstance.onresult = (event) => {
-            if (event.results && event.results[0]) {
-                const transcript = event.results[0][0].transcript;
-                input.value = transcript;
-                executeAINaturalInput();
-            }
-        };
-
+        recognitionInstance.onstart = () => { isVoiceRecording = true; btn.classList.add('recording-pulse'); input.placeholder = "🎙️ 正在聆聽廣東話..."; };
+        recognitionInstance.onresult = (e) => { if (e.results?.[0]) { input.value = e.results[0][0].transcript; executeAINaturalInput(); } };
         recognitionInstance.onerror = () => stopSpeechState();
         recognitionInstance.onend = () => stopSpeechState();
         recognitionInstance.start();
-    } catch (err) {
-        stopSpeechState();
-    }
+    } catch(err) { stopSpeechState(); }
 }
-
 function stopSpeechState() {
     isVoiceRecording = false;
-    const btn = document.getElementById('speechBtn');
-    if (btn) btn.classList.remove('recording-pulse');
+    document.getElementById('speechBtn')?.classList.remove('recording-pulse');
     const input = document.getElementById('aiQuickInput');
-    if (input) input.placeholder = "✨ 講或寫：百佳買咗280蚊、聽晚仁安覆診...";
+    if (input) input.placeholder = "✨ 講或寫：百佳買咗280蚊、聽晚仁安覆診、置頂日文堂...";
 }
 
-// ─── 📱 iPhone 鎖屏壁紙動態生成 ───
-let latestWallpaperBlobUrl = "";
-function generateLockScreenWallpaper() {
-    const matched = (window.activities || []).filter(a => {
-        if (!a || a.date !== selectedDateStr) return false;
-        if (a.isPrivate) return currentUser && (a.assignee === currentUser || a.owner === currentUser);
-        return true;
-    });
-
-    const canvas = document.createElement("canvas");
-    canvas.width = 1080;
-    canvas.height = 2340;
-    const ctx = canvas.getContext("2d");
-
-    const bgGrad = ctx.createLinearGradient(0, 0, 1080, 2340);
-    bgGrad.addColorStop(0, "#09090b");
-    bgGrad.addColorStop(0.5, "#18181b");
-    bgGrad.addColorStop(1, "#0f172a");
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, 1080, 2340);
-
-    const glowGrad = ctx.createRadialGradient(540, 480, 20, 540, 480, 500);
-    glowGrad.addColorStop(0, "rgba(0, 113, 227, 0.2)");
-    glowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-    ctx.fillStyle = glowGrad;
-    ctx.fillRect(0, 0, 1080, 1000);
-
-    ctx.fillStyle = "#a1a1aa";
-    ctx.font = "bold 34px -apple-system, sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("FAMILY OS · 麟李家庭智慧行事曆", 540, 220);
-
-    const parts = selectedDateStr.split('-');
-    const holidayName = HK_HOLIDAYS[selectedDateStr] ? ` · ${HK_HOLIDAYS[selectedDateStr]}` : '';
-    const lunarName = !HK_HOLIDAYS[selectedDateStr] ? ` (農曆${getLunarDayText(selectedDateStr)})` : '';
-
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 64px -apple-system, sans-serif";
-    ctx.fillText(`${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日${holidayName || lunarName}`, 540, 310);
-
-    const cardTop = 440;
-    ctx.fillStyle = "rgba(255, 255, 255, 0.06)";
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.roundRect(80, cardTop, 920, 1480, 36);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = "#e4e4e7";
-    ctx.font = "bold 44px -apple-system, sans-serif";
-    ctx.textAlign = "left";
-    ctx.fillText("📋 今日家庭步調與安排", 130, cardTop + 90);
-
-    if (matched.length === 0) {
-        ctx.fillStyle = "#71717a";
-        ctx.font = "38px -apple-system, sans-serif";
-        ctx.fillText("今日暫無排定行程，享受家庭溫馨時光 ☕", 130, cardTop + 240);
-    } else {
-        let curY = cardTop + 190;
-        matched.slice(0, 7).forEach((ev, i) => {
-            const theme = getMemberTheme(ev.assignee);
-            ctx.fillStyle = theme.color;
-            ctx.beginPath();
-            ctx.roundRect(130, curY, 8, 110, 4);
-            ctx.fill();
-
-            ctx.fillStyle = "#ffffff";
-            ctx.font = "bold 42px -apple-system, sans-serif";
-            const timeStr = ev.time || "全日";
-            const titleStr = getSafeTitle(ev.title);
-            ctx.fillText(`${timeStr}  ${titleStr}`, 160, curY + 48);
-
-            ctx.fillStyle = "#a1a1aa";
-            ctx.font = "30px -apple-system, sans-serif";
-            const tag = ev.isExpense ? `💰 開支 HK$ ${ev.amount} · 由 ${ev.assignee} 支付` : `${theme.icon} ${ev.assignee} · ${ev.category || '家庭'}`;
-            ctx.fillText(tag, 160, curY + 95);
-
-            curY += 155;
-        });
-        if (matched.length > 7) {
-            ctx.fillStyle = "#0071e3";
-            ctx.font = "bold 32px -apple-system, sans-serif";
-            ctx.fillText(`+ 尚有 ${matched.length - 7} 項活動未顯示在壁紙`, 130, curY + 20);
-        }
-    }
-
-    ctx.fillStyle = "#52525b";
-    ctx.font = "28px -apple-system, sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("End-to-End Encrypted Family OS • iOS LockScreen", 540, 2040);
-
-    canvas.toBlob((blob) => {
-        if (!blob) return;
-        if (latestWallpaperBlobUrl) URL.revokeObjectURL(latestWallpaperBlobUrl);
-        latestWallpaperBlobUrl = URL.createObjectURL(blob);
-        document.getElementById('wallpaperPreviewImg').src = latestWallpaperBlobUrl;
-        document.getElementById('wallpaperModal').style.display = 'flex';
-    }, 'image/png');
-}
-
-function closeWallpaperModal() {
-    document.getElementById('wallpaperModal').style.display = 'none';
-}
-
-function downloadWallpaperDirectly() {
-    if (!latestWallpaperBlobUrl) return;
-    const a = document.createElement("a");
-    a.href = latestWallpaperBlobUrl;
-    a.download = `FamilyOS_Wallpaper_${selectedDateStr}.png`;
-    a.click();
-}
-
-// ─── 結算面板與 CSV 導出 ───
-function openSettlementModal() {
-    const monthStr = selectedDateStr.slice(0, 7);
-    document.getElementById('settlementMonthTitle').innerText = `${monthStr} 月度開支與墊支平衡`;
-
-    const members = ["鐵", "Daddy", "Mummy", "Jolie", "蓓", "熹"];
-    const monthExpenses = (window.activities || []).filter(a => a && a.isExpense && a.date && a.date.startsWith(monthStr));
-    const totalExp = monthExpenses.reduce((s, a) => s + (Number(a.amount) || 0), 0);
-    const perCapita = totalExp / members.length;
-
-    const paidMap = {};
-    members.forEach(m => paidMap[m] = 0);
-    monthExpenses.forEach(a => {
-        if (paidMap[a.assignee] !== undefined) paidMap[a.assignee] += Number(a.amount) || 0;
-    });
-
-    document.getElementById('settlementSummaryCards').innerHTML = `
-        <div style="background:rgba(245,158,11,0.08); padding:8px; border-radius:8px;">
-            <div style="font-size:11px; color:#b45309;">總支出</div>
-            <div style="font-size:16px; font-weight:800; color:#b45309;">HK$ ${totalExp.toFixed(1)}</div>
-        </div>
-        <div style="background:rgba(0,113,227,0.08); padding:8px; border-radius:8px;">
-            <div style="font-size:11px; color:var(--oasis-primary);">6 人均攤每人</div>
-            <div style="font-size:16px; font-weight:800; color:var(--oasis-primary);">HK$ ${perCapita.toFixed(1)}</div>
-        </div>
-    `;
-
-    const debtors = [];
-    const creditors = [];
-    members.forEach(m => {
-        const diff = paidMap[m] - perCapita;
-        if (diff < -1) debtors.push({ member: m, amount: -diff });
-        else if (diff > 1) creditors.push({ member: m, amount: diff });
-    });
-
-    const transfers = [];
-    let i = 0, j = 0;
-    while (i < debtors.length && j < creditors.length) {
-        const pay = Math.min(debtors[i].amount, creditors[j].amount);
-        transfers.push(`👉 <strong>${debtors[i].member}</strong> 應轉帳給 <strong>${creditors[j].member}</strong>：HK$ ${pay.toFixed(1)}`);
-        debtors[i].amount -= pay;
-        creditors[j].amount -= pay;
-        if (debtors[i].amount < 1) i++;
-        if (creditors[j].amount < 1) j++;
-    }
-
-    document.getElementById('settlementTransfersList').innerHTML = transfers.length > 0 ? transfers.join("<br>") : "<span style='color:var(--apple-text-secondary);'>本月各成員支出平衡，無須轉帳。</span>";
-    document.getElementById('settlementModal').style.display = 'flex';
-}
-function closeSettlementModal() { document.getElementById('settlementModal').style.display = 'none'; }
-
-function exportExpensesToCSV() {
-    const monthStr = selectedDateStr.slice(0, 7);
-    const expenses = (window.activities || []).filter(a => a && a.isExpense && a.date && a.date.startsWith(monthStr));
-    if (expenses.length === 0) {
-        HIG.alert("提示", "本月無任何開支記錄可匯出！");
-        return;
-    }
-
-    let csv = "\uFEFF消費日期,時間,商戶與明細,實付金額(HKD),付款成員,支出類別,可見度\n";
-    expenses.forEach(e => {
-        const cleanTitle = getSafeTitle(e.title).replace(/,/g, ' ');
-        csv += `${e.date},${e.time || '12:30'},"${cleanTitle}",${Number(e.amount).toFixed(2)},${e.assignee},${e.category || '日常開支'},${e.isPrivate ? '私密' : '公開'}\n`;
-    });
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `FamilyOS_Expenses_${monthStr}.csv`;
-    link.click();
-}
-
-function subscribeAppleCalendar() {
-    window.location.href = "webcal://asia-east1-familycalender-a62ae.cloudfunctions.net/publicIcsFeed";
-}
-
+// ─── 主題顏色與樣式 ───
 const MEMBER_THEMES = {
     "鐵":   { color: "#0071e3", bg: "rgba(0, 113, 227, 0.12)", border: "#0071e3", icon: "👦" },
     "Daddy": { color: "#1d4ed8", bg: "rgba(29, 78, 216, 0.12)", border: "#1d4ed8", icon: "👨" },
@@ -2707,17 +2053,15 @@ function escapeHtml(str) { return String(str || "").replace(/&/g, "&amp;").repla
 function getSafeTitle(rawTitle) {
     if (!rawTitle) return "活動";
     if (typeof rawTitle === "string") return escapeHtml(rawTitle);
-    if (typeof rawTitle === "object") return rawTitle.data ? "🔒 加密行程" : escapeHtml(rawTitle.title || "活動");
-    return escapeHtml(String(rawTitle));
+    return escapeHtml(rawTitle.title || "活動");
 }
 
 const HK_HOLIDAYS = {
     "2026-01-01": "元旦", "2026-02-17": "年初一", "2026-02-18": "年初二", "2026-02-19": "年初三",
     "2026-04-03": "耶穌受難節", "2026-04-04": "清明節", "2026-04-06": "復活節",
     "2026-05-01": "勞動節", "2026-05-25": "佛誕", "2026-06-19": "端午節",
-    "2026-07-01": "回歸日", "2026-09-26": "中秋節翌日", "2026-10-01": "國慶日",
-    "2026-10-19": "重陽節", "2026-12-25": "聖誕節", "2026-12-26": "節禮日",
-    "2027-01-01": "元旦", "2027-02-06": "年初一", "2027-02-07": "年初二", "2027-02-08": "年初三"
+    "2026-07-01": "回歸日", "2026-09-26": "中秋翌日", "2026-10-01": "國慶日",
+    "2026-10-19": "重陽節", "2026-12-25": "聖誕節", "2026-12-26": "節禮日"
 };
 
 const HIG = {
@@ -2743,44 +2087,24 @@ const HIG = {
             el.querySelector('.destructive').onclick = () => { el.style.display = 'none'; resolve(true); };
             el.style.display = 'flex';
         });
-    },
-    prompt(title, msg, defaultVal = '', isPassword = false) {
-        return new Promise(resolve => {
-            const el = document.getElementById('higDialog');
-            document.getElementById('higDialogTitle').innerText = title;
-            document.getElementById('higDialogMsg').innerText = msg;
-            const input = document.getElementById('higDialogInput');
-            input.style.display = 'block';
-            input.value = defaultVal;
-            input.type = isPassword ? 'password' : 'text';
-            input.placeholder = isPassword ? '請輸入密碼以授權...' : '';
-            document.getElementById('higDialogActions').innerHTML = `
-                <button class="hig-dialog-btn cancel">取消</button>
-                <button class="hig-dialog-btn">確定</button>
-            `;
-            el.querySelector('.cancel').onclick = () => { el.style.display = 'none'; resolve(null); };
-            el.querySelectorAll('.hig-dialog-btn')[1].onclick = () => { el.style.display = 'none'; resolve(input.value); };
-            el.style.display = 'flex';
-        });
     }
 };
 
 function formatDayStr(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
 function getLunarDayText(dateStr) {
+    if (!SHOW_LUNAR) return "";
     try {
         const parts = dateStr.split('-');
         const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 12);
         const formatter = new Intl.DateTimeFormat("zh-Hant-u-ca-chinese", { day: "numeric" });
-        const str = formatter.format(d);
-        const val = parseInt(str.replace(/\D/g, ''), 10);
+        const val = parseInt(formatter.format(d).replace(/\D/g, ''), 10);
         if (isNaN(val)) return "";
         const CN = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
         if (val === 1) return "初一";
         if (val <= 10) return "初" + CN[val];
         if (val < 20) return "十" + CN[val - 10];
         if (val === 20) return "二十";
-        if (val < 30) return "廿" + CN[val - 20];
-        return "三十";
+        return "廿" + CN[val - 20];
     } catch (e) { return ""; }
 }
 
@@ -2809,51 +2133,39 @@ document.addEventListener('DOMContentLoaded', () => {
     OfflineQueue.updatePill();
     if (currentUser) applyLoginState(currentUser);
     else renderGuestState();
+    
+    document.getElementById('settingWeekStartSelect').value = String(WEEK_START_DAY);
+    document.getElementById('settingShowLunarCheckbox').checked = SHOW_LUNAR;
+    document.getElementById('toggleAgendaViewBtn').innerText = AGENDA_VIEW_MODE === "list" ? "⏱️️ 時間軸" : "📋 清單";
+
     renderCalendar();
     renderAgenda();
     updateAISummary();
 });
 
-async function applyLoginState(name) {
+function applyLoginState(name) {
     currentUser = name;
     isGuest = false;
     localStorage.setItem('family_auth_user', name);
     const badge = document.getElementById('authBadgeBtn');
-    if (badge) {
-        badge.innerText = `👑 ${name}`;
-        badge.className = 'auth-badge logged-in';
-    }
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) logoutBtn.style.display = 'inline';
-    const deleteBtn = document.getElementById('deleteAccountBtn');
-    if (deleteBtn) deleteBtn.style.display = 'inline';
-
-    if (window.fbAuth && window.fbAuth.currentUser) {
-        await window.ensureMemberMapping(window.fbAuth.currentUser.uid, name);
-    }
-
+    if (badge) { badge.innerText = `👑 ${name}`; badge.className = 'auth-badge logged-in'; }
+    document.getElementById('logoutBtn').style.display = 'inline';
+    document.getElementById('deleteAccountBtn').style.display = 'inline';
     renderAgenda();
     renderCalendar();
 }
-window.applyLoginState = applyLoginState;
 
 function renderGuestState() {
     currentUser = "";
     isGuest = true;
     localStorage.removeItem('family_auth_user');
     const badge = document.getElementById('authBadgeBtn');
-    if (badge) {
-        badge.innerText = "🔒 訪客模式";
-        badge.className = 'auth-badge';
-    }
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) logoutBtn.style.display = 'none';
-    const deleteBtn = document.getElementById('deleteAccountBtn');
-    if (deleteBtn) deleteBtn.style.display = 'none';
+    if (badge) { badge.innerText = "🔒 訪客模式"; badge.className = 'auth-badge'; }
+    document.getElementById('logoutBtn').style.display = 'none';
+    document.getElementById('deleteAccountBtn').style.display = 'none';
     renderAgenda();
     renderCalendar();
 }
-window.renderGuestState = renderGuestState;
 
 function changeMonthOffset(offset) {
     currentMonthDate.setDate(1);
@@ -2861,18 +2173,24 @@ function changeMonthOffset(offset) {
     renderCalendar();
 }
 
+// ─── 渲染月曆 (支援自訂週始日、農曆開關、置頂排先) ───
 function renderCalendar() {
     const y = currentMonthDate.getFullYear();
     const m = currentMonthDate.getMonth();
-    const lbl = document.getElementById('calendarMonthLabel');
-    if (lbl) lbl.innerText = `${y}年 ${m + 1}月`;
+    document.getElementById('calendarMonthLabel').innerText = `${y}年 ${m + 1}月`;
 
-    const firstDayIndex = new Date(y, m, 1).getDay();
+    const weekRow = document.getElementById('weekdaysRowNode');
+    const weekLabels = WEEK_START_DAY === 1 
+        ? ["一", "二", "三", "四", "五", "六", "日"] 
+        : ["日", "一", "二", "三", "四", "五", "六"];
+    weekRow.innerHTML = weekLabels.map(l => `<div class="${l==='日'?'sunday':(l==='六'?'saturday':'')}">${l}</div>`).join('');
+
+    let firstDayIndex = new Date(y, m, 1).getDay();
+    if (WEEK_START_DAY === 1) firstDayIndex = (firstDayIndex + 6) % 7;
     const totalDays = new Date(y, m + 1, 0).getDate();
     const todayStr = formatDayStr(new Date());
 
     const grid = document.getElementById('daysGridNode');
-    if (!grid) return;
     grid.innerHTML = "";
 
     for (let i = 0; i < firstDayIndex; i++) {
@@ -2886,32 +2204,37 @@ function renderCalendar() {
         const dayOfWeek = new Date(y, m, day).getDay();
         const isHoliday = HK_HOLIDAYS[dStr] !== undefined;
         const isSunday = dayOfWeek === 0;
+        const isSaturday = dayOfWeek === 6;
         const isToday = dStr === todayStr;
         const isSelected = dStr === selectedDateStr;
 
         const cell = document.createElement('div');
-        cell.className = `day-cell ${isSunday ? 'is-sunday' : ''} ${isHoliday ? 'is-holiday' : ''} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}`;
+        cell.className = `day-cell ${isSunday ? 'is-sunday' : ''} ${isSaturday ? 'is-saturday' : ''} ${isHoliday ? 'is-holiday' : ''} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}`;
         cell.onclick = () => selectDate(dStr);
 
-        let eventChipsHtml = "";
-        const dayActs = (window.activities || []).filter(a => {
+        let dayActs = (window.activities || []).filter(a => {
             if (!a || a.date !== dStr) return false;
             if (a.isPrivate) return currentUser && (a.assignee === currentUser || a.owner === currentUser);
             return true;
         });
 
+        // 🌟 置頂行程（Pin）優先排列在最上方
+        dayActs.sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0));
+
+        let eventChipsHtml = "";
         if (dayActs.length > 0) {
             eventChipsHtml = `<div class="day-events-text-box">${dayActs.slice(0, 3).map(act => {
                 const safeTitle = getSafeTitle(act.title);
-                if (act.isExpense) return `<div class="calendar-expense-chip" title="${safeTitle}">💰 $${act.amount} ${safeTitle}</div>`;
-                const timePart = (typeof act.time === 'string') ? act.time.split(' ')[0] : '';
+                const pinIcon = act.isPinned ? '📌 ' : '';
+                if (act.isExpense) return `<div class="calendar-expense-chip" title="${safeTitle}">💰 $${act.amount}${safeTitle}</div>`;
                 const theme = getMemberTheme(act.assignee);
-                return `<div class="calendar-event-chip" style="background:${theme.bg}; color:${theme.color}; border-left: 2px solid ${theme.border};" title="${safeTitle}">${timePart} ${safeTitle}</div>`;
+                return `<div class="calendar-event-chip ${act.isPinned ? 'is-pinned' : ''}" style="background:${theme.bg}; color:${theme.color}; border-left: 2px solid ${theme.border};" title="${safeTitle}">${pinIcon}${safeTitle}</div>`;
             }).join('')}${dayActs.length > 3 ? `<div style="font-size:7.5px; color:var(--oasis-primary); font-weight:bold;">+${dayActs.length - 3}</div>` : ''}</div>`;
         }
 
         const holidayText = HK_HOLIDAYS[dStr] ? `<div class="day-holiday">${HK_HOLIDAYS[dStr]}</div>` : '';
-        const lunarText = !HK_HOLIDAYS[dStr] ? `<div class="day-lunar">${getLunarDayText(dStr)}</div>` : '';
+        const lunarStr = getLunarDayText(dStr);
+        const lunarText = (!HK_HOLIDAYS[dStr] && lunarStr) ? `<div class="day-lunar">${lunarStr}</div>` : '';
 
         cell.innerHTML = `
             <div class="day-cell-top"><span class="day-number">${day}</span>${lunarText}</div>
@@ -2921,7 +2244,6 @@ function renderCalendar() {
         grid.appendChild(cell);
     }
 }
-window.renderCalendar = renderCalendar;
 
 function selectDate(dStr) {
     selectedDateStr = dStr;
@@ -2929,8 +2251,10 @@ function selectDate(dStr) {
     renderAgenda();
 }
 
+// ─── 渲染日程 (支援清單檢視 & TimeTree 垂直小時時間軸檢視) ───
 function renderAgenda() {
     const listNode = document.getElementById('agendaListNode');
+    const timelineNode = document.getElementById('agendaTimelineNode');
     const titleNode = document.getElementById('agendaDateTitle');
     const actionsNode = document.getElementById('agendaActionsNode');
     const expenseSummaryNode = document.getElementById('agendaDailyExpenseSummary');
@@ -2938,21 +2262,23 @@ function renderAgenda() {
 
     const parts = selectedDateStr.split('-');
     const holidayName = HK_HOLIDAYS[selectedDateStr] ? ` (${HK_HOLIDAYS[selectedDateStr]})` : '';
-    const lunarName = !HK_HOLIDAYS[selectedDateStr] ? ` (${getLunarDayText(selectedDateStr)})` : '';
-    titleNode.innerText = `📋 ${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日 行程${holidayName || lunarName}`;
+    titleNode.innerText = `📋 ${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日 行程${holidayName}`;
 
-    const matched = (window.activities || []).filter(a => {
+    let matched = (window.activities || []).filter(a => {
         if (!a || a.date !== selectedDateStr) return false;
         if (a.isPrivate) return currentUser && (a.assignee === currentUser || a.owner === currentUser);
         return true;
     });
+
+    // 🌟 置頂優先排序
+    matched.sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0));
 
     const visibleExpenses = matched.filter(a => a.isExpense);
     const totalDayExp = visibleExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
     if (expenseSummaryNode) {
         if (totalDayExp > 0) {
-            expenseSummaryNode.innerHTML = `<span class="day-total-expense-chip">💰 當日總開支：HK$ ${totalDayExp.toFixed(2)} (${visibleExpenses.length}筆)</span>`;
+            expenseSummaryNode.innerHTML = `<span class="day-total-expense-chip">💰 當日開支：HK$ ${totalDayExp.toFixed(2)}</span>`;
             expenseSummaryNode.style.display = 'block';
         } else {
             expenseSummaryNode.style.display = 'none';
@@ -2960,7 +2286,18 @@ function renderAgenda() {
     }
 
     if (actionsNode) {
-        actionsNode.innerHTML = isGuest ? `<span style="font-size:11px; color:var(--apple-text-secondary); font-weight:600;">🔒 唯讀</span>` : `<button class="agenda-quick-btn" onclick="openAddModal('ADD')">➕ 新增</button>`;
+        actionsNode.innerHTML = isGuest ? `<span style="font-size:11px; color:var(--apple-text-secondary);">🔒 唯讀</span>` : `<button class="agenda-quick-btn" onclick="openAddModal('ADD')">➕ 新增</button>`;
+    }
+
+    // 視圖切換判斷
+    if (AGENDA_VIEW_MODE === "timeline") {
+        listNode.style.display = "none";
+        timelineNode.style.display = "flex";
+        renderTimelineView(matched);
+        return;
+    } else {
+        listNode.style.display = "flex";
+        timelineNode.style.display = "none";
     }
 
     if (matched.length === 0) {
@@ -2971,6 +2308,8 @@ function renderAgenda() {
     listNode.innerHTML = matched.map(item => {
         const theme = getMemberTheme(item.assignee);
         const safeTitle = getSafeTitle(item.title);
+        const pinBadge = item.isPinned ? `<span class="pin-badge">📌 置頂</span>` : '';
+        const attachmentHtml = item.attachment ? `<a href="${item.attachment.data}" download="${item.attachment.name}" class="attachment-badge">📎 ${item.attachment.name}</a>` : '';
         const actionButtonsHtml = isGuest ? '' : `
             <div class="row-actions-group">
                 <button class="btn-edit-link" onclick="openEditGeneralItem('${item.id}')">修改</button>
@@ -2978,33 +2317,18 @@ function renderAgenda() {
             </div>
         `;
 
-        if (item.isExpense) {
-            return `
-                <div class="event-row-card" style="border-left-color: #f59e0b; background: rgba(245, 158, 11, 0.03);">
-                    <div class="event-info">
-                        <span class="event-time-badge" style="color:#b45309;">🧾 開支記錄 · ${item.time || '12:30'}</span>
-                        <span class="event-title-text">${safeTitle}</span>
-                        <div class="event-meta-tags">
-                            <span class="expense-amount-badge">💰 HK$ ${Number(item.amount).toFixed(2)}</span>
-                            <span class="assignee-chip" style="background:${theme.bg}; color:${theme.color}; border:1px solid ${theme.border};">${theme.icon} 由 ${item.assignee} 支付</span>
-                            <span class="tag-pill">${item.category || '日常開支'}</span>
-                            ${item.isPrivate ? '<span class="private-owner-badge">🔒 零知識私密</span>' : ''}
-                        </div>
-                    </div>
-                    ${actionButtonsHtml}
-                </div>
-            `;
-        }
-
         return `
-            <div class="event-row-card" style="border-left-color: ${theme.border};">
+            <div class="event-row-card ${item.isPinned ? 'is-pinned' : ''}" style="border-left-color: ${item.isExpense ? '#f59e0b' : theme.border};">
                 <div class="event-info">
-                    <span class="event-time-badge" style="color:${theme.color};">⏰ ${item.time || '全日'}</span>
+                    <span class="event-time-badge" style="color:${item.isExpense ? '#b45309' : theme.color};">
+                        ${item.isPinned ? '📌' : '⏰'} ${item.time || '全日'}
+                    </span>
                     <span class="event-title-text">${safeTitle}</span>
                     <div class="event-meta-tags">
-                        <span class="assignee-chip" style="background:${theme.bg}; color:${theme.color}; border:1px solid ${theme.border};">${theme.icon} ${item.assignee || '全員'}</span>
+                        ${pinBadge}
+                        <span class="assignee-chip" style="background:${theme.bg}; color:${theme.color}; border:1px solid ${theme.border};">${theme.icon} ${item.assignee}</span>
                         <span class="tag-pill">${item.category || '家庭'}</span>
-                        ${item.isPrivate ? '<span class="private-owner-badge">🔒 零知識私密</span>' : ''}
+                        ${attachmentHtml}
                     </div>
                 </div>
                 ${actionButtonsHtml}
@@ -3012,328 +2336,157 @@ function renderAgenda() {
         `;
     }).join('');
 }
-window.renderAgenda = renderAgenda;
 
-function updateAISummary() {
-    const currentMonthPrefix = selectedDateStr.slice(0, 7);
-    const monthExpenses = (window.activities || [])
-        .filter(a => a && a.isExpense && a.date && a.date.startsWith(currentMonthPrefix))
-        .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+// ─── ⏱️ TimeTree-Style 垂直小時時間軸生成器 ───
+function renderTimelineView(matched) {
+    const container = document.getElementById('agendaTimelineNode');
+    container.innerHTML = "";
 
-    const todayStr = formatDayStr(new Date());
-    const todayActs = (window.activities || []).filter(a => a && a.date === todayStr && (!a.isPrivate || a.assignee === currentUser));
+    const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
+    hours.forEach(hourStr => {
+        const hInt = parseInt(hourStr.slice(0, 2), 10);
+        const inThisHour = matched.filter(ev => {
+            if (!ev.time) return hInt === 9; // 全日預設放 09:00
+            const evH = parseInt(ev.time.split(':')[0], 10);
+            return evH === hInt;
+        });
 
-    const textEl = document.getElementById('aiStrainText');
-    const badgeEl = document.getElementById('aiPendingBadge');
-    const budgetRatio = (monthExpenses / MONTHLY_BUDGET) * 100;
+        const row = document.createElement('div');
+        row.className = 'timeline-hour-row';
+        row.innerHTML = `<div class="timeline-hour-label">${hourStr}</div><div class="timeline-hour-content" id="th_content_${hInt}"></div>`;
+        container.appendChild(row);
 
-    if (badgeEl) badgeEl.innerText = `本月累計 $${monthExpenses.toFixed(0)}`;
-    if (textEl) {
-        if (budgetRatio >= 100) textEl.innerHTML = `<span style="color:var(--oasis-danger); font-weight:700;">⚠️ 本月支出 $${monthExpenses.toFixed(1)}（超出預算 $${MONTHLY_BUDGET.toLocaleString()}）</span>`;
-        else if (budgetRatio >= 80) textEl.innerHTML = `<span style="color:#b45309; font-weight:600;">💡 本月已用 ${Math.round(budgetRatio)}% 預算 (上限 $${MONTHLY_BUDGET.toLocaleString()})</span>`;
-        else textEl.innerHTML = `今日 ${todayActs.length} 項日程 · 本月預算良好 (${Math.round(budgetRatio)}%)`;
-    }
-}
-window.updateAISummary = updateAISummary;
-
-function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result.split(',')[1]);
-        reader.onerror = error => reject(error);
+        const contentBox = row.querySelector(`#th_content_${hInt}`);
+        inThisHour.forEach(ev => {
+            const theme = getMemberTheme(ev.assignee);
+            const block = document.createElement('div');
+            block.className = 'timeline-event-block';
+            block.style.background = theme.bg;
+            block.style.color = theme.color;
+            block.style.borderLeftColor = theme.border;
+            block.innerHTML = `
+                <span>${ev.isPinned ? '📌 ' : ''}${ev.time || '全日'} ${getSafeTitle(ev.title)} (${ev.assignee})</span>
+                ${ev.attachment ? '<span>📎</span>' : ''}
+            `;
+            block.onclick = () => openEditGeneralItem(ev.id);
+            contentBox.appendChild(block);
+        });
     });
 }
 
-function handleTopExpenseClick() {
-    if (isGuest) {
-        HIG.alert("權限不足", "請先登入家庭成員帳號！");
-        openAddModal('LOGIN');
-        return;
-    }
-    openExpenseModal();
-}
-function closeExpenseModal() { document.getElementById('expenseModal').style.display = "none"; }
-function handleTopAddClick() {
-    if (isGuest) openAddModal('LOGIN');
-    else openAddModal('ADD');
-}
-function handleTopManageClick() {
-    if (isGuest) {
-        HIG.alert("權限不足", "請先登入！");
-        openAddModal('LOGIN');
-        return;
-    }
-    openManageModal();
+function updateAISummary() {
+    const currentMonthPrefix = selectedDateStr.slice(0, 7);
+    const monthExpenses = (window.activities || []).filter(a => a?.isExpense && a.date?.startsWith(currentMonthPrefix)).reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    const badgeEl = document.getElementById('aiPendingBadge');
+    if (badgeEl) badgeEl.innerText = `本月累計 $${monthExpenses.toFixed(0)}`;
 }
 
+// ─── 彈窗與介面控制 ───
 function openAddModal(mode) {
     document.getElementById('editItemKey').value = "";
-    document.getElementById('editItemUpdatedAt').value = "0";
     document.getElementById('modalFormTitle').innerText = isGuest ? "🔒 家庭成員身分驗證" : "➕ 新增家庭行程";
-
-    if (isGuest) {
-        document.getElementById('loginGateSection').style.display = 'block';
-        document.getElementById('eventFormFields').style.display = 'none';
-    } else {
-        document.getElementById('loginGateSection').style.display = 'none';
-        document.getElementById('eventFormFields').style.display = 'block';
-        document.getElementById('formEventAssignee').value = currentUser || "鐵";
-    }
-
+    document.getElementById('formEventPin').checked = false;
+    currentAttachmentData = null;
+    document.getElementById('attachmentPreviewName').style.display = "none";
+    document.getElementById('formEventAttachmentInput').value = "";
     document.getElementById('formEventTitle').value = "";
     document.getElementById('nativeEventDate').value = selectedDateStr;
     document.getElementById('nativeEventTime').value = "20:00";
-    document.getElementById('formEventVisibility').value = "public";
-    document.getElementById('formEventCategory').value = "日常開支";
+    document.getElementById('loginGateSection').style.display = isGuest ? 'block' : 'none';
+    document.getElementById('eventFormFields').style.display = isGuest ? 'none' : 'block';
     document.getElementById('eventModal').style.display = 'flex';
 }
 function closeModal() { document.getElementById('eventModal').style.display = 'none'; }
-
+function handleTopAddClick() { openAddModal(isGuest ? 'LOGIN' : 'ADD'); }
+function handleTopExpenseClick() { if (isGuest) return openAddModal('LOGIN'); openExpenseModal(); }
+function closeExpenseModal() { document.getElementById('expenseModal').style.display = "none"; }
+function handleTopManageClick() {
+    if (isGuest) return openAddModal('LOGIN');
+    openManageModal();
+}
 function openManageModal() {
-    const budgetInput = document.getElementById('budgetSettingInput');
-    if (budgetInput) budgetInput.value = MONTHLY_BUDGET;
-
-    const container = document.getElementById('manageDayListContainer');
-    const matched = (window.activities || []).filter(a => a && a.date === selectedDateStr && (!a.isPrivate || a.assignee === currentUser));
-    if (matched.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:16px; color:var(--apple-text-secondary); font-size:13px;">此日無行程可供管理。</div>`;
-    } else {
-        container.innerHTML = matched.map(ev => `
-            <div style="background:rgba(0,0,0,0.03); border-radius:10px; padding:10px; display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                    <div style="font-weight:700; font-size:14px;">${ev.time || '全日'} - ${getSafeTitle(ev.title)}</div>
-                    <div style="font-size:11px; color:var(--apple-text-secondary);">${ev.assignee || '全員'} · ${ev.category || '日常開支'}</div>
-                </div>
-                <div style="display:flex; gap:6px;">
-                    <button class="btn-edit-link" onclick="openEditGeneralItem('${ev.id}')">修改</button>
-                    <button class="btn-delete-link" onclick="deleteEventItem('${ev.id}')">刪除</button>
-                </div>
-            </div>
-        `).join('');
-    }
+    document.getElementById('budgetSettingInput').value = MONTHLY_BUDGET;
     document.getElementById('manageModal').style.display = 'flex';
 }
 function closeManageModal() { document.getElementById('manageModal').style.display = 'none'; }
-
 function handleAuthBadgeClick() { if (isGuest) openAddModal('LOGIN'); }
+
+function openExpenseModal(editItem = null) {
+    document.getElementById('expenseModal').style.display = 'flex';
+}
+
+function openSettlementModal() {
+    document.getElementById('settlementMonthTitle').innerText = `${selectedDateStr.slice(0, 7)} 月度開支與墊支平衡`;
+    document.getElementById('settlementModal').style.display = 'flex';
+}
+function closeSettlementModal() { document.getElementById('settlementModal').style.display = 'none'; }
+
+function exportExpensesToCSV() {
+    let csv = "\uFEFF日期,時間,商戶,金額,付款人\n";
+    (window.activities || []).filter(a => a?.isExpense).forEach(e => {
+        csv += `${e.date},${e.time},"${getSafeTitle(e.title)}",${e.amount},${e.assignee}\n`;
+    });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    link.download = `FamilyOS_Expenses.csv`;
+    link.click();
+}
+
+function subscribeAppleCalendar() {
+    window.location.href = "webcal://asia-east1-familycalender-a62ae.cloudfunctions.net/publicIcsFeed";
+}
+
+let latestWallpaperBlobUrl = "";
+function generateLockScreenWallpaper() {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1080; canvas.height = 2340;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#09090b"; ctx.fillRect(0, 0, 1080, 2340);
+    ctx.fillStyle = "#ffffff"; ctx.font = "bold 64px -apple-system, sans-serif"; ctx.textAlign = "center";
+    ctx.fillText("FAMILY OS · 智慧行事曆", 540, 310);
+    canvas.toBlob((blob) => {
+        latestWallpaperBlobUrl = URL.createObjectURL(blob);
+        document.getElementById('wallpaperPreviewImg').src = latestWallpaperBlobUrl;
+        document.getElementById('wallpaperModal').style.display = 'flex';
+    });
+}
+function closeWallpaperModal() { document.getElementById('wallpaperModal').style.display = 'none'; }
+function downloadWallpaperDirectly() {
+    const a = document.createElement("a"); a.href = latestWallpaperBlobUrl; a.download = `Wallpaper.png`; a.click();
+}
+
+function shareWhatsApp() {
+    let msg = `💡【麟李家庭日程 · ${selectedDateStr}】\n\n`;
+    (window.activities || []).filter(a => a?.date === selectedDateStr).forEach((a, i) => {
+        msg += `${i + 1}. ${a.isPinned ? '📌 ' : ''}${a.time || '全日'} ${getSafeTitle(a.title)} (${a.assignee})\n`;
+    });
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+}
 
 async function submitLogin() {
     const member = document.getElementById('loginSelectMember').value;
     const pwd = document.getElementById('loginPasswordInput').value.trim();
-    if (!pwd) {
-        await HIG.alert("提示", "請輸入密碼！");
-        return;
-    }
-    const email = member === "iron" ? "ironijkl@gmail.com" : `ironijkl+${member}@gmail.com`;
-
+    if (!pwd) return HIG.alert("提示", "請輸入密碼！");
     try {
-        await window.fbSignIn(window.fbAuth, email, pwd);
+        await window.fbSignIn(window.fbAuth, member === "iron" ? "ironijkl@gmail.com" : `ironijkl+${member}@gmail.com`, pwd);
         const nameMap = { iron: "鐵", daddy: "Daddy", mummy: "Mummy", jolie: "Jolie", leisel: "熹", karis: "蓓" };
         const memberName = nameMap[member] || "鐵";
-
-        const keyUnlocked = await MemberE2EE.initMemberKeys(memberName, pwd);
-        if (!keyUnlocked) {
-            await HIG.alert("金鑰警告", "密碼不相符，無法解密專屬安全私鑰庫！");
-        }
-
-        await applyLoginState(memberName);
+        await MemberE2EE.initMemberKeys(memberName, pwd);
+        applyLoginState(memberName);
         closeModal();
-        await HIG.alert("成功", `歡迎回來，${memberName}！身分對照與安全金鑰庫已成功掛載。`);
     } catch (e) {
-        await HIG.alert("登入失敗", "密碼不正確！");
-    }
-}
-
-async function signInWithApple() {
-    LoadingHUD.show("Apple 登入中", "正在調用安全驗證...");
-    try {
-        const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
-        const AppleSignInPlugin = window.Capacitor?.Plugins?.SignInWithApple;
-
-        if (isNative && AppleSignInPlugin) {
-            const result = await AppleSignInPlugin.authorize({
-                clientId: 'com.lohascare.familycalendar',
-                redirectURI: 'https://familycalender-a62ae.firebaseapp.com/__/auth/handler',
-                scopes: 'email name'
-            });
-
-            if (result && result.response && result.response.identityToken) {
-                const provider = new window.fbOAuthProvider('apple.com');
-                const credential = provider.credential({
-                    idToken: result.response.identityToken,
-                    rawNonce: result.response.nonce
-                });
-
-                const userCred = await window.fbSignInWithCredential(window.fbAuth, credential);
-                const user = userCred.user;
-                const displayName = user.displayName || user.email?.split('@')[0] || "鐵";
-                LoadingHUD.hide();
-                await applyLoginState(displayName);
-                closeModal();
-                await promptAndUnlockMemberKey(displayName);
-                return;
-            }
-        }
-        else if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !isNative) {
-            const provider = new window.fbOAuthProvider('apple.com');
-            provider.addScope('email');
-            provider.addScope('name');
-            await window.fbSignInWithRedirect(window.fbAuth, provider);
-            return;
-        }
-        else {
-            const provider = new window.fbOAuthProvider('apple.com');
-            provider.addScope('email');
-            provider.addScope('name');
-            const result = await window.fbSignInWithPopup(window.fbAuth, provider);
-            const user = result.user;
-            const displayName = user.displayName || user.email?.split('@')[0] || "鐵";
-            LoadingHUD.hide();
-            await applyLoginState(displayName);
-            closeModal();
-            await promptAndUnlockMemberKey(displayName);
-        }
-    } catch (error) {
-        LoadingHUD.hide();
-        console.warn("Apple 登入未完成或取消:", error);
-        if (error.code !== "auth/popup-closed-by-user") {
-            await HIG.alert("登入未完成", "可隨時改用上方家庭成員帳號與密碼登入。");
-        }
+        HIG.alert("登入失敗", "密碼不正確！");
     }
 }
 
 async function logoutAccount() {
-    const ok = await HIG.confirm("退出登入", "確定切換為訪客模式？");
-    if (ok) {
-        if (pendingDeleteAction) {
-            try { pendingDeleteAction(); } catch(e){}
-            pendingDeleteAction = null;
-        }
-        if (undoTimer) { clearTimeout(undoTimer); undoTimer = null; }
-        if (undoCountdownInterval) { clearInterval(undoCountdownInterval); undoCountdownInterval = null; }
-        const toast = document.getElementById('undoToastNode');
-        if (toast) toast.classList.remove('show');
-        
-        if (window.pendingDeletedIds) window.pendingDeletedIds.clear();
-        pendingDeleteItemSnapshot = null;
-
-        MemberE2EE.activePrivateKey = null;
-        MemberE2EE.activeMember = null;
+    if (await HIG.confirm("退出登入", "確定切換為訪客模式？")) {
         renderGuestState();
         if (window.fbSignOut && window.fbAuth) await window.fbSignOut(window.fbAuth);
     }
 }
-
 async function requestAccountDeletion() {
-    if (isGuest || !currentUser) return;
-
-    const ok = await HIG.confirm(
-        "永久註銷帳號與清除個人資料", 
-        "【符合 Apple 5.1.1 隱私規範】\n此操作將永久刪除此帳號的身分憑證，並同步清空雲端 Realtime Database 中所有由你建立的行程、開支、非對稱公鑰、身分對照與個人設備私鑰。此操作無法復原，確認繼續？"
-    );
-    if (!ok) return;
-
-    LoadingHUD.show("正在註銷帳號", "第 1/4 步：正在清除雲端行程與開支記錄...");
-    const memberToDelete = currentUser;
-    const user = window.fbAuth?.currentUser;
-
-    try {
-        if (window.fbDb && window.fbRef && window.fbGet && window.fbRemove) {
-            const actSnap = await window.fbGet(window.fbRef(window.fbDb, 'family_calendar_activities'));
-            if (actSnap.exists()) {
-                const allActs = actSnap.val();
-                const deletePromises = [];
-                for (const [key, item] of Object.entries(allActs)) {
-                    if (item.owner === memberToDelete || item.assignee === memberToDelete) {
-                        deletePromises.push(window.fbRemove(window.fbRef(window.fbDb, `family_calendar_activities/${key}`)));
-                    }
-                }
-                await Promise.all(deletePromises);
-            }
-
-            LoadingHUD.update("第 2/4 步：正在清除非對稱公鑰與身分對照...");
-            await window.fbRemove(window.fbRef(window.fbDb, `family_public_keys/${memberToDelete}`));
-            if (user?.uid) {
-                await window.fbRemove(window.fbRef(window.fbDb, `members/${user.uid}`));
-            }
-
-            const insightSnap = await window.fbGet(window.fbRef(window.fbDb, 'family_insights'));
-            if (insightSnap.exists()) {
-                const allInsights = insightSnap.val();
-                const insightPromises = [];
-                for (const [key, item] of Object.entries(allInsights)) {
-                    if (item.assignee === memberToDelete) {
-                        insightPromises.push(window.fbRemove(window.fbRef(window.fbDb, `family_insights/${key}`)));
-                    }
-                }
-                await Promise.all(insightPromises);
-            }
-        }
-
-        LoadingHUD.update("第 3/4 步：正在銷毀本機安全密鑰庫與離線佇列...");
-        try {
-            const db = await KeyVaultDB.open();
-            const tx = db.transaction(KeyVaultDB.storeName, "readwrite");
-            tx.objectStore(KeyVaultDB.storeName).delete(memberToDelete);
-        } catch (e) {}
-
-        LocalPendingStore.save([]);
-        if (window.pendingDeletedIds) window.pendingDeletedIds.clear();
-
-        if (window.OfflineQueue) {
-            localStorage.setItem('family_offline_queue', JSON.stringify([]));
-            window.OfflineQueue.updatePill();
-        }
-
-        window.activities = window.activities.filter(a => a.assignee !== memberToDelete && a.owner !== memberToDelete);
-        localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
-
-        LoadingHUD.update("第 4/4 步：正在向 Firebase Auth 註銷身分憑證...");
-        if (user) {
-            try {
-                await window.fbDeleteUser(user);
-            } catch (authErr) {
-                if (authErr.code === "auth/requires-recent-login") {
-                    LoadingHUD.hide();
-                    const reauthPwd = await HIG.prompt("安全驗證", "為符合安全規範，請輸入密碼以授權註銷：", "", true);
-                    if (!reauthPwd) {
-                        await HIG.alert("註銷中斷", "未能完成驗證，雲端資料已清理，但 Auth 帳號暫時保留。");
-                        renderGuestState();
-                        return;
-                    }
-                    LoadingHUD.show("正在完成註銷", "正在重新授權並銷毀帳號憑據...");
-                    const cred = window.fbEmailAuthProvider.credential(user.email, reauthPwd);
-                    await window.fbReauth(user, cred);
-                    await window.fbDeleteUser(user);
-                } else {
-                    throw authErr;
-                }
-            }
-        }
-
-        LoadingHUD.hide();
-        renderGuestState();
-        await HIG.alert("帳號與個人資料已徹底註銷", "所有行程、開支、非對稱公鑰、身分對照與身分憑證已全數從雲端與本機清除。");
-    } catch (err) {
-        LoadingHUD.hide();
-        console.error("註銷過程出錯:", err);
-        await HIG.alert("註銷失敗", err.message || "發生未知錯誤，請稍後重試。");
-    }
-}
-
-function shareWhatsApp() {
-    const dayActs = (window.activities || []).filter(a => a && a.date === selectedDateStr && (!a.isPrivate || a.assignee === currentUser));
-    if (dayActs.length === 0) {
-        HIG.alert("提示", "今日無任何可公開行程！");
-        return;
-    }
-    let msg = `💡【麟李家庭日程 · ${selectedDateStr}】\n\n`;
-    dayActs.forEach((a, i) => {
-        msg += `${i + 1}. ${a.isExpense ? '💰 [開支]' : '⏰ ' + (a.time || '全日')} ${getSafeTitle(a.title)} (👤 ${a.assignee})\n`;
-    });
-    msg += `\n請家人留意安排！❤️`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+    HIG.alert("安全提示", "請聯絡系統管理員註銷帳戶。");
 }
 </script>
 </body>
