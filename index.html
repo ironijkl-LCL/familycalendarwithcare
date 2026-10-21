@@ -334,26 +334,29 @@ header {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     grid-auto-rows: 1fr;
-    gap: calc(3px * var(--cal-zoom));
+    gap: calc(2px * var(--cal-zoom)) 0;
     overflow-y: auto;
 }
 .days-grid::-webkit-scrollbar { display: none; }
 
+/* 🌟 格子左右 padding 歸零，達成多日跨欄色條無縫貼齊 */
 .day-cell {
     background: rgba(0, 0, 0, 0.015);
-    border-radius: 8px;
-    padding: calc(3px * var(--cal-zoom)) calc(2px * var(--cal-zoom));
+    border-radius: 0;
+    padding: calc(3px * var(--cal-zoom)) 0;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
     cursor: pointer;
-    overflow: hidden;
-    border: 1px solid transparent;
-    min-height: calc(44px * var(--cal-zoom));
+    overflow: visible;
+    border-right: 1px solid rgba(60, 60, 67, 0.08);
+    border-bottom: 1px solid rgba(60, 60, 67, 0.08);
+    min-height: calc(52px * var(--cal-zoom));
+    position: relative;
 }
 .day-cell:active { background: rgba(0, 0, 0, 0.05); }
-.day-cell.empty { background: transparent !important; pointer-events: none; }
+.day-cell.empty { background: transparent !important; border-color: transparent !important; pointer-events: none; }
 .day-cell.today { border: 1.5px solid var(--oasis-warning); }
 .day-cell.today .day-number { color: var(--oasis-warning); font-weight: 800; }
 .day-cell.selected {
@@ -371,7 +374,7 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    padding: 0 2px;
+    padding: 0 4px;
     line-height: 1;
 }
 .day-number { font-size: calc(11px * var(--cal-zoom)); font-weight: 700; }
@@ -386,16 +389,19 @@ header {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    padding: 0 4px;
     transform: scale(0.85);
     transform-origin: left center;
 }
 
 .day-events-text-box { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; overflow: hidden; flex: 1; }
+
+/* 🌟 多日活動跨欄色條精確樣式 */
 .calendar-event-chip {
     font-size: calc(8.5px * var(--cal-zoom));
-    line-height: 1.15;
-    padding: calc(1px * var(--cal-zoom)) calc(3px * var(--cal-zoom));
-    border-radius: 3px;
+    line-height: 15px;
+    height: 15px;
+    padding: 0 4px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -403,21 +409,48 @@ header {
     display: flex;
     align-items: center;
     gap: 2px;
+    position: relative;
+    z-index: 2;
 }
-.calendar-event-chip.is-pinned {
-    box-shadow: 0 0 0 1px rgba(255, 149, 0, 0.7);
-    font-weight: 800;
+.calendar-event-chip.span-single {
+    border-radius: 4px;
+    margin: 1px 3px;
 }
+.calendar-event-chip.span-start {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    margin: 1px 0 1px 3px;
+    width: calc(100% - 2px);
+    margin-right: -2px;
+}
+.calendar-event-chip.span-middle {
+    border-radius: 0;
+    margin: 1px -2px;
+    width: calc(100% + 4px);
+}
+.calendar-event-chip.span-end {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    margin: 1px 3px 1px -2px;
+    width: calc(100% - 1px);
+}
+
 .calendar-expense-chip {
     font-size: calc(8.5px * var(--cal-zoom));
-    line-height: 1.15;
-    padding: calc(1px * var(--cal-zoom)) calc(3px * var(--cal-zoom));
+    line-height: 15px;
+    height: 15px;
+    padding: 0 4px;
     border-radius: 3px;
+    margin: 1px 3px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     font-weight: 700;
-    background: rgba(245, 158, 11, 0.15);
+    background: rgba(245, 158, 11, 0.18);
     color: #b45309;
     border-left: 2px solid #f59e0b;
 }
@@ -519,22 +552,6 @@ header {
     font-weight: 600;
 }
 .assignee-chip { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
-.expense-amount-badge {
-    font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background: rgba(245, 158, 11, 0.18);
-    color: #b45309;
-    font-weight: 800;
-}
-.private-owner-badge {
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background: rgba(107, 114, 128, 0.12);
-    color: #4b5563;
-    font-weight: 700;
-}
 .pin-badge {
     font-size: 10px;
     padding: 2px 5px;
@@ -561,7 +578,7 @@ header {
 .btn-delete-link { background: none; border: none; color: var(--oasis-danger); font-size: 13px; font-weight: 700; cursor: pointer; padding: 4px; }
 .empty-agenda-view { text-align: center; padding: 20px 0; color: var(--apple-text-secondary); font-size: 13px; }
 
-/* ⏱️ 小時時間軸檢視 (TimeTree-style 垂直時段排程) */
+/* ⏱️ 小時時間軸檢視 */
 .timeline-view-container {
     flex: 1;
     overflow-y: auto;
@@ -604,51 +621,17 @@ header {
     cursor: pointer;
 }
 
-/* ─── 🖥️ iPad 13" / 29" 桌面大螢幕專屬優化 (雙欄儀表板模式) ─── */
+/* ─── 🖥️ iPad / 桌面佈局 ─── */
 @media (min-width: 820px) {
-    .content-grid-wrapper {
-        flex-direction: row;
-        gap: 14px;
-    }
-    .calendar-card {
-        flex: 1.6;
-        padding: 12px 14px;
-    }
-    .agenda-card {
-        flex: 1.1;
-        padding: 12px 14px;
-    }
-    .day-cell {
-        min-height: calc(56px * var(--cal-zoom));
-    }
-    .adaptive-toolbar button {
-        font-size: 13px;
-        padding: 10px 8px;
-    }
+    .content-grid-wrapper { flex-direction: row; gap: 14px; }
+    .calendar-card { flex: 1.6; padding: 12px 14px; }
+    .agenda-card { flex: 1.1; padding: 12px 14px; }
+    .day-cell { min-height: calc(56px * var(--cal-zoom)); }
+    .adaptive-toolbar button { font-size: 13px; padding: 10px 8px; }
     .header-title { font-size: 20px; }
 }
 
-@media (min-width: 1400px) {
-    .main-layout {
-        padding: 14px 20px;
-        gap: 12px;
-    }
-    .calendar-card {
-        flex: 1.8;
-    }
-    .day-cell {
-        min-height: calc(72px * var(--cal-zoom));
-    }
-    .day-number {
-        font-size: calc(13px * var(--cal-zoom));
-    }
-    .calendar-event-chip, .calendar-expense-chip {
-        font-size: calc(11px * var(--cal-zoom));
-        padding: 2px 4px;
-    }
-}
-
-/* ─── Apple HIG 全螢幕 Loading HUD ─── */
+/* ─── Apple HIG Loading HUD ─── */
 .hig-loading-hud {
     display: none;
     position: fixed;
@@ -733,12 +716,11 @@ header {
 }
 .popup-card {
     background: #ffffff;
-    width: 90%;
-    max-width: 440px;
+    width: 92%;
+    max-width: 460px;
     border-radius: 20px;
     padding: 20px;
     box-shadow: 0 16px 40px rgba(0,0,0,0.15);
-    box-sizing: border-box;
     position: relative;
     max-height: 88vh;
     overflow-y: auto;
@@ -762,7 +744,6 @@ header {
     flex: 1; padding: 10px 12px; border: 1px solid var(--apple-border); border-radius: 10px;
     background: rgba(0, 0, 0, 0.02); font-family: inherit; color: var(--apple-text); outline: none;
 }
-.native-picker-row input[type="date"] { flex: 1.4; }
 
 .receipt-upload-label {
     display: block; border: 2px dashed rgba(245, 158, 11, 0.5); background: rgba(245, 158, 11, 0.04);
@@ -775,7 +756,6 @@ header {
 }
 .submit-btn-block:active { opacity: 0.85; }
 
-/* ─── Apple Sign-In 原生按鈕 ─── */
 .apple-signin-btn {
     width: 100%;
     padding: 12px;
@@ -792,8 +772,6 @@ header {
     justify-content: center;
     gap: 8px;
 }
-.apple-signin-btn:active { background: #1c1c1e; }
-.apple-logo-icon { width: 16px; height: 16px; fill: currentColor; }
 
 /* ─── HIG 對話框 ─── */
 .hig-dialog-overlay {
@@ -888,55 +866,6 @@ header {
       console.warn("Apple Redirect 認證未完成或已取消:", err);
   });
 
-  window.ensureMemberMapping = async function(uid, memberName) {
-      if (!window.fbDb || !window.fbRef || !window.fbGet || !window.fbSet || !uid || !memberName) return;
-
-      if (!navigator.onLine) {
-          if (window.OfflineQueue) {
-              const q = window.OfflineQueue.getQueue();
-              const exists = q.some(item => item.path === `members/${uid}`);
-              if (!exists) {
-                  window.OfflineQueue.push({
-                      type: 'SET',
-                      path: `members/${uid}`,
-                      data: { name: memberName, updatedAt: Date.now() }
-                  });
-              }
-          }
-          return;
-      }
-
-      try {
-          const memberRef = window.fbRef(window.fbDb, `members/${uid}`);
-          const snap = await window.fbGet(memberRef);
-          if (!snap.exists()) {
-              await window.fbSet(memberRef, {
-                  name: memberName,
-                  updatedAt: Date.now()
-              });
-          }
-      } catch (e) {
-          const isPermissionDenied = e.code === 'PERMISSION_DENIED' || (e.message && e.message.includes('Permission denied'));
-          const isNetworkError = !navigator.onLine || 
-                                 e.code === 'auth/network-request-failed' || 
-                                 (e.message && (e.message.includes('network') || e.message.includes('offline') || e.message.includes('timeout') || e.message.includes('disconnected')));
-
-          if (isPermissionDenied) {
-              console.error("Member mapping 權限拒絕:", e);
-          } else if (isNetworkError && window.OfflineQueue) {
-              const q = window.OfflineQueue.getQueue();
-              const exists = q.some(item => item.path === `members/${uid}`);
-              if (!exists) {
-                  window.OfflineQueue.push({
-                      type: 'SET',
-                      path: `members/${uid}`,
-                      data: { name: memberName, updatedAt: Date.now() }
-                  });
-              }
-          }
-      }
-  };
-
   onAuthStateChanged(auth, async (user) => {
       if (user) {
           const email = (user.email || "").toLowerCase();
@@ -950,7 +879,6 @@ header {
           if (window.applyLoginState) await window.applyLoginState(memberName);
           window.startFirebaseSync();
           window.initMemoryInsightsSync();
-          window.requestNotificationPermission();
       } else {
           if (window.renderGuestState) window.renderGuestState();
       }
@@ -971,7 +899,6 @@ header {
 
                   if (item.isPrivate) {
                       if (!currentUser || (item.owner !== currentUser && item.assignee !== currentUser)) continue;
-
                       try {
                           let decryptedJsonStr = "";
                           if (item.encrypted && typeof item.encrypted === 'object' && item.encrypted.is_ecdh) {
@@ -990,6 +917,7 @@ header {
                           cloudList.push({
                               id: key,
                               date: inner.date || "",
+                              endDate: inner.endDate || null,
                               time: inner.time || "20:00",
                               title: inner.title || "私密行程",
                               assignee: inner.assignee || item.owner || currentUser,
@@ -1009,6 +937,7 @@ header {
                       cloudList.push({
                           id: key,
                           date: item.date || "",
+                          endDate: item.endDate || null,
                           time: item.time || "20:00",
                           title: title || "活動",
                           assignee: item.assignee || "全員",
@@ -1138,7 +1067,6 @@ header {
         <div id="aiPendingBadge" class="ai-pending-badge">0 項活動</div>
     </div>
 
-    <!-- 響應式雙欄佈局 (iPhone 直排、iPad / 29" 橫排雙欄) -->
     <div class="content-grid-wrapper">
         <!-- 🗓️ 月曆卡片 -->
         <div class="calendar-card" id="calendarCardNode">
@@ -1166,11 +1094,9 @@ header {
                     <div id="agendaActionsNode"></div>
                 </div>
             </div>
-            <!-- 清單檢視 -->
             <div id="agendaListNode" class="agenda-list">
                 <div class="empty-agenda-view">此日暫無排定活動</div>
             </div>
-            <!-- 小時單位時間軸檢視 (TimeTree 核心功能) -->
             <div id="agendaTimelineNode" class="timeline-view-container" style="display: none;"></div>
         </div>
     </div>
@@ -1202,15 +1128,52 @@ header {
 
         <div id="eventFormFields">
             <label class="form-label">活動名稱 / 地點：</label>
-            <input type="text" id="formEventTitle" class="form-input" placeholder="例如：Dinner / Grandma home">
+            <input type="text" id="formEventTitle" class="form-input" placeholder="例如：西貢露營、長者覆診">
 
-            <label class="form-label">📅 日期與時間：</label>
+            <label class="form-label">📅 開始日期與時間：</label>
             <div class="native-picker-row">
-                <input type="date" id="nativeEventDate">
-                <input type="time" id="nativeEventTime">
+                <input type="date" id="nativeEventDate" onchange="handleStartDateChange(this.value)">
+                <input type="time" id="nativeEventTime" value="09:00">
             </div>
 
-            <!-- 📌 置頂重要行程 (TimeTree Pin 功能) -->
+            <!-- 🌟 橫跨多日切換 -->
+            <div style="display:flex; align-items:center; justify-content:space-between; margin:8px 0; background:rgba(0,113,227,0.06); padding:8px 12px; border-radius:10px; border:1px solid rgba(0,113,227,0.18);">
+                <span style="font-size:13px; font-weight:700; color:var(--oasis-primary);">🗓️ 橫跨多日活動</span>
+                <input type="checkbox" id="formEventIsMultiDay" onchange="toggleEndDateField()" style="width:18px; height:18px; accent-color:var(--oasis-primary);">
+            </div>
+
+            <div id="endDateRowContainer" style="display:none;">
+                <label class="form-label">🏁 結束日期：</label>
+                <input type="date" id="nativeEventEndDate" class="form-input">
+            </div>
+
+            <!-- 🔁 重複活動設定 -->
+            <div style="display:flex; gap:8px;">
+                <div style="flex:1;">
+                    <label class="form-label">🔁 重複週期：</label>
+                    <select id="formEventRecurrence" class="form-input" onchange="toggleRepeatCountField()">
+                        <option value="none">單次 (不重複)</option>
+                        <option value="weekly">每週重複</option>
+                        <option value="biweekly">每兩週重複</option>
+                        <option value="monthly">每月重複</option>
+                    </select>
+                </div>
+                <div id="repeatCountContainer" style="flex:1; display:none;">
+                    <label class="form-label">次數：</label>
+                    <input type="number" id="formEventRepeatCount" class="form-input" value="4" min="1" max="24">
+                </div>
+            </div>
+
+            <!-- 🔔 提醒通知設定 -->
+            <label class="form-label">🔔 活動前提醒通知：</label>
+            <select id="formEventReminder" class="form-input">
+                <option value="15">提早 15 分鐘</option>
+                <option value="30">提早 30 分鐘</option>
+                <option value="60">提早 1 小時</option>
+                <option value="0">不提醒</option>
+            </select>
+
+            <!-- 📌 置頂重要行程 -->
             <div style="display:flex; align-items:center; justify-content:space-between; margin:8px 0; background:rgba(255,149,0,0.06); padding:8px 12px; border-radius:10px; border:1px solid rgba(255,149,0,0.2);">
                 <span style="font-size:13px; font-weight:700; color:#b45309;">📌 置頂行程（優先展示不漏看）</span>
                 <input type="checkbox" id="formEventPin" style="width:18px; height:18px; accent-color:var(--oasis-warning);">
@@ -1241,15 +1204,14 @@ header {
                 <option value="Jolie">👧 Jolie</option>
                 <option value="蓓">👩 蓓</option>
                 <option value="熹">👶 熹</option>
-                <option value="全員">👨‍‍👩‍👧‍👦 全員</option>
+                <option value="全員">👨‍👩‍👧‍👦 全員</option>
             </select>
 
-            <!-- 📎 附件檔案/圖片上傳 (TimeTree Attachment 功能) -->
             <label class="form-label">📎 附加照片或文件憑證 (PDF/圖片)：</label>
             <input type="file" id="formEventAttachmentInput" class="form-input" style="padding:6px;" accept="image/*,application/pdf" onchange="handleEventAttachmentSelect(this)">
             <div id="attachmentPreviewName" style="font-size:11px; color:var(--oasis-primary); font-weight:600; margin-top:2px; display:none;"></div>
 
-            <button id="modalSubmitBtn" class="submit-btn-block" onclick="saveEvent()">確認儲存至此日</button>
+            <button id="modalSubmitBtn" class="submit-btn-block" onclick="saveEvent()">確認儲存並同步</button>
         </div>
     </div>
 </div>
@@ -1319,13 +1281,12 @@ header {
     </div>
 </div>
 
-<!-- ⚙️️ 系統設定與行程管理 -->
+<!-- ⚙ 系統設定與行程管理 -->
 <div id="manageModal" class="popup-overlay" onclick="if(event.target===this)closeManageModal()">
     <div class="popup-card">
         <button class="popup-close-x" onclick="closeManageModal()">&times;</button>
         <h3 style="margin:0 0 10px; font-size:17px;">⚙️ App 設定與行事曆偏好</h3>
         
-        <!-- 一週開始日與農曆顯示 (TimeTree Settings) -->
         <div style="background:rgba(0,0,0,0.03); border-radius:12px; padding:12px; margin-bottom:12px;">
             <div style="font-size:13px; font-weight:700; margin-bottom:8px;">📅 日曆偏好設定</div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -1378,6 +1339,37 @@ header {
 </div>
 
 <script>
+// ─── 香港法定假期引擎 (官方離線清單 + 自動遠端同步) ───
+let HK_HOLIDAYS_MAP = {
+    "2026-01-01": "元旦", "2026-02-17": "年初一", "2026-02-18": "年初二", "2026-02-19": "年初三",
+    "2026-04-03": "耶穌受難節", "2026-04-04": "清明節", "2026-04-06": "復活節",
+    "2026-05-01": "勞動節", "2026-05-25": "佛誕翌日", "2026-06-19": "端午節",
+    "2026-07-01": "特區紀念日", "2026-09-26": "中秋翌日", "2026-10-01": "國慶日",
+    "2026-10-19": "重陽節", "2026-12-25": "聖誕節", "2026-12-26": "節禮日"
+};
+
+async function syncHongKongPublicHolidays() {
+    try {
+        const cached = localStorage.getItem("hk_holidays_cache");
+        if (cached) {
+            HK_HOLIDAYS_MAP = { ...HK_HOLIDAYS_MAP, ...JSON.parse(cached) };
+        }
+        const res = await fetch("https://raw.githubusercontent.com/nman64/hk-holidays/main/holidays.json");
+        if (res.ok) {
+            const data = await res.json();
+            const holidays = {};
+            data.forEach(item => { holidays[item.date] = item.name; });
+            HK_HOLIDAYS_MAP = { ...HK_HOLIDAYS_MAP, ...holidays };
+            localStorage.setItem("hk_holidays_cache", JSON.stringify(holidays));
+            renderCalendar();
+            renderAgenda();
+        }
+    } catch (e) {
+        console.warn("使用本地香港假期備份庫:", e);
+    }
+}
+syncHongKongPublicHolidays();
+
 // ─── 獨立 LocalPendingStore ───
 const LocalPendingStore = {
     getItems() {
@@ -1677,9 +1669,9 @@ function triggerUndoAction() {
 }
 
 // ─── 全域偏好設定 ───
-let WEEK_START_DAY = parseInt(localStorage.getItem('family_week_start') || "0", 10); // 0=週日, 1=週一
+let WEEK_START_DAY = parseInt(localStorage.getItem('family_week_start') || "0", 10);
 let SHOW_LUNAR = localStorage.getItem('family_show_lunar') !== "false";
-let AGENDA_VIEW_MODE = localStorage.getItem('family_agenda_view') || "list"; // "list" 或 "timeline"
+let AGENDA_VIEW_MODE = localStorage.getItem('family_agenda_view') || "list";
 let currentAttachmentData = null;
 
 function saveAppDisplaySettings() {
@@ -1697,6 +1689,34 @@ function toggleAgendaView() {
     const btn = document.getElementById('toggleAgendaViewBtn');
     if (btn) btn.innerText = AGENDA_VIEW_MODE === "list" ? "⏱️ 時間軸" : "📋 清單";
     renderAgenda();
+}
+
+// ─── 跨日與重複欄位動態切換 ───
+function toggleEndDateField() {
+    const isMulti = document.getElementById('formEventIsMultiDay').checked;
+    const endContainer = document.getElementById('endDateRowContainer');
+    const startVal = document.getElementById('nativeEventDate').value;
+    const endInput = document.getElementById('nativeEventEndDate');
+
+    if (isMulti) {
+        endContainer.style.display = 'block';
+        endInput.min = startVal;
+        if (!endInput.value || endInput.value < startVal) endInput.value = startVal;
+    } else {
+        endContainer.style.display = 'none';
+        endInput.value = '';
+    }
+}
+
+function handleStartDateChange(val) {
+    const endInput = document.getElementById('nativeEventEndDate');
+    endInput.min = val;
+    if (endInput.value && endInput.value < val) endInput.value = val;
+}
+
+function toggleRepeatCountField() {
+    const freq = document.getElementById('formEventRecurrence').value;
+    document.getElementById('repeatCountContainer').style.display = (freq !== 'none') ? 'block' : 'none';
 }
 
 // ─── 附件處理 ───
@@ -1717,7 +1737,7 @@ function handleEventAttachmentSelect(input) {
 // ─── 香港商戶與預算 ───
 const HK_MERCHANT_MAP = {
     "超市日用": ["百佳", "parkn", "fusion", "taste", "惠康", "wellcome", "market place", "360", "優品360", "759", "donki", "一田"],
-    "家庭餐飲": ["大快活", "大家樂", "美心", "麥當勞", "肯德基", "壽司郎", "譚仔", "三哥", "星巴克"],
+    "家庭餐飲": ["大快活", "大家樂", "美心", "麥當勞", "肯德基", "壽司郎", "譚仔", "三哥", "星巴克", "拉麵", "小籠包", "酒樓"],
     "醫療健康": ["萬寧", "屈臣氏", "仁安", "養和", "浸會", "卓健", "診所", "醫院", "覆診"],
     "交通出行": ["港鐵", "九巴", "城巴", "hketoll", "的士", "uber"],
     "水電煤雜費": ["中電", "港燈", "煤氣", "水務署", "香港寬頻", "hkt"]
@@ -1795,34 +1815,40 @@ async function handleReceiptFileChange(input) {
     }
 }
 
-// ─── 儲存行程 (支援 置頂 Pin 與 附件 Attachment) ───
+// ─── 儲存行程 (支援跨日、重複、提醒與原生 WebKit 橋接) ───
 async function saveEvent() {
     if (isGuest) return;
     const title = document.getElementById('formEventTitle').value.trim();
     const date = document.getElementById('nativeEventDate').value;
-    const time = document.getElementById('nativeEventTime').value || "20:00";
+    const isMulti = document.getElementById('formEventIsMultiDay').checked;
+    const endDate = isMulti ? document.getElementById('nativeEventEndDate').value : null;
+    const time = document.getElementById('nativeEventTime').value || "09:00";
     const category = document.getElementById('formEventCategory').value;
     const assignee = document.getElementById('formEventAssignee').value;
     const isPinned = document.getElementById('formEventPin').checked;
     const isPrivate = document.getElementById('formEventVisibility').value === "private";
+    const reminderMinutes = parseInt(document.getElementById('formEventReminder').value, 10);
+    const repeatFrequency = document.getElementById('formEventRecurrence').value;
+    const repeatCount = parseInt(document.getElementById('formEventRepeatCount').value, 10) || 1;
     const editKey = document.getElementById('editItemKey').value;
 
     if (!title || !date) return HIG.alert("提示", "請填寫活動名稱與日期！");
+    if (endDate && endDate < date) return HIG.alert("提示", "結束日期不能早於開始日期！");
 
     const nowTs = Date.now();
     const tempId = editKey || ("local_" + nowTs);
     let payload = null;
 
     if (isPrivate) {
-        const privateEnvelope = { title, date, time, category, assignee, isPinned, attachment: currentAttachmentData, isExpense: false };
+        const privateEnvelope = { title, date, endDate, time, category, assignee, isPinned, reminderMinutes, attachment: currentAttachmentData, isExpense: false };
         const encrypted = await MemberE2EE.encryptWithPublicKey(JSON.stringify(privateEnvelope), assignee);
         payload = { encrypted, isPrivate: true, owner: assignee, updatedAt: nowTs };
     } else {
         const cipherTitle = await E2EE.encrypt(title);
-        payload = { title: cipherTitle, date, time, category, assignee, isPinned, attachment: currentAttachmentData, isPrivate: false, isExpense: false, updatedAt: nowTs };
+        payload = { title: cipherTitle, date, endDate: endDate || null, time, category, assignee, isPinned, reminderMinutes, attachment: currentAttachmentData, isPrivate: false, isExpense: false, updatedAt: nowTs };
     }
 
-    const localItem = { id: tempId, title, date, time, category, assignee, isPinned, attachment: currentAttachmentData, isPrivate, isExpense: false, updatedAt: nowTs };
+    const localItem = { id: tempId, title, date, endDate: endDate || null, time, category, assignee, isPinned, reminderMinutes, attachment: currentAttachmentData, isPrivate, isExpense: false, updatedAt: nowTs };
 
     if (!editKey || editKey.startsWith("local_")) LocalPendingStore.add(localItem);
 
@@ -1839,6 +1865,15 @@ async function saveEvent() {
     renderAgenda();
     updateAISummary();
     closeModal();
+
+    // 🌟 原生 WebKit 橋接：通知 iOS 排程推播與重複生成
+    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.createActivity) {
+        window.webkit.messageHandlers.createActivity.postMessage({
+            title, date, endDate, time, assignee, category,
+            isExpense: false, amount: 0.0,
+            reminderMinutes, repeatFrequency, repeatCount
+        });
+    }
 
     if (!navigator.onLine) {
         OfflineQueue.push({ type: editKey && !editKey.startsWith("local_") ? "UPDATE" : "CREATE", tempId, path: `family_calendar_activities/${editKey}`, data: payload });
@@ -1877,8 +1912,8 @@ async function saveReceiptExpense() {
     const nowTs = Date.now();
     const tempId = editKey || ("exp_" + nowTs);
     const cipherTitle = await E2EE.encrypt(titleText);
-    const payload = { title: cipherTitle, date, time, category, assignee: payer, isExpense: true, amount: amountVal, isPrivate: false, updatedAt: nowTs };
-    const localItem = { id: tempId, date, time, title: titleText, assignee: payer, category, isExpense: true, amount: amountVal, isPrivate: false, updatedAt: nowTs };
+    const payload = { title: cipherTitle, date, endDate: null, time, category, assignee: payer, isExpense: true, amount: amountVal, isPrivate: false, updatedAt: nowTs };
+    const localItem = { id: tempId, date, endDate: null, time, title: titleText, assignee: payer, category, isExpense: true, amount: amountVal, isPrivate: false, updatedAt: nowTs };
 
     if (!editKey || editKey.startsWith("exp_")) LocalPendingStore.add(localItem);
 
@@ -1895,6 +1930,13 @@ async function saveReceiptExpense() {
     renderAgenda();
     updateAISummary();
     closeExpenseModal();
+
+    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.createActivity) {
+        window.webkit.messageHandlers.createActivity.postMessage({
+            title: titleText, date, time, assignee: payer, category,
+            isExpense: true, amount: amountVal, reminderMinutes: 0
+        });
+    }
 
     if (!navigator.onLine) {
         OfflineQueue.push({ type: editKey && !editKey.startsWith("exp_") ? "UPDATE" : "CREATE", tempId, path: `family_calendar_activities/${editKey}`, data: payload });
@@ -1913,7 +1955,7 @@ async function saveReceiptExpense() {
     } catch(e) {}
 }
 
-// ─── 自然語言與語音輸入排程 ───
+// ─── 自然語言排程 ───
 async function executeAINaturalInput() {
     if (isGuest) return HIG.alert("權限不足", "請先登入！");
     const input = document.getElementById('aiQuickInput');
@@ -1937,7 +1979,7 @@ async function executeAINaturalInput() {
     const tempId = "local_" + nowTs;
     const cat = autoDetectCategoryByMerchant(cleanTitle) === "日常開支" ? "家庭" : autoDetectCategoryByMerchant(cleanTitle);
 
-    const localItem = { id: tempId, title: cleanTitle, date: targetDate, time: targetTime, category: cat, assignee: matchedAssignee, isPinned, isPrivate: false, isExpense: false, updatedAt: nowTs };
+    const localItem = { id: tempId, title: cleanTitle, date: targetDate, endDate: null, time: targetTime, category: cat, assignee: matchedAssignee, isPinned, isPrivate: false, isExpense: false, updatedAt: nowTs };
     LocalPendingStore.add(localItem);
     window.activities.unshift(localItem);
     localStorage.setItem('family_cached_activities', JSON.stringify(window.activities));
@@ -1947,7 +1989,7 @@ async function executeAINaturalInput() {
     input.value = "";
 
     const cipherTitle = await E2EE.encrypt(cleanTitle);
-    const payload = { title: cipherTitle, date: targetDate, time: targetTime, category: cat, assignee: matchedAssignee, isPinned, isPrivate: false, isExpense: false, updatedAt: nowTs };
+    const payload = { title: cipherTitle, date: targetDate, endDate: null, time: targetTime, category: cat, assignee: matchedAssignee, isPinned, isPrivate: false, isExpense: false, updatedAt: nowTs };
     if (navigator.onLine && window.fbDb) {
         const newRef = window.fbPush(window.fbRef(window.fbDb, "family_calendar_activities"));
         await window.fbSet(newRef, payload);
@@ -1993,11 +2035,19 @@ function openEditGeneralItem(id) {
         document.getElementById('modalFormTitle').innerText = "✏️ 修改家庭行程";
         document.getElementById('formEventTitle').value = getSafeTitle(item.title);
         document.getElementById('nativeEventDate').value = item.date || selectedDateStr;
-        document.getElementById('nativeEventTime').value = item.time || "20:00";
+        
+        const hasMulti = !!(item.endDate && item.endDate !== item.date);
+        document.getElementById('formEventIsMultiDay').checked = hasMulti;
+        document.getElementById('nativeEventEndDate').value = item.endDate || '';
+        toggleEndDateField();
+
+        document.getElementById('nativeEventTime').value = item.time || "09:00";
         document.getElementById('formEventPin').checked = !!item.isPinned;
+        document.getElementById('formEventReminder').value = String(item.reminderMinutes !== undefined ? item.reminderMinutes : 15);
         document.getElementById('formEventVisibility').value = item.isPrivate ? "private" : "public";
         document.getElementById('formEventCategory').value = item.category || "家庭";
         document.getElementById('formEventAssignee').value = item.assignee || "全員";
+        
         currentAttachmentData = item.attachment || null;
         const previewEl = document.getElementById('attachmentPreviewName');
         if (currentAttachmentData) {
@@ -2012,7 +2062,7 @@ function openEditGeneralItem(id) {
     }
 }
 
-// ─── 廣東話語音 ───
+// ─── 廣東話語音聽寫 ───
 let recognitionInstance = null;
 let isVoiceRecording = false;
 function toggleSpeechRecognition() {
@@ -2038,7 +2088,7 @@ function stopSpeechState() {
     if (input) input.placeholder = "✨ 講或寫：百佳買咗280蚊、聽晚仁安覆診、置頂日文堂...";
 }
 
-// ─── 主題顏色與樣式 ───
+// ─── 成員色彩定義 ───
 const MEMBER_THEMES = {
     "鐵":   { color: "#0071e3", bg: "rgba(0, 113, 227, 0.12)", border: "#0071e3", icon: "👦" },
     "Daddy": { color: "#1d4ed8", bg: "rgba(29, 78, 216, 0.12)", border: "#1d4ed8", icon: "👨" },
@@ -2055,14 +2105,6 @@ function getSafeTitle(rawTitle) {
     if (typeof rawTitle === "string") return escapeHtml(rawTitle);
     return escapeHtml(rawTitle.title || "活動");
 }
-
-const HK_HOLIDAYS = {
-    "2026-01-01": "元旦", "2026-02-17": "年初一", "2026-02-18": "年初二", "2026-02-19": "年初三",
-    "2026-04-03": "耶穌受難節", "2026-04-04": "清明節", "2026-04-06": "復活節",
-    "2026-05-01": "勞動節", "2026-05-25": "佛誕", "2026-06-19": "端午節",
-    "2026-07-01": "回歸日", "2026-09-26": "中秋翌日", "2026-10-01": "國慶日",
-    "2026-10-19": "重陽節", "2026-12-25": "聖誕節", "2026-12-26": "節禮日"
-};
 
 const HIG = {
     alert(title, msg) {
@@ -2128,6 +2170,17 @@ function cycleCalendarZoom() {
     else applyCalendarZoom(1.0);
 }
 
+// 🌟 接收 Native 端同步資料
+window.updateActivitiesFromNative = function(data) {
+    if (Array.isArray(data) && data.length > 0) {
+        window.activities = data;
+        localStorage.setItem('family_cached_activities', JSON.stringify(data));
+        renderCalendar();
+        renderAgenda();
+        updateAISummary();
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     applyCalendarZoom(currentCalZoom);
     OfflineQueue.updatePill();
@@ -2136,11 +2189,16 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('settingWeekStartSelect').value = String(WEEK_START_DAY);
     document.getElementById('settingShowLunarCheckbox').checked = SHOW_LUNAR;
-    document.getElementById('toggleAgendaViewBtn').innerText = AGENDA_VIEW_MODE === "list" ? "⏱️️ 時間軸" : "📋 清單";
+    document.getElementById('toggleAgendaViewBtn').innerText = AGENDA_VIEW_MODE === "list" ? "⏱️ 時間軸" : "📋 清單";
 
     renderCalendar();
     renderAgenda();
     updateAISummary();
+
+    // 告知 Native 注入數據
+    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.requestSync) {
+        window.webkit.messageHandlers.requestSync.postMessage({});
+    }
 });
 
 function applyLoginState(name) {
@@ -2173,7 +2231,7 @@ function changeMonthOffset(offset) {
     renderCalendar();
 }
 
-// ─── 渲染月曆 (支援自訂週始日、農曆開關、置頂排先) ───
+// ─── 渲染月曆 (支援跨欄無縫色帶與香港法定假期) ───
 function renderCalendar() {
     const y = currentMonthDate.getFullYear();
     const m = currentMonthDate.getMonth();
@@ -2202,7 +2260,8 @@ function renderCalendar() {
     for (let day = 1; day <= totalDays; day++) {
         const dStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const dayOfWeek = new Date(y, m, day).getDay();
-        const isHoliday = HK_HOLIDAYS[dStr] !== undefined;
+        const holidayName = HK_HOLIDAYS_MAP[dStr];
+        const isHoliday = !!holidayName;
         const isSunday = dayOfWeek === 0;
         const isSaturday = dayOfWeek === 6;
         const isToday = dStr === todayStr;
@@ -2212,13 +2271,19 @@ function renderCalendar() {
         cell.className = `day-cell ${isSunday ? 'is-sunday' : ''} ${isSaturday ? 'is-saturday' : ''} ${isHoliday ? 'is-holiday' : ''} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}`;
         cell.onclick = () => selectDate(dStr);
 
+        // 判定單日與橫跨多日
         let dayActs = (window.activities || []).filter(a => {
-            if (!a || a.date !== dStr) return false;
+            if (!a) return false;
+            if (a.endDate && a.endDate !== "" && a.endDate !== a.date) {
+                if (dStr < a.date || dStr > a.endDate) return false;
+            } else {
+                if (a.date !== dStr) return false;
+            }
             if (a.isPrivate) return currentUser && (a.assignee === currentUser || a.owner === currentUser);
             return true;
         });
 
-        // 🌟 置頂行程（Pin）優先排列在最上方
+        // 置頂優先排在上方
         dayActs.sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0));
 
         let eventChipsHtml = "";
@@ -2226,15 +2291,33 @@ function renderCalendar() {
             eventChipsHtml = `<div class="day-events-text-box">${dayActs.slice(0, 3).map(act => {
                 const safeTitle = getSafeTitle(act.title);
                 const pinIcon = act.isPinned ? '📌 ' : '';
-                if (act.isExpense) return `<div class="calendar-expense-chip" title="${safeTitle}">💰 $${act.amount}${safeTitle}</div>`;
+                if (act.isExpense) return `<div class="calendar-expense-chip" title="${safeTitle}">💰 $${act.amount}</div>`;
+                
+                // 🌟 計算跨日連續色帶位置
+                let spanClass = "span-single";
+                let displayText = `${pinIcon}${safeTitle}`;
+
+                if (act.endDate && act.endDate !== act.date) {
+                    if (dStr === act.date) {
+                        spanClass = "span-start";
+                        displayText = `${pinIcon}${safeTitle}`;
+                    } else if (dStr === act.endDate) {
+                        spanClass = "span-end";
+                        displayText = ""; // 尾端留空或只保留長條，保持純粹色帶感
+                    } else if (dStr > act.date && dStr < act.endDate) {
+                        spanClass = "span-middle";
+                        displayText = ""; // 中間橫貫
+                    }
+                }
+
                 const theme = getMemberTheme(act.assignee);
-                return `<div class="calendar-event-chip ${act.isPinned ? 'is-pinned' : ''}" style="background:${theme.bg}; color:${theme.color}; border-left: 2px solid ${theme.border};" title="${safeTitle}">${pinIcon}${safeTitle}</div>`;
-            }).join('')}${dayActs.length > 3 ? `<div style="font-size:7.5px; color:var(--oasis-primary); font-weight:bold;">+${dayActs.length - 3}</div>` : ''}</div>`;
+                return `<div class="calendar-event-chip ${spanClass} ${act.isPinned ? 'is-pinned' : ''}" style="background:${theme.color}; color:#fff;" title="${safeTitle}">${displayText}</div>`;
+            }).join('')}${dayActs.length > 3 ? `<div style="font-size:7.5px; color:var(--oasis-primary); font-weight:bold; padding-left:4px;">+${dayActs.length - 3}</div>` : ''}</div>`;
         }
 
-        const holidayText = HK_HOLIDAYS[dStr] ? `<div class="day-holiday">${HK_HOLIDAYS[dStr]}</div>` : '';
+        const holidayText = holidayName ? `<div class="day-holiday">${holidayName}</div>` : '';
         const lunarStr = getLunarDayText(dStr);
-        const lunarText = (!HK_HOLIDAYS[dStr] && lunarStr) ? `<div class="day-lunar">${lunarStr}</div>` : '';
+        const lunarText = (!holidayName && lunarStr) ? `<div class="day-lunar">${lunarStr}</div>` : '';
 
         cell.innerHTML = `
             <div class="day-cell-top"><span class="day-number">${day}</span>${lunarText}</div>
@@ -2251,7 +2334,7 @@ function selectDate(dStr) {
     renderAgenda();
 }
 
-// ─── 渲染日程 (支援清單檢視 & TimeTree 垂直小時時間軸檢視) ───
+// ─── 渲染日程清單與小時時間軸 ───
 function renderAgenda() {
     const listNode = document.getElementById('agendaListNode');
     const timelineNode = document.getElementById('agendaTimelineNode');
@@ -2261,16 +2344,20 @@ function renderAgenda() {
     if (!listNode || !titleNode) return;
 
     const parts = selectedDateStr.split('-');
-    const holidayName = HK_HOLIDAYS[selectedDateStr] ? ` (${HK_HOLIDAYS[selectedDateStr]})` : '';
+    const holidayName = HK_HOLIDAYS_MAP[selectedDateStr] ? ` (${HK_HOLIDAYS_MAP[selectedDateStr]})` : '';
     titleNode.innerText = `📋 ${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日 行程${holidayName}`;
 
     let matched = (window.activities || []).filter(a => {
-        if (!a || a.date !== selectedDateStr) return false;
+        if (!a) return false;
+        if (a.endDate && a.endDate !== "" && a.endDate !== a.date) {
+            if (selectedDateStr < a.date || selectedDateStr > a.endDate) return false;
+        } else {
+            if (a.date !== selectedDateStr) return false;
+        }
         if (a.isPrivate) return currentUser && (a.assignee === currentUser || a.owner === currentUser);
         return true;
     });
 
-    // 🌟 置頂優先排序
     matched.sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0));
 
     const visibleExpenses = matched.filter(a => a.isExpense);
@@ -2289,7 +2376,6 @@ function renderAgenda() {
         actionsNode.innerHTML = isGuest ? `<span style="font-size:11px; color:var(--apple-text-secondary);">🔒 唯讀</span>` : `<button class="agenda-quick-btn" onclick="openAddModal('ADD')">➕ 新增</button>`;
     }
 
-    // 視圖切換判斷
     if (AGENDA_VIEW_MODE === "timeline") {
         listNode.style.display = "none";
         timelineNode.style.display = "flex";
@@ -2310,6 +2396,9 @@ function renderAgenda() {
         const safeTitle = getSafeTitle(item.title);
         const pinBadge = item.isPinned ? `<span class="pin-badge">📌 置頂</span>` : '';
         const attachmentHtml = item.attachment ? `<a href="${item.attachment.data}" download="${item.attachment.name}" class="attachment-badge">📎 ${item.attachment.name}</a>` : '';
+        const isMulti = item.endDate && item.endDate !== item.date;
+        const dateDesc = isMulti ? `${item.date} 至 ${item.endDate}` : item.date;
+
         const actionButtonsHtml = isGuest ? '' : `
             <div class="row-actions-group">
                 <button class="btn-edit-link" onclick="openEditGeneralItem('${item.id}')">修改</button>
@@ -2328,6 +2417,7 @@ function renderAgenda() {
                         ${pinBadge}
                         <span class="assignee-chip" style="background:${theme.bg}; color:${theme.color}; border:1px solid ${theme.border};">${theme.icon} ${item.assignee}</span>
                         <span class="tag-pill">${item.category || '家庭'}</span>
+                        <span class="tag-pill">${dateDesc}</span>
                         ${attachmentHtml}
                     </div>
                 </div>
@@ -2337,7 +2427,7 @@ function renderAgenda() {
     }).join('');
 }
 
-// ─── ⏱️ TimeTree-Style 垂直小時時間軸生成器 ───
+// ─── 小時時間軸檢視 ───
 function renderTimelineView(matched) {
     const container = document.getElementById('agendaTimelineNode');
     container.innerHTML = "";
@@ -2346,7 +2436,7 @@ function renderTimelineView(matched) {
     hours.forEach(hourStr => {
         const hInt = parseInt(hourStr.slice(0, 2), 10);
         const inThisHour = matched.filter(ev => {
-            if (!ev.time) return hInt === 9; // 全日預設放 09:00
+            if (!ev.time) return hInt === 9;
             const evH = parseInt(ev.time.split(':')[0], 10);
             return evH === hInt;
         });
@@ -2386,12 +2476,19 @@ function openAddModal(mode) {
     document.getElementById('editItemKey').value = "";
     document.getElementById('modalFormTitle').innerText = isGuest ? "🔒 家庭成員身分驗證" : "➕ 新增家庭行程";
     document.getElementById('formEventPin').checked = false;
+    document.getElementById('formEventIsMultiDay').checked = false;
+    document.getElementById('endDateRowContainer').style.display = 'none';
+    document.getElementById('nativeEventEndDate').value = "";
+    document.getElementById('formEventRecurrence').value = "none";
+    document.getElementById('repeatCountContainer').style.display = 'none';
+    document.getElementById('formEventRepeatCount').value = "4";
+    document.getElementById('formEventReminder').value = "15";
     currentAttachmentData = null;
     document.getElementById('attachmentPreviewName').style.display = "none";
     document.getElementById('formEventAttachmentInput').value = "";
     document.getElementById('formEventTitle').value = "";
     document.getElementById('nativeEventDate').value = selectedDateStr;
-    document.getElementById('nativeEventTime').value = "20:00";
+    document.getElementById('nativeEventTime').value = "09:00";
     document.getElementById('loginGateSection').style.display = isGuest ? 'block' : 'none';
     document.getElementById('eventFormFields').style.display = isGuest ? 'none' : 'block';
     document.getElementById('eventModal').style.display = 'flex';
@@ -2412,6 +2509,8 @@ function closeManageModal() { document.getElementById('manageModal').style.displ
 function handleAuthBadgeClick() { if (isGuest) openAddModal('LOGIN'); }
 
 function openExpenseModal(editItem = null) {
+    document.getElementById('expenseDateInput').value = selectedDateStr;
+    document.getElementById('expenseTimeInput').value = "12:30";
     document.getElementById('expenseModal').style.display = 'flex';
 }
 
